@@ -1,0 +1,38 @@
+networks:
+  oob-network:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/acme.json:/etc/traefik/acme.json
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - oob-network
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    networks:
+      - oob-network
+
+volumes:
+  portainer_data:

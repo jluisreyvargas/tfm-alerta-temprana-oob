@@ -1,0 +1,35 @@
+api:
+  dashboard: true
+  insecure: false
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: tu@email.com
+      storage: /etc/traefik/acme.json
+      httpChallenge:
+        entryPoint: web
+
+providers:
+  docker:
+    endpoint: "unix:///run/docker.sock"
+    exposedByDefault: false
+    network: oob-network
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: INFO

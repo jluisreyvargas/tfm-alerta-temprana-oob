@@ -1,0 +1,7 @@
+.env
+traefik/acme.json
+authelia/db.sqlite3
+authelia/notification.txt
+*.pem
+*.key
+*.crt
