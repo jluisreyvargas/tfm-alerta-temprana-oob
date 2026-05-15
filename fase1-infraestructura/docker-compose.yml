@@ -34,5 +34,26 @@ services:
     networks:
       - oob-network
 
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    restart: unless-stopped
+    volumes:
+      - ./authelia:/config
+    environment:
+      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET=${AUTHELIA_JWT_SECRET}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY=${AUTHELIA_STORAGE_ENCRYPTION_KEY}
+    networks:
+      - oob-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.rule=Host(`auth.${ENCLAVE_DOMAIN}`)"
+     # → se resuelve a: Host(`auth.local`)
+      - "traefik.http.routers.authelia.entrypoints=websecure"
+      - "traefik.http.routers.authelia.tls=true"
+     # SIN certresolver → Traefik usa self-signed automático
+      - "traefik.http.services.authelia.loadbalancer.server.port=9091"
+
 volumes:
   portainer_data:

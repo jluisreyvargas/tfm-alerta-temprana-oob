@@ -5,3 +5,8 @@ authelia/notification.txt
 *.pem
 *.key
 *.crt
+.env
+authelia/db.sqlite3
+authelia/notification.txt
+authelia/users_database.yml
+traefik/acme.json

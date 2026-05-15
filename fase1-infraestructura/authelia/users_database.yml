@@ -1,0 +1,9 @@
+users:
+  jose:
+    displayname: "Jose - IR Lead"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$WngRt7Vqe7qTVTKnMo5b3Q$TRWRbdrjcvckVwwYsXZV394WMwCF0vBM2ca0Hgi8v9E"
+    email: jose@localhost
+    groups:
+      - ir_lead
+      - ir_team
+

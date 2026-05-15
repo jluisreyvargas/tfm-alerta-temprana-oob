@@ -1,6 +1,13 @@
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: INFO
+
 api:
   dashboard: true
-  insecure: false
+  insecure: true        # Dashboard accesible en :8080 sin auth (solo lab local)
 
 entryPoints:
   web:
@@ -10,26 +17,17 @@ entryPoints:
         entryPoint:
           to: websecure
           scheme: https
-          permanent: true
+
   websecure:
     address: ":443"
 
-certificatesResolvers:
-  letsencrypt:
-    acme:
-      email: tu@email.com
-      storage: /etc/traefik/acme.json
-      httpChallenge:
-        entryPoint: web
-
 providers:
   docker:
-    endpoint: "unix:///run/docker.sock"
+    endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     network: oob-network
   file:
     directory: /etc/traefik/dynamic
     watch: true
 
-log:
-  level: INFO
+# SIN certificatesResolvers — Traefik usará self-signed automáticamente
