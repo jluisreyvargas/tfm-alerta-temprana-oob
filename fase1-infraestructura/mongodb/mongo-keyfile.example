@@ -1,0 +1,1 @@
+# Generar con: openssl rand -base64 756 > mongo-keyfile && chmod 644 mongo-keyfile

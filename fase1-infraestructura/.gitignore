@@ -10,3 +10,5 @@ authelia/db.sqlite3
 authelia/notification.txt
 authelia/users_database.yml
 traefik/acme.json
+mongodb/mongo-keyfile
+mongodb/mongo-keyfile

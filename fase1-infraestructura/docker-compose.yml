@@ -1,6 +1,8 @@
 networks:
   oob-network:
     external: true
+  fase1-internal:
+    internal: true
 
 services:
   traefik:
@@ -55,5 +57,59 @@ services:
      # SIN certresolver → Traefik usa self-signed automático
       - "traefik.http.services.authelia.loadbalancer.server.port=9091"
 
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    restart: unless-stopped
+    user: root
+    entrypoint: ["/etc/mongodb/docker-entrypoint-keyfile.sh"]
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongodb/mongo-keyfile"]
+    volumes:
+      - mongodata:/data/db
+      - mongoconfig:/data/configdb
+      - ./mongodb/mongo-keyfile:/tmp/mongo-keyfile:ro
+      - ./mongodb/docker-entrypoint-keyfile.sh:/etc/mongodb/docker-entrypoint-keyfile.sh:ro
+    networks:
+      - fase1-internal
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet",
+             "-u", "rcuser", "-p", "MongoOOB2026!",
+             "--authenticationDatabase", "admin",
+             "--eval", "rs.status().ok"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  rocketchat:
+    image: registry.rocket.chat/rocketchat/rocket.chat:${ROCKETCHAT_VERSION}
+    container_name: rocketchat
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/rocketchat?authSource=admin&replicaSet=rs0
+      MONGO_OPLOG_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/local?authSource=admin&replicaSet=rs0
+      ROOT_URL: ${ROOT_URL}
+      PORT: 3000
+      DEPLOY_METHOD: docker
+      OVERWRITE_SETTING_Show_Setup_Wizard: completed
+    volumes:
+      - rocketchat_uploads:/app/uploads
+    networks:
+      - oob-network
+      - fase1-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rocketchat.rule=Host(`chat.${ENCLAVE_DOMAIN}`)"
+      - "traefik.http.routers.rocketchat.entrypoints=websecure"
+      - "traefik.http.routers.rocketchat.tls=true"
+      - "traefik.http.services.rocketchat.loadbalancer.server.port=3000"
+      - "traefik.docker.network=oob-network"    
+
 volumes:
   portainer_data:
+  mongodata:
+  mongoconfig:
+  rocketchat_uploads:
