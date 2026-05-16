@@ -1,4 +1,4 @@
 http:
   serversTransports:
     wazuhtransport:
-      insecureSkipVerify: true    # Wazuh dashboard usa self-signed internamente
+      insecureSkipVerify: true

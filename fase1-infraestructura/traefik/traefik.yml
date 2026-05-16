@@ -31,3 +31,6 @@ providers:
     watch: true
 
 # SIN certificatesResolvers — Traefik usará self-signed automáticamente
+
+serversTransport:
+  insecureSkipVerify: true
