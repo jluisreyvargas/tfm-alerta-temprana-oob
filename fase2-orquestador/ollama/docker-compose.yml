@@ -1,0 +1,21 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - oob-network
+    # Sin exposición de puerto al host — solo acceso interno Docker
+    # n8n se conecta via http://ollama:11434
+
+volumes:
+  ollama_data:
+
+networks:
+  oob-network:
+    external: true
