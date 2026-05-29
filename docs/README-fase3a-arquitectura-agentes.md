@@ -2,22 +2,22 @@
 
 ## Contexto
 
-En las fases 2e, 2f y 2g se construyó un pipeline de triage automático que integra Wazuh, n8n, un modelo local en Ollama y enriquecimiento CTI con AbuseIPDB, VirusTotal y MISP.[cite:1] El flujo actual realiza una única llamada a un agente de IA dentro de n8n, que recibe el contexto CTI normalizado y devuelve un análisis estructurado para Rocket.Chat.[cite:1]
+En las fases 2e, 2f y 2g se construyó un pipeline de triage automático que integra Wazuh, n8n, un modelo local en Ollama y enriquecimiento CTI con AbuseIPDB, VirusTotal y MISP. El flujo actual realiza una única llamada a un agente de IA dentro de n8n, que recibe el contexto CTI normalizado y devuelve un análisis estructurado para Rocket.Chat.
 
-En esta fase se define la arquitectura de un sistema de agentes especializado basado en LangGraph, manteniendo n8n como orquestador principal y Ollama como LLM local.[cite:2][cite:3]
+En esta fase se define la arquitectura de un sistema de agentes especializado basado en LangGraph, manteniendo n8n como orquestador principal y Ollama como LLM local.
 
 ## Objetivo de la fase
 
 - Diseñar el contrato JSON entre n8n y un servicio de agentes basado en LangGraph.
-- Definir el estado del grafo (StateGraph) que modela un incidente de seguridad y su triage.[cite:2][cite:3]
-- Especificar los agentes especializados, sus responsabilidades y el flujo de control.[cite:2][cite:3]
-- Dejar preparada la base conceptual para las fases 3b (despliegue del servicio) y 3c (herramientas del agente).
+- Definir el estado del grafo que modela un incidente de seguridad y su triage.
+- Especificar los agentes especializados, sus responsabilidades y el flujo de control.
+- Dejar preparada la base conceptual para las fases 3b y 3c.
 
 ## Contrato n8n ↔ servicio de agentes
 
-El orquestador n8n seguirá siendo el punto de entrada del pipeline del TFM.[cite:1] Recibirá alertas desde Wazuh, ejecutará consultas CTI a AbuseIPDB, VirusTotal y MISP, y normalizará el contexto en un nodo `Code CTI Context`, igual que en la fase anterior.[cite:1]
+El orquestador n8n seguirá siendo el punto de entrada del pipeline del TFM. Recibirá alertas desde Wazuh, ejecutará consultas CTI a AbuseIPDB, VirusTotal y MISP, y normalizará el contexto en un nodo `Code CTI Context`, igual que en la fase anterior.
 
-A partir de esta fase, en lugar de llamar al AI Agent interno de n8n, se llamará a un servicio HTTP desplegado en Docker dentro de la red `oob-network`, implementado en Python con LangGraph.[cite:1][cite:3] El contrato propuesto se divide en dos bloques principales: `wazuh` y `cti`.
+A partir de esta fase, en lugar de llamar al AI Agent interno de n8n, se llamará a un servicio HTTP desplegado en Docker dentro de la red `oob-network`, implementado en Python con LangGraph. El contrato propuesto se divide en dos bloques principales: `wazuh` y `cti`.
 
 ### Ejemplo de entrada JSON
 
@@ -51,7 +51,7 @@ A partir de esta fase, en lugar de llamar al AI Agent interno de n8n, se llamar�
 }
 ```
 
-Este diseño reutiliza la normalización CTI ya validada en Fase 2, pero separa claramente el plano de datos (`wazuh`, `cti`) del plano de decisión inteligente.[cite:1]
+Este diseño reutiliza la normalización CTI ya validada en Fase 2, pero separa claramente el plano de datos (`wazuh`, `cti`) del plano de decisión inteligente.
 
 ### Ejemplo de salida JSON
 
@@ -77,16 +77,16 @@ Este diseño reutiliza la normalización CTI ya validada en Fase 2, pero separa 
 }
 ```
 
-La salida está pensada para que n8n pueda seguir usando una lógica similar a la actual: publicar en Rocket.Chat, activar nodos condicionales y disparar playbooks cuando `requires_block` sea verdadero.[cite:1]
+La salida está pensada para que n8n pueda seguir usando una lógica similar a la actual: publicar en Rocket.Chat, activar nodos condicionales y disparar playbooks cuando `requires_block` sea verdadero.
 
 ## Estado del grafo
 
-LangGraph está orientado a flujos con estado, donde cada nodo lee y modifica un `StateGraph` compartido.[cite:2][cite:3] Para este proyecto se propone un estado tipado `IncidentState` con cuatro áreas principales:
+LangGraph está orientado a flujos con estado, donde cada nodo lee y modifica un `StateGraph` compartido. Para este proyecto se propone un estado tipado `IncidentState` con cuatro áreas principales:
 
 - `wazuh`: campos de la alerta original.
 - `cti`: resumen CTI ya normalizado.
 - `decision`: resultados producidos por los agentes.
-- `messages`: historial de mensajes internos del sistema multiagente.[cite:2][cite:3]
+- `messages`: historial de mensajes internos del sistema multiagente.
 
 ### Esquema lógico del estado
 
@@ -98,17 +98,17 @@ class IncidentState(TypedDict):
     messages: list
 ```
 
-Este patrón encaja con la filosofía de LangGraph: estado explícito, nodos especializados y transiciones controladas por edges.[cite:2][cite:3]
+Este patrón encaja con la filosofía de LangGraph: estado explícito, nodos especializados y transiciones controladas por edges.
 
 ## Agentes definidos
 
-La arquitectura adoptará un patrón de supervisor más agentes especializados, recomendado para sistemas multiagente con flujo controlado y trazabilidad.[cite:2][cite:3]
+La arquitectura adoptará un patrón de supervisor con agentes especializados, recomendado para sistemas multiagente con flujo controlado y trazabilidad.
 
 ### `triage_agent`
 
 - Entrada: `wazuh` y `cti`.
 - Salida: `severity_real`, `mitre_tactic`, `mitre_technique`, `summary`.
-- Rol: evaluar la criticidad real del incidente combinando señal Wazuh y contexto CTI.[cite:1]
+- Rol: evaluar la criticidad real del incidente combinando señal Wazuh y contexto CTI.
 
 ### `remediation_agent`
 
@@ -119,12 +119,12 @@ La arquitectura adoptará un patrón de supervisor más agentes especializados, 
 ### `supervisor_agent`
 
 - Entrada: estado completo del incidente.
-- Salida: decide qué nodo ejecutar a continuación y cuándo finalizar el flujo.[cite:2][cite:3]
+- Salida: decide qué nodo ejecutar a continuación y cuándo finalizar el flujo.
 - Rol: implementar la lógica de control del grafo y permitir futuras ampliaciones del sistema.
 
 ## Flujo de control del grafo
 
-El flujo lógico propuesto es el siguiente:[cite:2][cite:3]
+El flujo lógico propuesto es el siguiente:
 
 1. `START` → `load_incident`.
 2. `supervisor_agent` envía el control a `triage_agent`.
@@ -135,8 +135,8 @@ El flujo lógico propuesto es el siguiente:[cite:2][cite:3]
 7. `finalizer` construye el JSON final.
 8. `END` devuelve la respuesta HTTP a n8n.
 
-Este diseño mantiene n8n como plano de orquestación visible y LangGraph como plano de razonamiento agéntico, lo que mejora la trazabilidad y el valor académico del TFM.[cite:1][cite:2][cite:3]
+Este diseño mantiene n8n como plano de orquestación visible y LangGraph como plano de razonamiento agéntico, lo que mejora la trazabilidad y el valor académico del TFM.
 
 ## Resultado de la fase
 
-Al finalizar la Fase 3a se dispone de un diseño formal del contrato n8n ↔ servicio de agentes, la definición del estado del grafo, la lista de agentes y el flujo de control general.[cite:2][cite:3] Esto deja preparada la implementación de la Fase 3b y la definición técnica de herramientas de la Fase 3c.
+Al finalizar la Fase 3a se dispone de un diseño formal del contrato n8n ↔ servicio de agentes, la definición del estado del grafo, la lista de agentes y el flujo de control general. Esto deja preparada la implementación de la Fase 3b y la definición técnica de herramientas de la Fase 3c.
