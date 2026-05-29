@@ -1,0 +1,17 @@
+services:
+  langgraph-agent:
+    build: .
+    container_name: langgraph-agent
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=mistral:7b
+      - TZ=Europe/Madrid
+    networks:
+      - oob-network
+
+networks:
+  oob-network:
+    external: true

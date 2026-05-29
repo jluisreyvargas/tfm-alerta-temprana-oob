@@ -10,8 +10,10 @@ services:
       - WEBHOOK_URL=https://n8n.oob.local/
       - N8N_ENCRYPTION_KEY=cambia_esta_clave_segura_32chars
       - GENERIC_TIMEZONE=Europe/Madrid
+      - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/misp.crt
     volumes:
       - n8n_data:/home/node/.n8n
+      - ./n8n/certs/misp.crt:/usr/local/share/ca-certificates/misp.crt:ro
     networks:
       - oob-network
     labels:

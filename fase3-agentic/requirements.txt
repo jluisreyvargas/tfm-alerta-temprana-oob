@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+langgraph
+langchain
+langchain-community
+langchain-ollama
+pydantic
+requests
