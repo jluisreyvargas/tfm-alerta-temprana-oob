@@ -1,0 +1,20 @@
+services:
+  headscale:
+    image: docker.io/headscale/headscale:0.28.0
+    container_name: headscale
+    restart: unless-stopped
+    command: serve
+    tmpfs:
+      - /var/run/headscale
+    volumes:
+      - /home/jose/tfm-alerta-temprana-oob/fase4-breakglass-dc/headscale/config:/etc/headscale
+      - /home/jose/tfm-alerta-temprana-oob/fase4-breakglass-dc/headscale/lib:/var/lib/headscale
+    ports:
+      - "8090:8080"
+      - "9090:9090"
+    networks:
+      - oob-network
+
+networks:
+  oob-network:
+    external: true
