@@ -47,7 +47,7 @@ Documento detallado:
 Despliegue del agente Python en el DC para ejecutar scripts bajo allowlist y autenticación por token.
 
 Documento detallado:
-[README Fase 4c](../docs/README-fase4c-dc-agent.md)
+[README Fase 4c](../docs/README-fase4c-dcagent.md)
 
 ### Fase 4d — Integración n8n
 Orquestación del flujo n8n → DC Agent → Rocket.Chat para automatizar aprobaciones y ejecuciones.
@@ -106,6 +106,6 @@ La Fase 4 queda orientada a un flujo estable de operación remota controlada sob
 
 - [README Fase 4a](../docs/README-fase4a-headscale.md)
 - [README Fase 4b](../docs/README-fase4b-tailnet.md)
-- [README Fase 4c](../docs/README-fase4c-dc-agent.md)
+- [README Fase 4c](../docs/README-fase4c-dcagent.md)
 - [README Fase 4d](../docs/README-fase4d-n8n.md)
 - [README Fase 4e](../docs/README-fase4e-rustdesk-breakglass.md)
