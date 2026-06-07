@@ -1,0 +1,32 @@
+services:
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: rustdesk-hbbs
+    command: hbbs
+    restart: unless-stopped
+    volumes:
+      - ./rustdesk/data:/root
+    ports:
+      - "21115:21115"
+      - "21116:21116"
+      - "21116:21116/udp"
+      - "21118:21118"
+    networks:
+      - oob-network
+
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: rustdesk-hbbr
+    command: hbbr
+    restart: unless-stopped
+    volumes:
+      - ./rustdesk/data:/root
+    ports:
+      - "21117:21117"
+      - "21119:21119"
+    networks:
+      - oob-network
+
+networks:
+  oob-network:
+    external: true
