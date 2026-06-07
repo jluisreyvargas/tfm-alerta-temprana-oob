@@ -1,131 +1,111 @@
-# 🛡️ TFM — Sistema de Alerta Temprana Out-of-Band para Respuesta a Incidentes
+# Fase 4 — Conectividad privada, DC Agent y Break-Glass RustDesk
 
-> **Principio fundamental:** Cuando el entorno corporativo puede estar comprometido,
-> no puedes confiar en correo, AD, VPN ni Teams. Este proyecto crea un **canal alternativo completamente aislado**
-> para coordinar incidentes, solicitar aprobaciones y ejecutar acciones de respuesta de forma controlada.
+## Objetivo
 
-[![Estado](https://img.shields.io/badge/Estado-Fase%201%20en%20curso-yellow)](./fase1-infraestructura/)
-[![Stack](https://img.shields.io/badge/Stack-Python%20%7C%20Docker%20%7C%20Wazuh%20%7C%20Rocket.Chat-blue)](#stack)
-[![IA](https://img.shields.io/badge/IA-LangGraph%20%2B%20Ollama-purple)](#ia-ag%C3%A9ntica)
+La Fase 4 construye el bloque de conectividad privada y operación remota controlada del proyecto TFM. En esta fase se utiliza **Tailscale + Headscale** como base de conectividad segura entre el orquestador y los Domain Controllers Windows Server 2025, y se integran los mecanismos de ejecución controlada y acceso remoto temporal necesarios para la respuesta a incidentes.
 
----
+El propósito es disponer de una capa out-of-band capaz de:
+- conectar el orquestador con los DCs sin depender de la red corporativa,
+- ejecutar acciones autorizadas sobre los DCs de forma autenticada,
+- habilitar acceso remoto break-glass con TTL,
+- y registrar toda la actividad para auditoría y trazabilidad.
 
-## 🎯 Objetivo del Proyecto
+## Contexto dentro del proyecto
 
-Construir un sistema **Out-of-Band** que, ante alertas críticas de Wazuh, automatiza:
+La Fase 4 se sitúa sobre la infraestructura base ya preparada en fases previas y sirve como puente entre la coordinación de incidentes y la intervención técnica sobre los DCs.
 
-- 💬 Creación de **War Rooms** en Rocket.Chat por incidente
-- 🤖 **Triage inteligente** con IA Agéntica (LangGraph + LLM local)
-- 🔍 **Enrichment CTI** automático (MISP, AbuseIPDB, VirusTotal)
-- 🧯 **Acceso remoto break-glass** (RustDesk, TTL, credenciales efímeras)
-- 🐍 **Ejecución de scripts en DCs** (W2025) via Cloudflare Tunnels
-- 🦖 **Colección forense automática** (Velociraptor + MinIO)
-- 🗂️ **Gestión de caso** (DFIR-IRIS) con trazabilidad total
-- 🧩 **Plan C KVM** para servidores on-prem (GL.iNet)
+Esta fase permite que el sistema pase de la simple detección y coordinación a la **actuación remota controlada**, manteniendo el enfoque out-of-band del TFM.
 
-**Todo bajo control propio** — VPS, Cloud o on-prem dedicado. Sin dependencias de servicios externos críticos.
+## Componentes principales
 
----
+- **Tailscale**: conectividad privada entre nodos del entorno.
+- **Headscale**: plano de control autogestionado para la tailnet.
+- **DC Agent Python**: ejecución controlada de scripts permitidos.
+- **cloudflared**: túnel saliente seguro hacia el agente del DC.
+- **NSSM**: arranque del agente Python como servicio de Windows.
+- **RustDesk Server OSS**: acceso remoto temporal break-glass.
+- **Wazuh Active Response**: activación y revocación con TTL.
+- **Rocket.Chat**: canal de aprobación y notificación.
+- **Orquestador**: coordinación, estado y trazabilidad.
+- **IRIS**: registro de acciones, sesiones y evidencias.
 
-## 🏗️ Arquitectura Resumida
+## Subfases de la Fase 4
 
-```
-[Red Corporativa] → [Wazuh] → [Orquestador] → [IA Agéntica] → [Rocket.Chat War Room]
-                                    │                                    │
-                              [Velociraptor]                      [DFIR-IRIS Case]
-                              [MinIO Evidence]                   [OpenSearch Metrics]
-                                    │
-                    [CF Tunnel] → [Python Agent W2025 DC]
-```
+### Fase 4a — Headscale
+Despliegue del controlador Headscale para gestionar la red privada de Tailscale bajo control propio.
 
----
+Documento detallado:
+[README Fase 4a](../docs/README-fase4a-headscale.md)
 
-## 📦 Stack Tecnológico
+### Fase 4b — Tailnet de orquestador y DC
+Enrolamiento y validación de conectividad de los nodos `orchestrator-tfm` y `dc01-tfm` dentro de la tailnet.
 
-| Capa | Tecnología | Deploy |
-|---|---|---|
-| Detección | Wazuh SIEM/EDR | Docker |
-| Comunicación OOB | Rocket.Chat | Docker |
-| Orquestador | FastAPI + PostgreSQL + Redis | Docker |
-| IA Agéntica | LangGraph + Ollama (Mistral-7B) | Docker |
-| Forensics | Velociraptor Server | Docker |
-| Evidence Store | MinIO (S3-compatible) | Docker |
-| Case Management | DFIR-IRIS | Docker |
-| Observabilidad | OpenSearch + Dashboards | Docker |
-| Acceso remoto OOB | RustDesk Server | Docker |
-| Agentes DC | Python (FastAPI) + cloudflared | Windows Service |
-| Gestión contenedores | Portainer | Docker |
-| Autenticación | Authelia (MFA independiente AD) | Docker |
-| Plan C | GL.iNet KVM | Hardware |
+Documento detallado:
+[README Fase 4b](../docs/README-fase4b-tailnet.md)
 
----
+### Fase 4c — DC Agent
+Despliegue del agente Python en el DC para ejecutar scripts bajo allowlist y autenticación por token.
 
-## 🗺️ Fases del Proyecto
+Documento detallado:
+[README Fase 4c](../docs/README-fase4c-dcagent.md)
 
-| Fase | Nombre | Estado | Descripción |
-|---|---|---|---|
-| [Fase 1](./fase1-infraestructura/) | Infraestructura Base | 🟡 En curso | Docker, Portainer, Rocket.Chat, Wazuh, Authelia |
-| [Fase 2](./fase2-orquestador-mvp/) | Orquestador MVP | ⬜ Pendiente | FastAPI + War Rooms + Aprobaciones |
-| [Fase 3](./fase3-ia-agentica/) | IA Agéntica | ⬜ Pendiente | LangGraph + Triage Agent + CTI |
-| [Fase 4](./fase4-breakglass-dc/) | Break-Glass + DC Scripts | ⬜ Pendiente | RustDesk + CF Tunnels + Python Agents |
-| [Fase 5](./fase5-velociraptor/) | Forensics Automático | ⬜ Pendiente | Velociraptor + MinIO + Evidence Pipeline |
-| [Fase 6](./fase6-dfir-iris/) | DFIR-IRIS Case Mgmt | ⬜ Pendiente | Case Management + Timeline + IOCs |
-| [Fase 7](./fase7-observabilidad/) | Observabilidad | ⬜ Pendiente | OpenSearch + Dashboard de Métricas |
-| [Fase 8](./fase8-kvm-hardening/) | KVM + Hardening | ⬜ Pendiente | Plan C KVM + mTLS + Hardening Final |
+### Fase 4d — Integración n8n
+Orquestación del flujo n8n → DC Agent → Rocket.Chat para automatizar aprobaciones y ejecuciones.
 
----
+Documento detallado:
+[README Fase 4d](../docs/README-fase4d-n8n.md)
 
-## 📚 Documentación
+### Fase 4e — RustDesk break-glass
+Despliegue de RustDesk self-hosted para acceso remoto temporal con TTL, revocación automática y trazabilidad.
 
-- 📄 [Propuesta TFM v3](./docs/propuesta_tfm_v3.md) — Documento completo del proyecto
-- 🏗️ [Arquitectura detallada](./docs/arquitectura.md)
-- 🤖 [Diseño IA Agéntica](./fase3-ia-agentica/README.md)
-- 🌩️ [Cloudflare Tunnels + DC Agents](./fase4-breakglass-dc/README.md)
+Documento detallado:
+[README Fase 4e](../docs/README-fase4e-rustdesk-breakglass.md)
 
----
+## Arquitectura resumida
 
-## 🚀 Inicio Rápido (Fase 1)
+El flujo funcional de esta fase es el siguiente:
 
-```bash
-# 1. Clonar repositorio
-git clone https://github.com/TU_USUARIO/tfm-alerta-temprana-oob.git
-cd tfm-alerta-temprana-oob
+1. El orquestador y el DC se unen por **Tailscale** sobre **Headscale**.
+2. El operador solicita una acción o acceso en Rocket.Chat.
+3. El Orquestador valida la solicitud y registra el estado.
+4. Si la acción requiere ejecución técnica, el Orquestador llama al DC Agent por el canal privado o por el túnel seguro definido.
+5. El DC Agent ejecuta únicamente scripts permitidos.
+6. Si la acción requiere acceso remoto, se activa RustDesk bajo TTL.
+7. El resultado vuelve al Orquestador y se publica en el canal.
+8. Todo queda registrado en IRIS para auditoría y trazabilidad.
 
-# 2. Fase 1: Infraestructura base
-cd fase1-infraestructura
-cp .env.example .env
-# Editar .env con tus credenciales
-nano .env
+## Relación entre subfases
 
-# 3. Levantar servicios
-docker compose up -d
+Las subfases se apoyan entre sí y no deben interpretarse como piezas aisladas:
 
-# 4. Verificar estado
-docker compose ps
-```
+- **Headscale** establece la base de red privada.
+- **Tailscale** permite el canal de conectividad entre nodos.
+- **DC Agent** aporta ejecución controlada en el DC.
+- **n8n** automatiza la secuencia operacional.
+- **RustDesk** habilita acceso remoto temporal break-glass.
 
----
+En conjunto, la Fase 4 representa el bloque de operación remota segura sobre el DC dentro del proyecto TFM.
 
-## 📊 Métricas Objetivo
+## Seguridad y control
 
-| Métrica | Objetivo |
-|---|---|
-| MTTA (Alerta → War Room) | < 60 segundos |
-| MTTApprove | < 5 minutos |
-| Precisión Triage Agente | > 80% vs. experto |
-| Tasa deduplicación alertas | > 95% |
+La fase aplica varios controles clave:
 
----
+- Conectividad privada con **Tailscale + Headscale**.
+- Acceso remoto temporal con TTL.
+- Ejecución restringida a scripts de allowlist.
+- Autenticación mediante Bearer Token.
+- Servicios persistentes mediante NSSM.
+- Registro de actividad en IRIS.
+- Revocación automática de accesos al finalizar la ventana autorizada.
 
-## 📝 Notas de Desarrollo
+## Estado actual
 
-- Cada fase tiene su propio `README.md` con instrucciones detalladas de instalación y configuración.
-- Los `docker-compose.yml` de cada fase son **independientes** pero comparten la red Docker `oob-network`.
-- Los secretos y tokens se gestionan exclusivamente via variables de entorno (`.env`), nunca en código.
-- Este repositorio es el entregable técnico del TFM — toda decisión de diseño está documentada.
+La Fase 4 queda orientada a un flujo estable de operación remota controlada sobre el DC, con documentación separada por subfases para mantener claridad, trazabilidad y reutilización.
 
----
+## Navegación de documentación
 
-**Autor:** _(tu nombre)_
-**Máster en Ciberseguridad**
-**Estado:** Fase 1 en curso — Mayo 2026
+- [README Fase 4a](../docs/README-fase4a-headscale.md)
+- [README Fase 4b](../docs/README-fase4b-tailnet.md)
+- [README Fase 4c](../docs/README-fase4c-dcagent.md)
+- [README Fase 4d](../docs/README-fase4d-n8n.md)
+- [README Fase 4e](../docs/README-fase4e-rustdesk-breakglass.md)
