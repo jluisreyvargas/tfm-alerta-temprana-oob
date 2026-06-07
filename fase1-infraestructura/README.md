@@ -1,139 +1,170 @@
-# 🛡️ TFM — Sistema de Alerta Temprana Out-of-Band para Respuesta a Incidentes
+# ✅ Fase 1 — Infraestructura Base del Enclave Out-of-Band
 
-> **Idea central:** cuando el entorno corporativo puede estar comprometido, no puedes depender de su correo, su AD o sus herramientas de colaboración. Este proyecto construye un **canal alternativo, aislado y controlado** para coordinar incidentes, solicitar aprobaciones y ejecutar acciones de respuesta con trazabilidad.
+> **Estado:** ✅ Completada
+> **Objetivo:** levantar la base del enclave con Docker, seguridad, comunicación y SIEM.
 
-[![Estado](https://img.shields.io/badge/Estado-Fase%201%20completada-success)](./fase1-infraestructura/)
-[![Stack](https://img.shields.io/badge/Stack-Python%20%7C%20Docker%20%7C%20Wazuh%20%7C%20Rocket.Chat-blue)](#stack-tecnol%C3%B3gico)
-[![IA](https://img.shields.io/badge/IA-LangGraph%20%2B%20Ollama-purple)](#ia-ag%C3%A9ntica)
-
----
-
-## Objetivo del proyecto
-
-Construir un sistema **Out-of-Band** que permita responder a incidentes de seguridad sin depender de la infraestructura potencialmente afectada. La propuesta combina detección, comunicación, orquestación, automatización y trazabilidad en un único flujo operativo.
-
-El sistema debe:
-
-- Crear automáticamente **War Rooms** por incidente en Rocket.Chat.
-- Recibir alertas desde **Wazuh** y clasificarlas.
-- Aplicar **triage inteligente** con apoyo de IA agéntica.
-- Enriquecer alertas con **CTI** y fuentes externas.
-- Ejecutar acciones de respuesta con control y aprobación humana.
-- Mantener trazabilidad completa del caso y de las evidencias.
+[![Estado](https://img.shields.io/badge/Estado-Completada-brightgreen)]()
+[![Fase](https://img.shields.io/badge/Fase%201-Completada-brightgreen)]()
 
 ---
 
-## Arquitectura resumida
+## 🎯 Objetivo de la fase
+
+La Fase 1 deja operativa la infraestructura inicial del proyecto. El objetivo es disponer de servicios de entrada, autenticación, comunicación, administración de contenedores y detección completamente separados del entorno corporativo que pudiera estar afectado.[file:292][file:293]
+
+---
+
+## 🧱 Subfases
+
+| Subfase | Componente | Resultado | README |
+|---|---|---|---|
+| Fase 1a | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos. | [README](../docs/fase1a-traefik-portainer.md) |
+| Fase 1b | Authelia | IdP independiente con MFA/TOTP y control de acceso. | [README](../docs/fase1b-authelia.md) |
+| Fase 1c | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room. | [README](../docs/fase1c-rocketchat.md) |
+| Fase 1d | Wazuh | SIEM/EDR single-node con dashboard. | [README](../docs/fase1d-wazuh.md) |
+| Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [README](../docs/fase1e-validacion.md) |
+
+---
+
+## 📁 Estructura de esta fase
 
 ```text
-[Red corporativa] → [Wazuh] → [Orquestador] → [IA agéntica] → [Rocket.Chat War Room]
-                                   │                                │
-                             [Velociraptor]                  [DFIR-IRIS Case]
-                             [MinIO Evidence]                [OpenSearch Metrics]
-                                   │
-                   [Cloudflare Tunnel] → [Python Agent / DC]
+fase1-infraestructura/
+├── README.md
+├── .env
+├── .env.example
+├── .gitignore
+├── docker-compose.yml
+├── traefik/
+│   ├── traefik.yml
+│   ├── acme.json
+│   └── dynamic/
+│       └── middlewares.yml
+├── authelia/
+│   ├── configuration.yml
+│   └── users_database.yml
+├── rocketchat/
+└── wazuh/
 ```
 
 ---
 
-## Stack tecnológico
+## 🚀 Instalación paso a paso
 
-| Capa | Tecnología | Uso |
-|---|---|---|
-| Detección | Wazuh SIEM/EDR | Alertas, telemetría y respuesta inicial |
-| Comunicación OOB | Rocket.Chat | War Rooms, coordinación y bot de orquestación |
-| Orquestación | FastAPI + PostgreSQL + Redis | Motor principal de decisión y workflows |
-| IA agéntica | LangGraph + Ollama | Triage inteligente y apoyo a decisiones |
-| Forensics | Velociraptor | Recolección remota y adquisición de evidencias |
-| Evidence Store | MinIO | Almacenamiento S3-compatible de evidencias |
-| Case Management | DFIR-IRIS | Gestión de casos, timeline y evidencias |
-| Observabilidad | OpenSearch + Dashboards | Métricas, búsqueda y análisis |
-| Acceso remoto OOB | RustDesk Server | Soporte remoto break-glass |
-| Agentes DC | Python + cloudflared | Ejecución controlada sobre controladores de dominio |
-| Gestión contenedores | Portainer | Administración visual de Docker |
-| Autenticación | Authelia | MFA e identidad independiente del AD |
-| Plan C | GL.iNet KVM | Acceso hardware on-prem de contingencia |
+### Paso 1 — Requisitos previos
+
+- Ubuntu 24.04 LTS.
+- Docker Engine oficial instalado.
+- Red Docker `oob-network` creada.
+- Proyecto clonado en `/home/jose/tfm-alerta-temprana-oob`.
+
+Comprobación:
+```bash
+docker --version
+docker compose version
+docker network ls | grep oob-network
+```
 
 ---
 
-## Fases del proyecto
+### Paso 2 — Arranque de la Fase 1a
 
-| Fase | Nombre | Estado | Descripción |
-|---|---|---|---|
-| [Fase 1](../fase1-infraestructura/) | Infraestructura Base | ✅ Completada | Base Docker, seguridad, comunicación y SIEM |
-| [Fase 2](../fase2-orquestador/) | Orquestador MVP | ⬜ Pendiente | FastAPI + War Rooms + aprobaciones |
-| [Fase 3](../fase3-agentic/) | IA Agéntica | ⬜ Pendiente | LangGraph + triage + CTI |
-| [Fase 4](../fase4-breakglass-dc/) | Break-Glass + DC Scripts | ⬜ Pendiente | RustDesk + Cloudflare Tunnels + agentes |
-| [Fase 5](../fase5-velociraptor/) | Forensics Automático | ⬜ Pendiente | Velociraptor + MinIO + pipeline de evidencias |
-| [Fase 6](../fase6-dfir-iris/) | DFIR-IRIS Case Mgmt | ⬜ Pendiente | Casos, timeline, IOCs y trazabilidad |
-| [Fase 7](../fase7-observabilidad/) | Observabilidad | ⬜ Pendiente | OpenSearch y métricas del sistema |
-| [Fase 8](../fase8-kvm-hardening/) | KVM + Hardening | ⬜ Pendiente | Plan C hardware y endurecimiento final |
+```bash
+cd /home/jose/tfm-alerta-temprana-oob/fase1-infraestructura
 
----
+touch traefik/acme.json
+chmod 600 traefik/acme.json
 
-## Fase 1 — Infraestructura base
+docker compose up -d traefik portainer
+```
 
-La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es disponer de servicios de entrada, autenticación, comunicación, indexación y validación final completamente separados del entorno corporativo que pudiera estar afectado.
+Verificación:
+```bash
+docker compose ps
+ss -tulpn | grep -E ':80|:443|:9443'
+docker compose logs traefik | tail -20
+```
 
-### Subfases de la Fase 1
-
-| Subfase | Componente | Resultado |
-|---|---|---|
-| [Fase 1a](../docs/README-fase1a-traefik-portainer.md) | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos |
-| [Fase 1b](../docs/README-fase1b-authelia.md) | Authelia | IdP independiente con MFA/TOTP y WebAuthn |
-| [Fase 1c](../docs/README-fase1c-mongodb-rocketchat.md) | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room |
-| [Fase 1d](../docs/README-fase1d-wazuh.md) | Wazuh | SIEM/EDR single-node con dashboard |
-| [Fase 1e](../docs/README-fase1e-validacion.md) | Validación final | Comprobación integral y tag `fase1-base` |
-
-### Resultado técnico de la Fase 1
-
-- Traefik expone los servicios principales mediante HTTPS y enruta por host.
-- Portainer permite administrar contenedores de forma visual.
-- Authelia aporta autenticación independiente con MFA.
-- MongoDB 8.0 se ejecuta como replica set de un nodo con autenticación por keyFile.
-- Rocket.Chat 8.4.1 actúa como canal de comunicación del War Room.
-- Wazuh 4.14.0 cubre indexación, manager y dashboard.
-- La validación final confirma que toda la infraestructura base responde como se espera.
-
-### Validación consolidada
-
-La fase se considera completada cuando los siguientes servicios están operativos:
-
-- Traefik en `http://localhost:8080`.
-- Portainer en `https://portainer.oob.local`.
-- Authelia en `https://auth.oob.local`.
-- Rocket.Chat en `https://chat.oob.local`.
-- Wazuh en `https://wazuh.oob.local`.
-- MongoDB en estado `PRIMARY` y aislado en red interna.
+Portainer debe responder en `https://IP_DEL_SERVIDOR:9443`.
 
 ---
 
-## Decisiones de diseño
+### Paso 3 — Arranque de la Fase 1b
 
-- **Aislamiento de red:** el enclave OOB usa redes Docker separadas para reducir exposición y mantener límites claros entre servicios internos y externos.
-- **IdP independiente:** Authelia evita depender del AD corporativo, que puede no ser confiable durante un incidente.
-- **Canal de comunicación propio:** Rocket.Chat proporciona un espacio de coordinación controlado para War Rooms y automatización.
-- **SIEM local:** Wazuh actúa como motor de detección y fuente de alertas sin depender de servicios externos.
-- **Validación explícita:** cada subfase tiene README propio y pruebas reales documentadas para que la defensa del TFM sea reproducible.
+Añadir Authelia al `docker-compose.yml`, configurar secretos en `.env` y crear los ficheros `configuration.yml` y `users_database.yml`.
 
----
+Comprobación:
+```bash
+docker compose up -d authelia
+docker compose logs -f authelia
+```
 
-## Documentación por subfase
-
-- [README Fase 1a — Traefik + Portainer](../docs/README-fase1a-traefik-portainer.md)
-- [README Fase 1b — Authelia](../docs/README-fase1b-authelia.md)
-- [README Fase 1c — MongoDB + Rocket.Chat](../docs/README-fase1c-mongodb-rocketchat.md)
-- [README Fase 1d — Wazuh](../docs/README-fase1d-wazuh.md)
-- [README Fase 1e — Validación final](../docs/README-fase1e-validacion.md)
+Authelia debe quedar accesible en `https://auth.<dominio>`.
 
 ---
 
-## Estado final de la fase
+### Paso 4 — Arranque de la Fase 1c
 
-La Fase 1 queda cerrada con el tag Git `fase1-base`. Desde este punto el proyecto cuenta con una infraestructura base estable, validada y lista para el desarrollo del orquestador y el resto de fases del TFM.
+Levantar MongoDB y Rocket.Chat.
+
+```bash
+docker compose up -d mongodb
+# inicializar replica set si corresponde
+docker compose up -d rocketchat
+```
+
+Rocket.Chat debe quedar accesible en `https://chat.<dominio>`.
 
 ---
 
-## Siguiente paso
+### Paso 5 — Arranque de la Fase 1d
 
-La siguiente fase del proyecto es **Fase 2 — Orquestador MVP**, donde se construirá el motor que conectará las alertas de Wazuh con Rocket.Chat y los primeros playbooks de respuesta.
+Clonar `wazuh-docker`, generar certificados y levantar el stack single-node.
+
+```bash
+cd /home/jose/tfm-alerta-temprana-oob/fase1-infraestructura/wazuh
+# clonar repo oficial si no existe
+# docker compose -f generate-indexer-certs.yml run --rm generator
+# docker compose up -d wazuh.indexer
+# docker compose up -d wazuh.manager
+# docker compose up -d wazuh.dashboard
+```
+
+---
+
+### Paso 6 — Validación final de la Fase 1e
+
+```bash
+docker compose ps
+cd wazuh/single-node && docker compose ps
+```
+
+Validaciones mínimas:
+- Traefik corriendo.
+- Portainer accesible.
+- Authelia funcional.
+- Rocket.Chat operativo.
+- Wazuh dashboard operativo.
+
+---
+
+## ✅ Checklist de validación
+
+- [x] Docker Engine oficial instalado.
+- [x] Red `oob-network` creada.
+- [x] Traefik y Portainer operativos.
+- [x] Authelia funcionando.
+- [x] Rocket.Chat accesible.
+- [x] Wazuh desplegado.
+- [x] Fase cerrada con tag `fase1-base`.
+
+---
+
+## 🔄 Siguiente fase
+
+**Fase 2 — Orquestador MVP**
+
+---
+
+**TFM Alerta Temprana Out-of-Band | Fase 1**
+**Última actualización:** Junio 2026
