@@ -126,10 +126,10 @@ Cada subfase tiene su propio README detallado en la carpeta `/docs` de la rama p
 
 | Subfase | Descripción | Fecha | Estado | README |
 |---------|-------------|-------|--------|--------|
-| **2a** | Despliegue de n8n como orquestador | 2026-05-17 | ✅ Completada | [📄 README-fase2a-n8n.md](../../docs/README-fase2a-n8n.md) |
-| **2b/2c/2d** | Integración Wazuh → n8n → Rocket.Chat | 2026-05-17 | ✅ Completada | [📄 README-fase2bcd-workflow-n8n.md](../../docs/README-fase2bcd-workflow-n8n.md) |
-| **2e** | Ollama + Mistral 7B + AI Agent | 2026-05-21 | ✅ Completada | [📄 README-fase2e-ollama-ai-agent.md](../../docs/README-fase2e-ollama-ai-agent.md) |
-| **2f** | CTI Enrichment (AbuseIPDB + VirusTotal) | 2026-05-24 | ✅ Completada | [📄 README-fase2f-cti-enrichment.md](../../docs/README-fase2f-cti-enrichment.md) |
+| **2a** | Despliegue de n8n como orquestador | 2026-05-17 | ✅ Completada | [📄 README-fase2a-n8n.md](../docs/README-fase2a-n8n.md) |
+| **2b/2c/2d** | Integración Wazuh → n8n → Rocket.Chat | 2026-05-17 | ✅ Completada | [📄 README-fase2bcd-workflow-n8n.md](../docs/README-fase2bcd-workflow-n8n.md) |
+| **2e** | Ollama + Mistral 7B + AI Agent | 2026-05-21 | ✅ Completada | [📄 README-fase2e-ollama-ai-agent.md](../docs/README-fase2e-ollama-ai-agent.md) |
+| **2f** | CTI Enrichment (AbuseIPDB + VirusTotal) | 2026-05-24 | ✅ Completada | [📄 README-fase2f-cti-enrichment.md](../docs/README-fase2f-cti-enrichment.md) |
 | **2g** | MISP Integration (IOCs internos) | — | ⏳ En progreso | — |
 
 > Los enlaces apuntan a la carpeta `/docs` de la rama `main` del repositorio TFM.
