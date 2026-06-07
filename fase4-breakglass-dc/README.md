@@ -35,31 +35,31 @@ Esta fase permite que el sistema pase de la simple detección y coordinación a 
 Despliegue del controlador Headscale para gestionar la red privada de Tailscale bajo control propio.
 
 Documento detallado:
-[README Fase 4a](docs/README-fase4a-headscale.md)
+[README Fase 4a](../docs/README-fase4a-headscale.md)
 
 ### Fase 4b — Tailnet de orquestador y DC
 Enrolamiento y validación de conectividad de los nodos `orchestrator-tfm` y `dc01-tfm` dentro de la tailnet.
 
 Documento detallado:
-[README Fase 4b](docs/README-fase4b-tailnet.md)
+[README Fase 4b](../docs/README-fase4b-tailnet.md)
 
 ### Fase 4c — DC Agent
 Despliegue del agente Python en el DC para ejecutar scripts bajo allowlist y autenticación por token.
 
 Documento detallado:
-[README Fase 4c](docs/README-fase4c-dc-agent.md)
+[README Fase 4c](../docs/README-fase4c-dc-agent.md)
 
 ### Fase 4d — Integración n8n
 Orquestación del flujo n8n → DC Agent → Rocket.Chat para automatizar aprobaciones y ejecuciones.
 
 Documento detallado:
-[README Fase 4d](docs/README-fase4d-n8n.md)
+[README Fase 4d](../docs/README-fase4d-n8n.md)
 
 ### Fase 4e — RustDesk break-glass
 Despliegue de RustDesk self-hosted para acceso remoto temporal con TTL, revocación automática y trazabilidad.
 
 Documento detallado:
-[README Fase 4e](docs/README-fase4e-rustdesk-breakglass.md)
+[README Fase 4e](../docs/README-fase4e-rustdesk-breakglass.md)
 
 ## Arquitectura resumida
 
@@ -104,8 +104,8 @@ La Fase 4 queda orientada a un flujo estable de operación remota controlada sob
 
 ## Navegación de documentación
 
-- [README Fase 4a](docs/README-fase4a-headscale.md)
-- [README Fase 4b](docs/README-fase4b-tailnet.md)
-- [README Fase 4c](docs/README-fase4c-dc-agent.md)
-- [README Fase 4d](docs/README-fase4d-n8n.md)
-- [README Fase 4e](docs/README-fase4e-rustdesk-breakglass.md)
+- [README Fase 4a](../docs/README-fase4a-headscale.md)
+- [README Fase 4b](../docs/README-fase4b-tailnet.md)
+- [README Fase 4c](../docs/README-fase4c-dc-agent.md)
+- [README Fase 4d](../docs/README-fase4d-n8n.md)
+- [README Fase 4e](../docs/README-fase4e-rustdesk-breakglass.md)
