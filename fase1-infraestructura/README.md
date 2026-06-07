@@ -61,8 +61,8 @@ El sistema debe:
 | Fase | Nombre | Estado | Descripción |
 |---|---|---|---|
 | [Fase 1](../fase1-infraestructura/) | Infraestructura Base | ✅ Completada | Base Docker, seguridad, comunicación y SIEM |
-| [Fase 2](../fase2-orquestador-mvp/) | Orquestador MVP | ⬜ Pendiente | FastAPI + War Rooms + aprobaciones |
-| [Fase 3](../fase3-ia-agentica/) | IA Agéntica | ⬜ Pendiente | LangGraph + triage + CTI |
+| [Fase 2](../fase2-orquestador/) | Orquestador MVP | ⬜ Pendiente | FastAPI + War Rooms + aprobaciones |
+| [Fase 3](../fase3-agentic/) | IA Agéntica | ⬜ Pendiente | LangGraph + triage + CTI |
 | [Fase 4](../fase4-breakglass-dc/) | Break-Glass + DC Scripts | ⬜ Pendiente | RustDesk + Cloudflare Tunnels + agentes |
 | [Fase 5](../fase5-velociraptor/) | Forensics Automático | ⬜ Pendiente | Velociraptor + MinIO + pipeline de evidencias |
 | [Fase 6](../fase6-dfir-iris/) | DFIR-IRIS Case Mgmt | ⬜ Pendiente | Casos, timeline, IOCs y trazabilidad |
@@ -79,7 +79,7 @@ La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es dispone
 
 | Subfase | Componente | Resultado |
 |---|---|---|
-| [Fase 1a](../docs/README_fase1a-traefik-portainer.md) | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos |
+| [Fase 1a](../docs/README-fase1a-traefik-portainer.md) | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos |
 | [Fase 1b](../docs/README-fase1b-authelia.md) | Authelia | IdP independiente con MFA/TOTP y WebAuthn |
 | [Fase 1c](../docs/README-fase1c-mongodb-rocketchat.md) | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room |
 | [Fase 1d](../docs/README-fase1d-wazuh.md) | Wazuh | SIEM/EDR single-node con dashboard |
@@ -120,7 +120,7 @@ La fase se considera completada cuando los siguientes servicios están operativo
 
 ## Documentación por subfase
 
-- [README Fase 1a — Traefik + Portainer](../docs/README_fase1a-traefik-portainer.md)
+- [README Fase 1a — Traefik + Portainer](../docs/README-fase1a-traefik-portainer.md)
 - [README Fase 1b — Authelia](../docs/README-fase1b-authelia.md)
 - [README Fase 1c — MongoDB + Rocket.Chat](../docs/README-fase1c-mongodb-rocketchat.md)
 - [README Fase 1d — Wazuh](../docs/README-fase1d-wazuh.md)
