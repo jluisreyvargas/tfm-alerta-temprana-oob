@@ -25,17 +25,16 @@ Además, se validó la salida final del sistema con un mensaje coherente en Rock
 ### Fase 3a — Diseño de arquitectura de agentes
 En esta subfase se definió el contrato de datos entre n8n y el servicio agéntico, el estado del grafo y los agentes especializados que participan en el triage y la remediación.
 
-[Ver README de Fase 3a](README-fase3a-arquitectura-agentes.md)
+[Ver README de Fase 3a](..docs/README-fase3a-arquitectura-agentes.md)
 
 ### Fase 3b — Despliegue del servicio LangGraph
 En esta subfase se preparó el microservicio Python, el contenedor Docker y el endpoint HTTP que permite a n8n delegar el razonamiento agéntico en LangGraph.
 
-[Ver README de Fase 3b](README-fase3b-despliegue-langgraph.md)
+[Ver README de Fase 3b](..docs/README-fase3b-despliegue-langgraph.md)
 
 ### Fase 3c — Validación final
 En esta subfase se cerró el flujo final validado, corrigiendo el mapeo de Wazuh, la recuperación correcta de VirusTotal y la salida definitiva del sistema en Rocket.Chat.
 
-[Ver README de Fase 3c](README_Fase3c-validacion-final.md)
 
 ## Relación con fases anteriores
 
