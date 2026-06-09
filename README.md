@@ -35,19 +35,19 @@ Cuando el entorno corporativo puede estar comprometido, no conviene depender de 
 
 | Capa | Tecnología | Rol |
 |---|---|---|
-| 🛎️ Detección | Wazuh | Alertas, telemetría y respuesta inicial.[file:304] |
-| 💬 Comunicación OOB | Rocket.Chat | War Rooms, coordinación y bot de orquestación.[file:304] |
-| 🧭 Orquestación | FastAPI + PostgreSQL + Redis | Motor de decisión y workflows.[file:304] |
-| 🧠 IA agéntica | LangGraph + Ollama | Triage inteligente y apoyo a decisiones.[file:304] |
-| 🧪 Forensics | Velociraptor | Recolección remota y adquisición de evidencias.[file:304] |
-| 📦 Evidence Store | MinIO | Almacenamiento S3-compatible de evidencias.[file:304] |
-| 📚 Case Management | DFIR-IRIS | Gestión de casos, timeline y evidencias.[file:304] |
-| 📊 Observabilidad | OpenSearch Dashboards | Métricas, búsqueda y análisis.[file:304] |
-| 🧰 Acceso remoto | RustDesk Server | Soporte remoto break-glass.[file:304] |
+| 🛎️ Detección | Wazuh | Alertas, telemetría y respuesta inicial.|
+| 💬 Comunicación OOB | Rocket.Chat | War Rooms, coordinación y bot de orquestación.|
+| 🧭 Orquestación | FastAPI + PostgreSQL + Redis | Motor de decisión y workflows.|
+| 🧠 IA agéntica | LangGraph + Ollama | Triage inteligente y apoyo a decisiones.|
+| 🧪 Forensics | Velociraptor | Recolección remota y adquisición de evidencias.|
+| 📦 Evidence Store | MinIO | Almacenamiento S3-compatible de evidencias.|
+| 📚 Case Management | DFIR-IRIS | Gestión de casos, timeline y evidencias.|
+| 📊 Observabilidad | OpenSearch Dashboards | Métricas, búsqueda y análisis.|
+| 🧰 Acceso remoto | RustDesk Server | Soporte remoto break-glass.|
 | 🌐 Conectividad DC | Python + Tailscale | Ejecución controlada en hosts Windows y DCs. |
-| 🖥️ Gestión Docker | Portainer | Administración visual de contenedores.[file:304] |
-| 🔐 Autenticación | Authelia | MFA e identidad independiente del AD.[file:304] |
-| 🧯 Plan C | GL.iNet KVM | Acceso físico on-prem de contingencia.[file:304] |
+| 🖥️ Gestión Docker | Portainer | Administración visual de contenedores.|
+| 🔐 Autenticación | Authelia | MFA e identidad independiente del AD.|
+| 🧯 Plan C | GL.iNet KVM | Acceso físico on-prem de contingencia.|
 
 ---
 
@@ -55,20 +55,20 @@ Cuando el entorno corporativo puede estar comprometido, no conviene depender de 
 
 | Fase | Nombre | Estado | Descripción |
 |---|---|---|---|
-| 1 | Infraestructura Base | ✅ Completada | Base Docker, seguridad, comunicación y SIEM.[file:292][file:304] |
-| 2 | Orquestador MVP | ✅ Completada | FastAPI, War Rooms y aprobaciones.[file:304] |
-| 3 | IA Agéntica | ✅ Completada | LangGraph, triage y CTI.[file:304] |
-| 4 | Break-Glass DC Scripts | ✅ Completada | RustDesk, Tailscale y agentes Python.[file:304] |
-| 5 | Forensics Automático | ⏳ Pendiente | Velociraptor, MinIO y pipeline de evidencias.[file:304] |
-| 6 | DFIR-IRIS Case Mgmt | ⏳ Pendiente | Casos, timeline, IOCs y trazabilidad.[file:304] |
-| 7 | Observabilidad | ⏳ Pendiente | OpenSearch y métricas del sistema.[file:304] |
-| 8 | KVM Hardening | ⏳ Pendiente | Plan C hardware y endurecimiento final.[file:304] |
+| 1 | Infraestructura Base | ✅ Completada | Base Docker, seguridad, comunicación y SIEM.|
+| 2 | Orquestador MVP | ✅ Completada | FastAPI, War Rooms y aprobaciones.|
+| 3 | IA Agéntica | ✅ Completada | LangGraph, triage y CTI.|
+| 4 | Break-Glass DC Scripts | ✅ Completada | RustDesk, Tailscale y agentes Python.|
+| 5 | Forensics Automático | ⏳ Pendiente | Velociraptor, MinIO y pipeline de evidencias.|
+| 6 | DFIR-IRIS Case Mgmt | ⏳ Pendiente | Casos, timeline, IOCs y trazabilidad.|
+| 7 | Observabilidad | ⏳ Pendiente | OpenSearch y métricas del sistema.|
+| 8 | KVM Hardening | ⏳ Pendiente | Plan C hardware y endurecimiento final.|
 
 ---
 
 ## 🔥 Fase 1 — Infraestructura Base
 
-La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es disponer de servicios de entrada, autenticación, comunicación, indexación y validación final completamente separados del entorno corporativo que pudiera estar afectado.[file:292][file:304]
+La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es disponer de servicios de entrada, autenticación, comunicación, indexación y validación final completamente separados del entorno corporativo que pudiera estar afectado.
 
 ### Subfases y guías
 
