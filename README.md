@@ -74,11 +74,11 @@ La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es dispone
 
 | Subfase | Componente | Resultado | Guía |
 |---|---|---|---|
-| 🧩 Fase 1a | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos. | [📘 README](./docs/fase1a-traefik-portainer.md) |
-| 🔐 Fase 1b | Authelia | IdP independiente con MFA/TOTP y control de acceso. | [📘 README](./docs/fase1b-authelia.md) |
-| 💬 Fase 1c | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room. | [📘 README](./docs/fase1c-rocketchat.md) |
-| 🛡️ Fase 1d | Wazuh | SIEM/EDR single-node con dashboard. | [📘 README](./docs/fase1d-wazuh.md) |
-| ✅ Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [📘 README](./docs/fase1e-validacion.md) |
+| 🧩 Fase 1a | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos. | [📘 README](../docs/fase1a-traefik-portainer.md) |
+| 🔐 Fase 1b | Authelia | IdP independiente con MFA/TOTP y control de acceso. | [📘 README](../docs/fase1b-authelia.md) |
+| 💬 Fase 1c | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room. | [📘 README](../docs/fase1c-rocketchat.md) |
+| 🛡️ Fase 1d | Wazuh | SIEM/EDR single-node con dashboard. | [📘 README](../docs/fase1d-wazuh.md) |
+| ✅ Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [📘 README](../docs/fase1e-validacion.md) |
 
 ---
 
@@ -88,7 +88,7 @@ La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es dispone
 Motor central que conecta Wazuh con Rocket.Chat y gestiona el ciclo básico del incidente con FastAPI, PostgreSQL y Redis.
 
 ### 🤖 Fase 3 — IA Agéntica
-Triage inteligente local con LangGraph y Ollama para enriquecer el análisis sin depender de servicios externos.[file:304]
+Triage inteligente local con LangGraph y Ollama para enriquecer el análisis sin depender de servicios externos.
 
 ### 🌐 Fase 4 — Break-Glass DC Scripts
 Acceso remoto temporal y ejecución controlada de scripts en DCs/hosts Windows. La conectividad remota documentada es Tailscale, en sustitución de Cloudflare Tunnels.
