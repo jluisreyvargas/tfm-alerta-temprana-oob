@@ -7,7 +7,9 @@ fase4-breakglass-dc/rustdesk/data/
 **/*.log
 **/*.tidx
 
+fase5-velociraptor/velociraptor-config/client_info/
 fase5-velociraptor/velociraptor-config/logs/
 fase5-velociraptor/velociraptor-config/server_artifact_logs/
-fase5-velociraptor/velociraptor-config/clients/**/monitoring/
-fase5-velociraptor/velociraptor-config/clients/**/monitoring_logs/
+fase5-velociraptor/velociraptor-config/server_artifacts/
+fase5-velociraptor/velociraptor-config/clients/*/monitoring/
+fase5-velociraptor/velociraptor-config/clients/*/monitoring_logs/
