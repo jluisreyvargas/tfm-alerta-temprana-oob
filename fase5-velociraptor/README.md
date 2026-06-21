@@ -43,7 +43,7 @@ Esta fase se integra con la arquitectura general del TFM: **n8n / Orquestador** 
 
 ```mermaid
 flowchart LR
-  ORC[🧠 Orquestador\n(n8n / FastAPI)] -->|Dispara colección| VR[🦖 Velociraptor Server]
+  ORC["🧠 Orquestador<br/>(n8n / FastAPI)"] -->|Dispara colección| VR[🦖 Velociraptor Server]
   VR -->|Recolecta artefactos| END[🖥️ Clientes\nUbuntu / W11 / W2025]
   VR -->|Exporta ZIP| MINIO[🪣 MinIO\nEvidence Store]
   MINIO -->|manifest + hash| IRIS[🗂️ DFIR-IRIS]
