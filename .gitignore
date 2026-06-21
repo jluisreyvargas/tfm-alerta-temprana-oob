@@ -1,3 +1,4 @@
 fase4-breakglass-dc/headscale/lib/
 fase4-breakglass-dc/rustdesk/data/.config/
 fase4-breakglass-dc/rustdesk/data/
+*.log
