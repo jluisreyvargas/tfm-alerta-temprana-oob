@@ -1,7 +1,13 @@
 fase4-breakglass-dc/headscale/lib/
 fase4-breakglass-dc/rustdesk/data/.config/
 fase4-breakglass-dc/rustdesk/data/
+# Velociraptor generated artifacts
 *.log
 *.tidx
+**/*.log
+**/*.tidx
+
 fase5-velociraptor/velociraptor-config/logs/
 fase5-velociraptor/velociraptor-config/server_artifact_logs/
+fase5-velociraptor/velociraptor-config/clients/**/monitoring/
+fase5-velociraptor/velociraptor-config/clients/**/monitoring_logs/
