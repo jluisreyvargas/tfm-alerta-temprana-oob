@@ -1,0 +1,263 @@
+{
+  "name": "Fase5 - Velociraptor a MinIO",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dfir/collect",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook Incident Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "value1": "={{ $json.profile }}",
+        "rules": [
+          {
+            "operation": "equal",
+            "value2": "credentialdumpcollection"
+          },
+          {
+            "operation": "equal",
+            "value2": "ransomwaretriage"
+          }
+        ]
+      },
+      "id": "2",
+      "name": "Switch Profile",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://velociraptor:8001/api/collections/start",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonParameters": true,
+        "bodyParametersJson": "={{ {\n  \"incident_id\": $json.incident_id,\n  \"target_host\": $json.target_host,\n  \"profile\": $json.profile,\n  \"requested_by\": \"n8n-orchestrator\"\n} }}",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Launch Velociraptor Collection",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        720,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            {
+              "name": "incident_id",
+              "value": "={{ $node[\"Webhook Incident Trigger\"].json.incident_id }}"
+            },
+            {
+              "name": "target_host",
+              "value": "={{ $node[\"Webhook Incident Trigger\"].json.target_host }}"
+            },
+            {
+              "name": "profile",
+              "value": "={{ $node[\"Webhook Incident Trigger\"].json.profile }}"
+            },
+            {
+              "name": "collection_id",
+              "value": "={{ $json.collection_id }}"
+            }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Store Collection Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        940,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ `http://velociraptor:8001/api/collections/${$json.collection_id}/download` }}",
+        "authentication": "none",
+        "responseFormat": "file",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "5",
+      "name": "Download ZIP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1160,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ `http://minio:9000/evidence/${$json.incident_id}-${$json.target_host}-${Date.now()}.zip` }}",
+        "authentication": "none",
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Content-Type",
+              "value": "application/zip"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6",
+      "name": "Upload to MinIO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1380,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            {
+              "name": "evidence_bucket",
+              "value": "evidence"
+            },
+            {
+              "name": "evidence_key",
+              "value": "={{ `${$json.incident_id}-${$json.target_host}-${Date.now()}.zip` }}"
+            }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "Save Evidence Reference",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "responseCode": 200,
+        "responseBody": "={{ {\n  \"status\": \"ok\",\n  \"incident_id\": $json.incident_id,\n  \"collection_id\": $json.collection_id,\n  \"evidence_bucket\": $json.evidence_bucket,\n  \"evidence_key\": $json.evidence_key\n} }}",
+        "options": {}
+      },
+      "id": "8",
+      "name": "Respond Final",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Incident Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Profile": {
+      "main": [
+        [
+          {
+            "node": "Launch Velociraptor Collection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Launch Velociraptor Collection": {
+      "main": [
+        [
+          {
+            "node": "Store Collection Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Collection Data": {
+      "main": [
+        [
+          {
+            "node": "Download ZIP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download ZIP": {
+      "main": [
+        [
+          {
+            "node": "Upload to MinIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to MinIO": {
+      "main": [
+        [
+          {
+            "node": "Save Evidence Reference",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Evidence Reference": {
+      "main": [
+        [
+          {
+            "node": "Respond Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

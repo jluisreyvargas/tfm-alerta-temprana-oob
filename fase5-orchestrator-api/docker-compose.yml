@@ -1,0 +1,20 @@
+services:
+  orchestrator:
+    build: .
+    container_name: orchestrator
+    restart: unless-stopped
+    ports:
+      - "8020:8000"
+    networks:
+      - oob-network
+
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: evidence
+      MINIO_SECURE: "false"
+
+networks:
+  oob-network:
+    external: true

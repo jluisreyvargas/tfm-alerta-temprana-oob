@@ -1,90 +1,83 @@
-# 🦖 Fase 5 — Forense Automático con Velociraptor + MinIO
+# 🦖 Fase 5 — Forensics Automático (Velociraptor + MinIO)
 
-**Proyecto:** TFM — Plataforma OOB de alerta temprana y respuesta a incidentes  
-**Fase:** 5 — Captura Forense Automática  
-**Fecha:** 2026-06-21  
-**Estado:** ✅ Validada en laboratorio, lista para integración con el Orquestador
-
-[![TFM](https://img.shields.io/badge/TFM-Alerta%20Temprana%20OOB-blue)]()
-[![Fase](https://img.shields.io/badge/Fase-5-purple)]()
-[![Estado](https://img.shields.io/badge/Estado-Validado-success)]()
-[![Velociraptor](https://img.shields.io/badge/Velociraptor-0.76.6-brightgreen)]()
-[![MinIO](https://img.shields.io/badge/MinIO-Evidence%20Store-yellow)]()
-[![Docker](https://img.shields.io/badge/Docker-Compose-black)]()
+> **Objetivo de la fase:** implementar una captura forense automática vinculada al flujo de triage del proyecto **alerta-temprana-oob**, almacenando evidencias en MinIO con trazabilidad mediante `manifest.json` y `sha256.txt`, como base para su posterior registro en DFIR-IRIS [file:720].
 
 ---
 
-## 📋 Tabla de contenidos
+## 📌 Índice
 
-- [🎯 Objetivo de la fase](#-objetivo-de-la-fase)
-- [🏗️ Arquitectura](#️-arquitectura)
-- [🧱 Componentes desplegados](#-componentes-desplegados)
-- [✅ Validaciones realizadas](#-validaciones-realizadas)
-- [🪣 MinIO y evidencia](#-minio-y-evidencia)
-- [🛰️ Clientes de prueba](#️-clientes-de-prueba)
-- [🔁 Flujo operativo](#-flujo-operativo)
-- [🧪 Colecciones de prueba](#-colecciones-de-prueba)
-- [🧩 Integración con la Fase 2](#-integración-con-la-fase-2)
-- [🐛 Incidencias resueltas](#-incidencias-resueltas)
-- [📊 Estado final](#-estado-final)
-- [📌 Próximos pasos](#-próximos-pasos)
+- [1. Objetivo de la fase](#-1-objetivo-de-la-fase)
+- [2. Arquitectura implementada](#-2-arquitectura-implementada)
+- [3. Componentes desplegados](#-3-componentes-desplegados)
+- [4. Flujo funcional validado](#-4-flujo-funcional-validado)
+- [5. Evidencia generada](#-5-evidencia-generada)
+- [6. Validación real realizada](#-6-validación-real-realizada)
+- [7. Nota preparada para DFIR-IRIS](#-7-nota-preparada-para-dfir-iris)
+- [8. Estado de la fase](#-8-estado-de-la-fase)
 
 ---
 
-## 🎯 Objetivo de la fase
+## 🎯 1. Objetivo de la fase
 
-La **Fase 5** implementa la capacidad de **captura forense remota** del proyecto mediante **Velociraptor**, y la persistencia de la evidencia en **MinIO** como repositorio compatible con S3. El objetivo es que, ante un incidente, el sistema pueda recolectar artefactos de manera rápida, reproducible y trazable, sin depender de acceso manual al endpoint.
+Esta fase tiene como finalidad automatizar la **colección forense inicial** para incidentes HIGH/CRITICAL mediante Velociraptor, sin depender de intervención manual en el endpoint, y almacenar la evidencia en un repositorio S3-compatible gestionado por MinIO [file:720].
 
-Esta fase se integra con la arquitectura general del TFM: **n8n / Orquestador** decide cuándo lanzar la colección, **Velociraptor** ejecuta la recolección, **MinIO** conserva el ZIP y sus metadatos, y **IRIS** recibirá después la referencia a la evidencia y el resumen del caso.
+El resultado esperado en la propuesta es un pipeline del tipo:
+
+```text
+Velociraptor collection → ZIP → MinIO → manifest.json + sha256 → nota en IRIS
+```
+
+Tal como se define en la memoria del TFM, la estructura de evidencia debe quedar organizada por `incident_id`, `host` y `timestamp` [file:720].
 
 ---
 
-## 🏗️ Arquitectura
+## 🏗️ 2. Arquitectura implementada
 
 ```mermaid
 flowchart LR
-  ORC["🧠 Orquestador<br/>(n8n / FastAPI)"] -->|Dispara colección| VR[🦖 Velociraptor Server]
-  VR -->|Recolecta artefactos| END[🖥️ Clientes\nUbuntu / W11 / W2025]
-  VR -->|Exporta ZIP| MINIO[🪣 MinIO\nEvidence Store]
-  MINIO -->|manifest + hash| IRIS[🗂️ DFIR-IRIS]
+  N8N[n8n webhook dfir-collect] --> ORC[Orchestrator FastAPI]
+  ORC --> VR[Velociraptor logic / profile selection]
+  ORC --> MINIO[MinIO evidence bucket]
+  MINIO --> E1[manifest.json]
+  MINIO --> E2[sha256.txt]
+  ORC --> RESP[Webhook response to n8n]
+  RESP --> FUTURE[DFIR-IRIS note integration]
 ```
 
-La fase se ha validado con una topología de laboratorio basada en **Ubuntu Server** como servidor central y tres clientes de prueba: **Ubuntu Server**, **Windows 11** y **Windows Server 2025**. Todos los equipos están unidos por la red del entorno de pruebas y resuelven `velociraptor.local` correctamente tras la edición del fichero `hosts`.
+La implementación realizada en esta fase deja operativo el tramo **n8n → Orchestrator → MinIO**, con escritura efectiva de evidencia en el bucket `evidence` [cite:916][file:720].
 
 ---
 
-## 🧱 Componentes desplegados
+## 🧩 3. Componentes desplegados
 
-| Componente | Función | Estado |
+| Componente | Estado | Resultado |
 |---|---|---|
-| 🦖 **Velociraptor Server 0.76.6** | Gestión de colecciones forenses | ✅ Operativo |
-| 🪣 **MinIO** | Almacenamiento de evidencia | ✅ Operativo |
-| 🖥️ **Ubuntu Server** | Cliente de prueba y servicio systemd | ✅ Conectado |
-| 🪟 **Windows 11** | Cliente de prueba con MSI | ✅ Conectado |
-| 🪟 **Windows Server 2025** | Cliente de prueba con MSI | ✅ Conectado |
-| 🧠 **Orquestador** | Lógica de disparo de colecciones | 🔜 Integración pendiente |
+| 🦖 Orchestrator FastAPI | ✅ Operativo | Endpoint `/velociraptor/collect` funcional [file:722] |
+| 🔗 n8n webhook `dfir-collect` | ✅ Operativo | Payload correcto entre nodos |
+| 📦 Perfil `credential_dump_collection` | ✅ Validado | Perfil permitido y ejecutado [file:722] |
+| 🗄️ MinIO bucket `evidence` | ✅ Operativo | Escritura validada [cite:916] |
+| 🧾 `manifest.json` | ✅ Generado | Persistido en MinIO [cite:916] |
+| 🔐 `sha256.txt` | ✅ Generado | Persistido en MinIO [cite:916] |
+| 🗂️ Nota DFIR-IRIS | 🟡 Preparada | Pendiente de automatización [file:720] |
 
 ---
 
-## ✅ Validaciones realizadas
+## 🔁 4. Flujo funcional validado
 
-Durante el desarrollo de la fase se han validado los siguientes puntos:
+El flujo probado en esta fase ha sido el siguiente:
 
-- Despliegue de **Velociraptor Server 0.76.6** en Docker.
-- Acceso correcto a la GUI en `https://velociraptor.local:8889`.
-- Generación de `client.config.yaml` desde la configuración del servidor.
-- Instalación del cliente en Ubuntu como servicio systemd.
-- Generación e instalación del **MSI de Windows** en W11 y W2025.
-- Resolución de nombre mediante el fichero `hosts` en los equipos Windows.
-- Conexión estable de los tres clientes en la GUI de Velociraptor.
-- Ejecución de colecciones manuales de prueba.
-- Creación del bucket `evidence` en MinIO.
+1. Un `curl` envía un evento al webhook de n8n en modo test.
+2. n8n normaliza el payload y lo reenvía al endpoint interno del orquestador.
+3. El orquestador valida el perfil solicitado y construye el manifiesto de evidencia.
+4. El orquestador genera `manifest.json` y `sha256.txt`.
+5. Ambos artefactos se almacenan en MinIO dentro del bucket `evidence`.
+6. n8n devuelve una respuesta final con estado `queued` y datos del manifiesto [cite:916][file:722].
 
 ---
 
-## 🪣 MinIO y evidencia
+## 🗂️ 5. Evidencia generada
 
-La evidencia forense se almacena en MinIO en una estructura jerárquica pensada para facilitar la trazabilidad y el análisis posterior.
+La estructura prevista para la evidencia en MinIO, definida en la propuesta del TFM, es la siguiente [file:720]:
 
 ```text
 /evidence/
@@ -96,135 +89,108 @@ La evidencia forense se almacena en MinIO en una estructura jerárquica pensada 
         sha256.txt
 ```
 
-### Archivos esperados
+En la validación real realizada durante esta fase, se confirmó la creación de la siguiente ruta en MinIO [cite:916]:
 
-- `velociraptor_collection.zip`: ZIP exportado con los resultados de la colección.
-- `manifest.json`: metadatos del caso, host, perfil de colección y sello temporal.
-- `sha256.txt`: hash de integridad del ZIP o de la evidencia exportada.
+```text
+evidence/INC-2026-042/HOST-DC01/20260625T185518Z/
+```
 
-Este esquema permite enlazar la salida de Velociraptor con el caso DFIR en fases posteriores.
+Con los siguientes artefactos presentes [cite:916]:
 
----
-
-## 🛰️ Clientes de prueba
-
-### Ubuntu Server
-
-El cliente se instaló como servicio con `systemd` y se verifica su persistencia mediante `systemctl status velociraptor_client`. El cliente quedó operativo y reportando a la GUI.
-
-### Windows 11
-
-Se generó un MSI personalizado desde la GUI de Velociraptor y se instaló correctamente en el host de pruebas. El equipo aparece como cliente activo.
-
-### Windows Server 2025
-
-Se usó el mismo MSI generado para W11, ajustando previamente la resolución del nombre mediante `hosts`. Tras ello, el servidor quedó visible y operativo en la GUI.
+- `manifest.json`
+- `sha256.txt`
 
 ---
 
-## 🔁 Flujo operativo
+## ✅ 6. Validación real realizada
 
-El flujo validado en esta fase es el siguiente:
+Se ejecutó una prueba completa sobre el incidente `INC-2026-042` y el host `HOST-DC01`, utilizando el perfil `credential_dump_collection`, con resultado satisfactorio [cite:916].
 
-1. El analista identifica el host objetivo desde la GUI o desde el Orquestador.
-2. Se lanza una colección de Velociraptor con el perfil adecuado.
-3. El cliente ejecuta el artefacto y devuelve los resultados al servidor.
-4. Velociraptor genera el ZIP exportable.
-5. El ZIP y el manifiesto se guardan en MinIO.
-6. El Orquestador podrá registrar la referencia a la evidencia en IRIS.
+### `manifest.json` validado
 
-Este flujo puede ejecutarse manualmente desde la GUI o automatizarse más adelante desde el Orquestador de la Fase 2.
+```json
+{
+  "incident_id": "INC-2026-042",
+  "host": "HOST-DC01",
+  "collection_profile": "credential_dump_collection",
+  "selected_by": "forensics_agent_v1",
+  "started_at": "20260625T185518Z",
+  "ended_at": "20260625T185518Z",
+  "artifact_list": [
+    "Windows.System.Pslist",
+    "Windows.Memory.Acquisition"
+  ],
+  "zip_path": "s3://evidence/INC-2026-042/HOST-DC01/20260625T185518Z/velociraptor_collection.zip",
+  "zip_sha256": "2fc7f85ceed2e4a1bc5081a1691d231961b1ba093a7ef8671f4da34f601080f9",
+  "operator": "orchestrator_v1",
+  "source": "n8n-fase5"
+}
+```
 
----
+### Resumen de validación
 
-## 🧪 Colecciones de prueba
-
-Se realizaron colecciones básicas para verificar la conectividad y el funcionamiento del pipeline:
-
-- `Windows.System.Pslist` en Windows 11.
-- `Windows.System.Pslist` en Windows Server 2025.
-- `Linux.Sys.Pslist` en Ubuntu Server.
-
-Estas colecciones sirven como validación mínima de que el servidor, los clientes y la GUI están funcionando correctamente.
-
----
-
-## 🧩 Integración con la Fase 2
-
-La **Fase 2** del proyecto define el **Orquestador** como la capa de automatización y coordinación del sistema, implementada con **n8n** y complementada por servicios auxiliares en **FastAPI** cuando sea necesario. Por tanto, la Fase 5 no debe crear un orquestador paralelo; debe integrarse con la lógica ya definida en la Fase 2.
-
-### Enfoque recomendado
-
-- **n8n**: motor de automatización principal.
-- **FastAPI**: microservicio auxiliar para exponer operaciones técnicas, si conviene.
-- **Velociraptor**: ejecución de la colección forense.
-- **MinIO**: persistencia de la evidencia.
-- **IRIS**: trazabilidad y gestión del caso.
-
-### Qué se hará desde la Fase 2
-
-El Orquestador podrá:
-- seleccionar el perfil de colección según el incidente,
-- invocar la colección de Velociraptor,
-- supervisar el estado de la tarea,
-- recibir el ZIP generado,
-- cargarlo en MinIO,
-- y dejar la referencia en IRIS.
-
-### Sobre el script Python adjunto
-
-El fichero `orchestrator_velociraptor_example.py` se mantiene solo como **ejemplo de integración** o base de microservicio, pero no debe entenderse como un segundo orquestador completo. La arquitectura final del proyecto se apoya en **n8n + Orquestador** como punto de coordinación central.
-
----
-
-## 🐛 Incidencias resueltas
-
-| Incidencia | Causa | Solución |
-|---|---|---|
-| Imagen Docker inexistente | Se intentó usar una imagen no oficial | Se construyó una imagen propia con el binario oficial 0.76.6 |
-| `--plain-http` inválido | Flag obsoleto/no soportado | Se eliminó del arranque y se ajustó la configuración |
-| Fichero `server.config.yaml` no encontrado | Volumen vacío tras recreación | Se regeneró la configuración con el binario actual |
-| Puerto `8001` ocupado | Contenedor/proxy previo seguía activo | Se liberó el puerto y se reinició el servicio |
-| `Permission denied` al crear `client.config.yaml` | Redirección sin permisos | Se usó `sudo tee` o se corrigieron permisos |
-| `velociraptor: Is a directory` | Conflicto de nombre con un directorio local | Se renombró el binario y se instaló en `/usr/local/bin` |
-| `service install` no funcionaba | Subcomando no válido para el flujo usado | Se creó un servicio systemd manual |
-| Windows Server 2025 en warning | `hosts` revertido a versión anterior | Se restauró la entrada correcta y se vació la caché DNS |
-
----
-
-## 📊 Estado final
-
-| Elemento | Estado |
+| Campo | Valor |
 |---|---|
-| Velociraptor Server | ✅ Operativo |
-| MinIO | ✅ Operativo |
-| Cliente Ubuntu | ✅ Conectado |
-| Cliente Windows 11 | ✅ Conectado |
-| Cliente Windows Server 2025 | ✅ Conectado |
-| Colecciones de prueba | ✅ Ejecutadas |
-| Bucket `evidence` | ✅ Creado |
-| Integración con Orquestador | 🔜 Pendiente de automatización |
+| Incident ID | `INC-2026-042` |
+| Host | `HOST-DC01` |
+| Profile | `credential_dump_collection` |
+| Artifacts | `Windows.System.Pslist`, `Windows.Memory.Acquisition` |
+| MinIO path | `evidence/INC-2026-042/HOST-DC01/20260625T185518Z/` |
+| SHA-256 | `2fc7f85ceed2e4a1bc5081a1691d231961b1ba093a7ef8671f4da34f601080f9` |
+| Result | `OK` |
 
 ---
 
-## 📌 Próximos pasos
+## 📝 7. Nota preparada para DFIR-IRIS
 
-1. Integrar el Orquestador de Fase 2 con Velociraptor mediante un endpoint HTTP o servicio auxiliar.
-2. Automatizar la exportación del ZIP y la subida a MinIO.
-3. Generar `manifest.json` y `sha256.txt` de forma automática.
-4. Dejar listo el enlace de la evidencia para la futura fase de DFIR-IRIS.
+Como siguiente paso de integración, se ha definido una nota textual compatible con el caso DFIR-IRIS, siguiendo el requisito de trazabilidad completa indicado en la propuesta [file:720].
+
+```text
+[Forensics Evidence Added]
+
+Velociraptor collection executed successfully.
+
+Incident ID: INC-2026-042
+Host: HOST-DC01
+Collection profile: credential_dump_collection
+Selected by: forensics_agent_v1
+Started at: 20260625T185518Z
+Ended at: 20260625T185518Z
+
+Artifacts collected:
+- Windows.System.Pslist
+- Windows.Memory.Acquisition
+
+Evidence storage:
+- ZIP path: s3://evidence/INC-2026-042/HOST-DC01/20260625T185518Z/velociraptor_collection.zip
+- SHA-256: 2fc7f85ceed2e4a1bc5081a1691d231961b1ba093a7ef8671f4da34f601080f9
+
+Recorded by: orchestrator_v1
+Source: n8n-fase5
+```
+
+Esta nota todavía no se inserta automáticamente en IRIS, pero ya está preparada para su uso manual o para una futura integración por API desde n8n o desde el orquestador [file:720].
 
 ---
 
-## 📚 Referencias
+## 📊 8. Estado de la fase
 
-- [Velociraptor Docs](https://docs.velociraptor.app/)
-- [Velociraptor Releases](https://github.com/Velocidex/velociraptor/releases)
-- [MinIO Docs](https://min.io/docs/)
-- [DFIR-IRIS](https://dfir-iris.org/)
-- [n8n Docs](https://docs.n8n.io/)
+| Subobjetivo | Estado |
+|---|---|
+| Despliegue de Velociraptor server | 🟡 Parcial / lógico |
+| Integración webhook n8n → Orchestrator | ✅ Completado |
+| Validación de perfiles permitidos | ✅ Completado |
+| Generación de `manifest.json` | ✅ Completado |
+| Generación de `sha256.txt` | ✅ Completado |
+| Persistencia en MinIO | ✅ Completado |
+| Evidencia trazable por incidente/host/timestamp | ✅ Completado |
+| Registro automático en DFIR-IRIS | 🟡 Pendiente |
+| Subida de `velociraptor_collection.zip` real | 🟡 Pendiente |
 
 ---
 
-**Última actualización:** 2026-06-21  
-**Estado:** ✅ Fase 5 validada en laboratorio | 🔜 Integración con Fase 2 pendiente
+## 🧠 Resultado alcanzado
+
+La Fase 5 queda validada funcionalmente en su núcleo: el sistema ya puede recibir una orden de colección, procesar el incidente, construir un manifiesto coherente y persistir evidencia estructurada en MinIO bajo control del enclave OOB [cite:916][file:720].
+
+Esto deja preparado el siguiente salto evolutivo del proyecto: **integrar automáticamente DFIR-IRIS** y, más adelante, sustituir el ZIP lógico por un artefacto real procedente de Velociraptor [file:720].
