@@ -1,0 +1,7 @@
+# headscale-ui/container-config/config.yaml
+# URL interna del API de Headscale (nombre del servicio en la red Docker)
+api_url: "http://headscale:8080"
+
+# API key generada con: docker exec headscale headscale apikeys create
+# Este valor se puede dejar vacío y pegar la key directamente en la UI (Settings)
+api_key: ""

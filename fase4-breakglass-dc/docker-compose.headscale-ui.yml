@@ -1,0 +1,29 @@
+# docker-compose.headscale-ui.yml
+# Fase 4a — Headscale UI integrado con Traefik
+# Acceso esperado:
+#   https://hs.${ENCLAVE_DOMAIN}/web
+# Requisitos:
+#   - Traefik desplegado en Fase 1 y conectado a oob-network
+#   - Headscale accesible en la misma red Docker con nombre 'headscale'
+#   - Misma base de dominio para Headscale y Headscale UI para evitar problemas de CORS
+
+networks:
+  oob-network:
+    external: true
+
+services:
+  headscale-ui:
+    image: ghcr.io/gurucomputing/headscale-ui:latest
+    container_name: headscale-ui
+    restart: unless-stopped
+    volumes:
+      - ./headscale-ui/container-config:/etc/headscale-ui
+    networks:
+      - oob-network
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.headscale-ui.rule=Host(`hs.oob.local`) && PathPrefix(`/web`)"
+        - "traefik.http.routers.headscale-ui.entrypoints=websecure"
+        - "traefik.http.routers.headscale-ui.tls=true"
+        - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
+        - "traefik.docker.network=oob-network"

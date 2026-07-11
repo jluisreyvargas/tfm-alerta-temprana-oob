@@ -14,6 +14,13 @@ services:
       - "9090:9090"
     networks:
       - oob-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.headscale.rule=Host(`hs.oob.local`)"
+      - "traefik.http.routers.headscale.entrypoints=websecure"
+      - "traefik.http.routers.headscale.tls=true"
+      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
+      - "traefik.docker.network=oob-network"
 
 networks:
   oob-network:
