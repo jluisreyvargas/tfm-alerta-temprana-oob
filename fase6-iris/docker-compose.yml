@@ -1,0 +1,64 @@
+# IRIS Source Code
+# contact@dfir-iris.org
+
+services:
+  rabbitmq:
+    extends:
+      file: docker-compose.base.yml
+      service: rabbitmq
+    networks:
+      - iris_backend
+      - iris_frontend
+      - oob-network
+
+  db:
+    extends:
+      file: docker-compose.base.yml
+      service: db
+    image: ${DB_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_db}:${DB_IMAGE_TAG:-v2.4.27}
+    networks:
+      - iris_backend
+      - oob-network
+
+  app:
+    extends:
+      file: docker-compose.base.yml
+      service: app
+    image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.27}
+    networks:
+      - iris_backend
+      - iris_frontend
+      - oob-network
+
+  worker:
+    extends:
+      file: docker-compose.base.yml
+      service: worker
+    image: ${APP_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_app}:${APP_IMAGE_TAG:-v2.4.27}
+    networks:
+      - iris_backend
+      - oob-network
+
+  nginx:
+    extends:
+      file: docker-compose.base.yml
+      service: nginx
+    image: ${NGINX_IMAGE_NAME:-ghcr.io/dfir-iris/iriswebapp_nginx}:${NGINX_IMAGE_TAG:-v2.4.27}
+    
+    networks:
+      - iris_frontend
+      - oob-network
+
+volumes:
+  iris-downloads:
+  user_templates:
+  server_data:
+  db_data:
+
+networks:
+  iris_backend:
+    name: iris_backend
+  iris_frontend:
+    name: iris_frontend
+  oob-network:
+    external: true
