@@ -1,0 +1,110 @@
+services:
+  rttys:
+    image: ${GLKVM_IMAGE:-glzhitong/glkvm-cloud:latest}
+    container_name: glkvm_cloud
+    user: "0:0"
+    restart: always
+    environment:
+      GLKVM_ACCESS_IP: ${GLKVM_ACCESS_IP:-}
+
+      RTTYS_TOKEN: ${RTTYS_TOKEN:-DeviceTokenYouCanChangeMe}
+      RTTYS_PASS: ${RTTYS_PASS:-StrongP@ssw0rd}
+      RTTYS_ADMIN_NAME: ${RTTYS_ADMIN_NAME:-}
+
+      RTTYS_DEVICE_PORT: ${RTTYS_DEVICE_PORT:-5912}
+      RTTYS_WEBUI_PORT: ${RTTYS_WEBUI_PORT:-8180}
+      RTTYS_HTTP_PROXY_PORT: ${RTTYS_HTTP_PROXY_PORT:-10443}
+
+      TURN_PORT: ${TURN_PORT:-3478}
+      TURN_USER: ${TURN_USER:-glkvmcloudwebrtcuser}
+      TURN_PASS: ${TURN_PASS:-AnotherS3cret}
+
+      LDAP_ENABLED: ${LDAP_ENABLED:-false}
+      LDAP_SERVER: ${LDAP_SERVER:-}
+      LDAP_PORT: ${LDAP_PORT:-389}
+      LDAP_USE_TLS: ${LDAP_USE_TLS:-false}
+      LDAP_BIND_DN: ${LDAP_BIND_DN:-}
+      LDAP_BIND_PASSWORD: ${LDAP_BIND_PASSWORD:-}
+      LDAP_BASE_DN: ${LDAP_BASE_DN:-}
+      LDAP_USER_FILTER: ${LDAP_USER_FILTER:-(uid=%s)}
+      LDAP_ALLOWED_GROUPS: ${LDAP_ALLOWED_GROUPS:-}
+      LDAP_ALLOWED_USERS: ${LDAP_ALLOWED_USERS:-}
+      LDAP_ADMIN_GROUP: ${LDAP_ADMIN_GROUP:-}
+      LDAP_ADMIN_USERS: ${LDAP_ADMIN_USERS:-}
+
+      OIDC_ENABLED: ${OIDC_ENABLED:-false}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_AUTH_URL: ${OIDC_AUTH_URL:-}
+      OIDC_TOKEN_URL: ${OIDC_TOKEN_URL:-}
+      OIDC_REDIRECT_URL: ${OIDC_REDIRECT_URL:-}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid profile email}
+      OIDC_ALLOWED_USERS: ${OIDC_ALLOWED_USERS:-}
+      OIDC_ALLOWED_SUBS: ${OIDC_ALLOWED_SUBS:-}
+      OIDC_ALLOWED_USERNAMES: ${OIDC_ALLOWED_USERNAMES:-}
+      OIDC_ALLOWED_GROUPS: ${OIDC_ALLOWED_GROUPS:-}
+      OIDC_ADMIN_GROUP: ${OIDC_ADMIN_GROUP:-}
+      OIDC_ADMIN_USERS: ${OIDC_ADMIN_USERS:-}
+
+      SELFHOST_WEBUI_URL: ${SELFHOST_WEBUI_URL:-}
+      REVERSE_PROXY_ENABLED: ${REVERSE_PROXY_ENABLED:-true}
+      DEVICE_ENDPOINT_HOST: ${DEVICE_ENDPOINT_HOST:-}
+      WEB_UI_HOST: ${WEB_UI_HOST:-}
+
+    volumes:
+      - ./templates/rttys.conf.template:/tpl/rttys.conf.tmpl:ro
+      - ./scripts/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+      - ./certificate/glkvm.cer:/home/certificate/glkvm_cer:ro
+      - ./certificate/glkvm.key:/home/certificate/glkvm_key:ro
+      - ./database:/home/database:rw
+      
+    entrypoint: ["/bin/sh", "/docker-entrypoint.sh"]
+    command: ["rttys"]
+
+    ports:
+      - "${RTTYS_DEVICE_PORT:-5912}:${RTTYS_DEVICE_PORT:-5912}"
+      - "${RTTYS_HTTP_PROXY_PORT:-10443}:${RTTYS_HTTP_PROXY_PORT:-10443}"
+
+    networks:
+      - oob-network
+      - kvm-internal
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=oob-network"
+      - "traefik.http.routers.kvm.rule=Host(`kvm.oob.local`)"
+      - "traefik.http.routers.kvm.entrypoints=websecure"
+      - "traefik.http.routers.kvm.tls=true"
+      - "traefik.http.routers.kvm.middlewares=secure-headers@file"
+      - "traefik.http.services.kvm.loadbalancer.server.port=8180"
+
+  coturn:
+    image: ${COTURN_IMAGE:-coturn/coturn:edge-alpine}
+    container_name: glkvm_coturn
+    restart: always
+    environment:
+      GLKVM_ACCESS_IP: ${GLKVM_ACCESS_IP:-}
+      TURN_PORT: ${TURN_PORT:-3478}
+      TURN_USER: ${TURN_USER:-glkvmcloudwebrtcuser}
+      TURN_PASS: ${TURN_PASS:-AnotherS3cret}
+
+    entrypoint: ["/bin/sh", "/docker-entrypoint.sh"]
+    command: ["coturn"]
+
+    volumes:
+      - ./templates/turnserver.conf.template:/tpl/turnserver.conf.tmpl:ro
+      - ./scripts/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+
+    ports:
+      - "${TURN_PORT:-3478}:3478/tcp"
+      - "${TURN_PORT:-3478}:3478/udp"
+
+    networks:
+      - kvm-internal
+
+networks:
+  oob-network:
+    external: true
+  kvm-internal:
+    driver: bridge

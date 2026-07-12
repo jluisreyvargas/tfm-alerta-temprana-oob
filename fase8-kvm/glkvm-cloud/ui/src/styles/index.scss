@@ -1,0 +1,142 @@
+body {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif !important;
+}
+
+a {
+  text-decoration: none;
+}
+
+.dense-form {
+  .ant-form-item-explain {
+    display: none;
+  }
+  .ant-form-item {
+    margin-bottom: 16px;
+  }
+}
+
+.ant-btn-primary {
+  box-shadow: unset;
+}
+
+.base-table {
+  .ant-table-body {
+    overflow: auto !important;
+  }
+
+  .ant-table-thead {
+    .ant-table-cell::before {
+      background: transparent !important;
+    }
+  }
+
+  .ant-table-thead {
+    tr {
+      th {
+        border-top: 1px solid var(--gl-color-line-divider1) !important;
+        border-bottom: 1px solid var(--gl-color-line-divider1) !important;
+        background-color: var(--gl-color-bg-surface1) !important;
+        padding: 7px 12px !important;
+        color: var(--gl-color-text-level1) !important;
+      }
+    }
+  }
+  .ant-table-tbody {
+    tr td {
+      border-top: unset !important;
+      border-bottom: 1px solid var(--gl-color-line-divider1) !important;
+      padding: 10px 12px !important;
+    }
+  }
+
+  // 增加类名，可以让列的表头左对齐（例如筛选按钮紧挨着列标题）
+  .custom-table-header-cell-to-left {
+    .ant-table-column-sorters {
+        justify-content: flex-start !important;
+    }
+    .ant-table-column-title {
+        flex: unset !important;
+    }
+  }
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}
+
+.base-dropdown {
+  .ant-dropdown-menu {
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 3px 14px rgba(0,0,0, 0.05),0 8px 10px rgba(0,0,0, 0.06),0 8px 10px rgba(0,0,0, 0.06);
+
+    .ant-dropdown-menu-item {
+      min-width: 116px;
+      max-width: 300px;
+      color: var(--gl-color-text-level2);
+      padding: 7px 8px;
+
+      &:hover {
+        background-color: var(--gl-color-bg-icon-button-hover);
+      }
+      &:active {
+        background-color: var(--gl-color-brand-background);
+        color: var(--gl-color-brand-primary);
+      }
+    }
+
+    .dropdown-menu-item-danger {
+      color: var(--gl-color-error-primary);
+
+      &:hover {
+        background-color: var(--gl-color-bg-icon-button-error-hover);
+      }
+      &:active {
+        background-color: var(--gl-color-bg-icon-button-error-active);
+        color: var(--gl-color-error-primary);
+      }
+    }
+  }
+}
+
+.ant-form-item .ant-form-item-label >label {
+  color: var(--gl-color-text-level2);
+}
+
+// 解决edge浏览器input眼睛图标问题
+input::-ms-clear,input::-ms-reveal{
+  display: none;
+}
+
+.groups-a {
+    a {
+        margin-right: 16px;
+        text-decoration: underline;
+    }
+
+    .groups-a-dropdown {
+        display: inline-block;
+        width: 36px;
+        height: 18px;
+        margin-right: 0;
+        text-decoration: none;
+        border-radius: 2px;
+        text-align: center;
+
+        &:hover {
+            background-color: var(--gl-color-brand-background);
+        }
+    }
+}

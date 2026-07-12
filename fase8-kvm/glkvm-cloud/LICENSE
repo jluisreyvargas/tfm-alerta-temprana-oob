@@ -1,0 +1,49 @@
+Business Source License 1.1
+
+Parameters
+
+Licensor:              GL.iNet
+Licensed Work:         GLKVM Cloud (the "Software")
+                       The Licensed Work is © 2025 GL.iNet
+Additional Use Grant:  You may use the Licensed Work free of charge for
+                       non-production purposes, including development,
+                       testing, personal, or academic use.
+
+Change Date:           2030-01-01
+
+Change License:        GNU General Public License, version 3 (GPLv3)
+
+-----------------------------------------------------------------------
+
+Terms
+
+The Business Source License (this "License") sets forth the terms under
+which the Licensor permits you to use the Licensed Work.
+
+1. **Usage Grant**
+   Until the Change Date, you may use the Licensed Work according to the
+   Additional Use Grant specified above. Any use outside this grant
+   (such as commercial, production, or SaaS hosting) requires a separate
+   commercial license from the Licensor.
+
+2. **Change Date and License**
+   On the Change Date, the Licensed Work will automatically be made
+   available under the Change License. From that date forward, you may
+   use the Licensed Work under the Change License.
+
+3. **Disclaimer**
+   THE LICENSED WORK IS PROVIDED "AS IS," WITHOUT WARRANTIES OR
+   CONDITIONS OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+   TO WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
+   MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+
+4. **Limitation of Liability**
+   IN NO EVENT WILL THE LICENSOR BE LIABLE FOR DAMAGES, INCLUDING BUT
+   NOT LIMITED TO DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR
+   CONSEQUENTIAL DAMAGES, ARISING OUT OF THE USE OR INABILITY TO USE THE
+   LICENSED WORK.
+
+-----------------------------------------------------------------------
+
+For more information about the Business Source License, please see
+https://mariadb.com/bsl11

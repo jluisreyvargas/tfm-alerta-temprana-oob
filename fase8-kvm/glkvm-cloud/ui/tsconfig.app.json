@@ -1,0 +1,33 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": [
+      "env.d.ts",
+      "src/**/*",
+      "src/**/*.vue",
+      "node_modules/ant-design-vue/typings/global.d.ts"
+  ],
+  "exclude": [
+      "src/**/__tests__/*"
+  ],
+  "compilerOptions": {
+      "noImplicitAny": false,
+      "strictNullChecks": false,
+      "composite": true,
+      "noEmit": true,
+      "moduleResolution": "bundler",
+      "lib": ["ES2015", "ES2017", "ES2018", "DOM", "ES2021"],
+      "verbatimModuleSyntax": false,
+      "baseUrl": ".",
+      "paths": {
+          "@/*": [
+              "./src/*"
+          ],
+          "@cross/*": [
+              "./crossProjectModule/*"
+          ]
+      },
+      "types": [
+          "vite/client",
+      ]
+  }
+}

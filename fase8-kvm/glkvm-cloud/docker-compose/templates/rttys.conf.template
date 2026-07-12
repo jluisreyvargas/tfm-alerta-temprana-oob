@@ -1,0 +1,56 @@
+# Authentication token for device connections
+token: {{RTTYS_TOKEN}}
+
+# Web management password
+password: {{RTTYS_PASS}}
+
+# Admin username (leave empty to default to "admin")
+admin-name: {{RTTYS_ADMIN_NAME}}
+
+# WebRTC
+webrtc-ip: {{GLKVM_ACCESS_IP}}
+webrtc-port: {{TURN_PORT}}
+webrtc-username: {{TURN_USER}}
+webrtc-password: {{TURN_PASS}}
+
+# Listen addresses
+addr-dev: :{{RTTYS_DEVICE_PORT}}
+addr-user: :{{RTTYS_WEBUI_PORT}}
+addr-http-proxy: :{{RTTYS_HTTP_PROXY_PORT}}
+
+# LDAP Authentication
+ldap-enabled: {{LDAP_ENABLED}}
+ldap-server: {{LDAP_SERVER}}
+ldap-port: {{LDAP_PORT}}
+ldap-use-tls: {{LDAP_USE_TLS}}
+ldap-bind-dn: {{LDAP_BIND_DN}}
+# Note: ldap-bind-password is read directly from LDAP_BIND_PASSWORD environment variable
+ldap-base-dn: {{LDAP_BASE_DN}}
+ldap-user-filter: {{LDAP_USER_FILTER}}
+ldap-allowed-groups: {{LDAP_ALLOWED_GROUPS}}
+ldap-allowed-users: {{LDAP_ALLOWED_USERS}}
+ldap-admin-group: {{LDAP_ADMIN_GROUP}}
+ldap-admin-users: {{LDAP_ADMIN_USERS}}
+
+# OIDC Authentication (generic OIDC provider)
+oidc-enabled: {{OIDC_ENABLED}}
+
+oidc-generic-issuer: {{OIDC_ISSUER}}
+oidc-generic-client-id: {{OIDC_CLIENT_ID}}
+
+# Note: oidc-generic-client-secret is read directly from the OIDC_CLIENT_SECRET
+# environment variable and is intentionally not parsed from YAML to avoid
+# leaking secrets in config files.
+
+oidc-generic-auth-url: {{OIDC_AUTH_URL}}
+oidc-generic-token-url: {{OIDC_TOKEN_URL}}
+oidc-generic-redirect-url: {{OIDC_REDIRECT_URL}}
+oidc-generic-scopes: {{OIDC_SCOPES}}
+
+# Whitelists (all are optional)
+oidc-generic-allowed-users: {{OIDC_ALLOWED_USERS}}
+oidc-generic-allowed-subs: {{OIDC_ALLOWED_SUBS}}
+oidc-generic-allowed-usernames: {{OIDC_ALLOWED_USERNAMES}}
+oidc-generic-allowed-groups: {{OIDC_ALLOWED_GROUPS}}
+oidc-admin-group: {{OIDC_ADMIN_GROUP}}
+oidc-admin-users: {{OIDC_ADMIN_USERS}}
