@@ -147,8 +147,8 @@ Esta fase no sustituye el flujo de Fase 5, sino que lo **extiende**. La evidenci
 
 ## 📄 Subfases documentadas
 
-- 📘 [`README-Fase6a.md`](./docs/README-Fase6a.md) — Despliegue de DFIR-IRIS
-- 📗 [`README-Fase6b.md`](./docs/README-Fase6b.md) — Validación del caso y trazabilidad
+- 📘 [`README-Fase6a.md`](../docs/README-Fase6a.md) — Despliegue de DFIR-IRIS
+- 📗 [`README-Fase6b.md`](../docs/README-Fase6b.md) — Validación del caso y trazabilidad
 
 ---
 
