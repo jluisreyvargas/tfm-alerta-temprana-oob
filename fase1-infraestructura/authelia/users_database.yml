@@ -1,6 +1,6 @@
 users:
     jose:
-        password: $argon2id$v=19$m=65536,t=3,p=4$bJs64Q6L4pwik32p2Mr87w$qqAGUIrnqQKxTdFlHj5o+XOSSLmb6t6z7tgTFlxdUoc
+        password: $argon2id$v=19$m=65536,t=3,p=4$oQyw4YhR7YsgCqUZf3torg$+0Gl+qCvtcdk70muMd64c7otemY+7sZC7MAfw3PRAwA
         displayname: Jose - IR Lead
         email: jose@localhost
         groups:

@@ -25,7 +25,7 @@ session:
   cookies:
     - domain: oob.local
       authelia_url: https://auth.oob.local
-      default_redirection_url: https://portainer.oob.local
+      default_redirection_url: https://portainer.oob.local:9443
       expiration: 3600
       inactivity: 1800
 

@@ -107,6 +107,8 @@ services:
       - "traefik.http.services.wazuh.loadbalancer.server.port=5601"
       - "traefik.http.services.wazuh.loadbalancer.server.scheme=https"
       - "traefik.docker.network=oob-network"
+      # Added this middleware to go though Authelia authentication    
+      #- "traefik.http.routers.wazuh.middlewares=secure-headers@file,authelia@file"
 
 volumes:
   wazuh_api_configuration:
