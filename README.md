@@ -78,7 +78,7 @@ La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es dispone
 | 🔐 Fase 1b | Authelia | IdP independiente con MFA/TOTP y control de acceso. | [📘 README](/docs/README-fase1b-authelia.md) |
 | 💬 Fase 1c | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room. | [📘 README](/docs/README-fase1c-mongodb-rocketchat.md) |
 | 🛡️ Fase 1d | Wazuh | SIEM/EDR single-node con dashboard. | [📘 README](/docs/README-fase1d-wazuh.md) |
-| ✅ Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [📘 README](/docs/REAMDE-fase1e-validacion.md) |
+| ✅ Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [📘 README](/docs/README-fase1e-validacion.md) |
 
 ---
 
