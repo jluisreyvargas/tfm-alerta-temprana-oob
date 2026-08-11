@@ -8,8 +8,8 @@
 
 | Documento | Propósito |
 |---|---|
-| [README global de Fase 5](./fase5-velociraptor/README.md) | Visión funcional de la fase, validación, evidencia y estado final |
-| [README técnico del orquestador](./fase5-orchestrator-api/README.md) | Detalle del servicio FastAPI, endpoints, variables y MinIO |
+| [README global de Fase 5](../fase5-velociraptor/README.md) | Visión funcional de la fase, validación, evidencia y estado final |
+| [README técnico del orquestador](../fase5-orchestrator-api/README.md) | Detalle del servicio FastAPI, endpoints, variables y MinIO |
 
 ---
 
