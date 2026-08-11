@@ -142,12 +142,12 @@ Plan C de resiliencia con GL.iNet KVM y endurecimiento final.
 ## 🔗 Enlaces principales
 
 - [📘 README Fase 1](./fase1-infraestructura/README.md)
-- [📝 Propuesta TFM v3](./docs/propuesta_tfm_alerta_temprana_v3.md)
-- [🧩 Fase 1a — Traefik + Portainer](./docs/README-fase1a-traefik-portainer.md)
-- [🔐 Fase 1b — Authelia](./docs/README-fase1b-authelia.md)
-- [💬 Fase 1c — MongoDB + Rocket.Chat](./docs/README-fase1c-mongodb-rocketchat.md)
-- [🛡️ Fase 1d — Wazuh](./docs/README-fase1d-wazuh.md)
-- [✅ Fase 1e — Validación](./docs/README-fase1e-validacion.md)
+- [📝 Propuesta TFM v3](/docs/propuesta_tfm_alerta_temprana_v3.md)
+- [🧩 Fase 1a — Traefik + Portainer](/docs/README-fase1a-traefik-portainer.md)
+- [🔐 Fase 1b — Authelia](/docs/README-fase1b-authelia.md)
+- [💬 Fase 1c — MongoDB + Rocket.Chat](/docs/README-fase1c-mongodb-rocketchat.md)
+- [🛡️ Fase 1d — Wazuh](/docs/README-fase1d-wazuh.md)
+- [✅ Fase 1e — Validación](/docs/README-fase1e-validacion.md)
 
 ---
 
