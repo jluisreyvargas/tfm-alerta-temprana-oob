@@ -334,7 +334,7 @@ echo "Portainer disponible en: https://$(hostname -I | awk '{print $1}'):9443"
 ## 🔄 Siguiente fase
 
 **Fase 1b — Authelia (MFA independiente del AD)**
-Ver: [`docs/fase1b-authelia.md`](./fase1b-authelia.md)
+Ver: [`docs/fase1b-authelia.md`](./README-fase1b-authelia.md)
 
 ---
 

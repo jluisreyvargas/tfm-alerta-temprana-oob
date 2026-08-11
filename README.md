@@ -74,11 +74,11 @@ La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es dispone
 
 | Subfase | Componente | Resultado | Guía |
 |---|---|---|---|
-| 🧩 Fase 1a | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos. | [📘 README](../docs/fase1a-traefik-portainer.md) |
-| 🔐 Fase 1b | Authelia | IdP independiente con MFA/TOTP y control de acceso. | [📘 README](../docs/fase1b-authelia.md) |
-| 💬 Fase 1c | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room. | [📘 README](../docs/fase1c-rocketchat.md) |
-| 🛡️ Fase 1d | Wazuh | SIEM/EDR single-node con dashboard. | [📘 README](../docs/fase1d-wazuh.md) |
-| ✅ Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [📘 README](../docs/fase1e-validacion.md) |
+| 🧩 Fase 1a | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos. | [📘 README](/docs/fase1a-traefik-portainer.md) |
+| 🔐 Fase 1b | Authelia | IdP independiente con MFA/TOTP y control de acceso. | [📘 README](/docs/fase1b-authelia.md) |
+| 💬 Fase 1c | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room. | [📘 README](/docs/fase1c-rocketchat.md) |
+| 🛡️ Fase 1d | Wazuh | SIEM/EDR single-node con dashboard. | [📘 README](/docs/fase1d-wazuh.md) |
+| ✅ Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [📘 README](/docs/fase1e-validacion.md) |
 
 ---
 
@@ -143,11 +143,11 @@ Plan C de resiliencia con GL.iNet KVM y endurecimiento final.
 
 - [📘 README Fase 1](./fase1-infraestructura/README.md)
 - [📝 Propuesta TFM v3](./docs/propuesta_tfm_alerta_temprana_v3.md)
-- [🧩 Fase 1a — Traefik + Portainer](./docs/fase1a-traefik-portainer.md)
-- [🔐 Fase 1b — Authelia](./docs/fase1b-authelia.md)
-- [💬 Fase 1c — MongoDB + Rocket.Chat](./docs/fase1c-rocketchat.md)
-- [🛡️ Fase 1d — Wazuh](./docs/fase1d-wazuh.md)
-- [✅ Fase 1e — Validación](./docs/fase1e-validacion.md)
+- [🧩 Fase 1a — Traefik + Portainer](./docs/README-fase1a-traefik-portainer.md)
+- [🔐 Fase 1b — Authelia](./docs/README-fase1b-authelia.md)
+- [💬 Fase 1c — MongoDB + Rocket.Chat](./docs/README-fase1c-mongodb-rocketchat.md)
+- [🛡️ Fase 1d — Wazuh](./docs/README-fase1d-wazuh.md)
+- [✅ Fase 1e — Validación](./docs/README-fase1e-validacion.md)
 
 ---
 
