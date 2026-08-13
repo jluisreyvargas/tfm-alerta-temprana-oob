@@ -7,6 +7,7 @@ services:
       - "8020:8000"
     networks:
       - oob-network
+      - single-node_default
 
     environment:
       MINIO_ENDPOINT: minio:9000
@@ -15,6 +16,17 @@ services:
       MINIO_BUCKET: evidence
       MINIO_SECURE: "false"
 
+      # --- Fase 7: Observabilidad / Métricas ---
+      OS_URL: https://single-node-wazuh.indexer-1:9200
+      OS_USER: admin
+      OS_PASS: SecretPassword
+      OS_INDEX: tfm-metrics-events
+
+    volumes:
+      - ../fase7-observabilidad/shared:/app/shared
+
 networks:
   oob-network:
+    external: true
+  single-node_default:
     external: true

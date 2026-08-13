@@ -9,9 +9,22 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=mistral:7b
       - TZ=Europe/Madrid
+
+      # --- Fase 7: Observabilidad / Métricas ---
+      - OS_URL=https://single-node-wazuh.indexer-1:9200
+      - OS_USER=admin
+      - OS_PASS=SecretPassword
+      - OS_INDEX=tfm-metrics-events
+
+    volumes:
+      - ../fase7-observabilidad/shared:/app/shared
+
     networks:
       - oob-network
+      - single-node_default
 
 networks:
   oob-network:
+    external: true
+  single-node_default:
     external: true
