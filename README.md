@@ -1,121 +1,165 @@
-## 🚨✨ Sistema de Alerta Temprana Out-of-Band
+# 🚨 Sistema de Alerta Temprana Out-of-Band para Respuesta a Incidentes (v3)
+
 ## Respuesta a Incidentes con War Rooms, IA Agéntica y Trazabilidad Total
 
-> **TFM — Documento principal del proyecto**  
-> Un enclave seguro, aislado y operable para coordinar incidentes sin depender del entorno corporativo comprometido.
+> **Objetivo:** Disponer de un entorno **completamente aislado** para coordinar incidentes cuando el entorno corporativo puede estar comprometido, automatizando **war rooms**, **aprobaciones**, **acceso remoto temporal**, **captura forense**, **gestión de caso** y **triage inteligente mediante IA agéntica**.
+>
+> **Principio fundamental:** Todo el proyecto se basa en arquitectura **Out-of-Band** — el operador controla todos los servicios y dónde se ejecutan (VPS, Cloud, on-prem). Cero dependencias de servicios externos críticos.
 
 [![Estado](https://img.shields.io/badge/Estado-Actualizado-success)]()
-[![Fase actual](https://img.shields.io/badge/Fase%20actual-Fase%204-blue)]()
+[![Fase actual](https://img.shields.io/badge/Fase%20actual-Fase%208-blue)]()
 [![Arquitectura](https://img.shields.io/badge/Arquitectura-Out--of--Band-purple)]()
 [![Stack](https://img.shields.io/badge/Stack-Docker%20%2B%20Wazuh%20%2B%20Rocket.Chat%20%2B%20Authelia%20%2B%20Tailscale-orange)]()
 
 ---
 
-## 🎯 Propósito
+<details open>
+<summary><b>🗺️ Índice Interactivo</b> <i>(Haz clic para colapsar/expandir)</i></summary>
 
-Construir un sistema Out-of-Band para responder a incidentes de seguridad sin depender de la infraestructura potencialmente afectada. La solución integra detección, comunicación, orquestación, automatización y trazabilidad en un único flujo operativo.[file:304]
+- [🎯 Objetivos del proyecto](#-objetivos-del-proyecto)
+- [🧱 Stack de Componentes](#-stack-de-componentes)
+- [🏗️ Arquitectura del Enclave (Out-of-Band)](#️-arquitectura-del-enclave-out-of-band)
+- [🔁 Flujo Principal](#-flujo-principal)
+- [📈 Estado del Proyecto (Fases)](#-estado-del-proyecto-fases)
+- [🎯 Métricas Objetivo](#-métricas-objetivo)
+- [📦 Entregables del TFM](#-entregables-del-tfm)
 
-### Objetivos clave
-- 🧩 Crear War Rooms automáticamente en Rocket.Chat.
-- 📡 Ingerir y clasificar alertas desde Wazuh.
-- 🧠 Aplicar triage inteligente con IA agéntica.
-- 🔎 Enriquecer eventos con CTI y fuentes externas.
-- ✅ Ejecutar acciones de respuesta con aprobación humana.
-- 🧾 Mantener trazabilidad completa de cada incidente y evidencia.[file:304]
-
----
-
-## 🛡️ Principio base
-
-Cuando el entorno corporativo puede estar comprometido, no conviene depender de correo, AD, VPN o herramientas internas. Por eso este proyecto crea un canal alternativo, aislado y controlado para coordinar incidentes, solicitar aprobaciones y ejecutar acciones con trazabilidad.[file:291][file:304]
+</details>
 
 ---
 
-## 🧱 Arquitectura resumida
+## 🎯 Objetivos del proyecto
 
-| Capa | Tecnología | Rol |
-|---|---|---|
-| 🛎️ Detección | Wazuh | Alertas, telemetría y respuesta inicial.|
-| 💬 Comunicación OOB | Rocket.Chat | War Rooms, coordinación y bot de orquestación.|
-| 🧭 Orquestación | FastAPI + PostgreSQL + Redis | Motor de decisión y workflows.|
-| 🧠 IA agéntica | LangGraph + Ollama | Triage inteligente y apoyo a decisiones.|
-| 🧪 Forensics | Velociraptor | Recolección remota y adquisición de evidencias.|
-| 📦 Evidence Store | MinIO | Almacenamiento S3-compatible de evidencias.|
-| 📚 Case Management | DFIR-IRIS | Gestión de casos, timeline y evidencias.|
-| 📊 Observabilidad | OpenSearch Dashboards | Métricas, búsqueda y análisis.|
-| 🧰 Acceso remoto | RustDesk Server | Soporte remoto break-glass.|
-| 🌐 Conectividad DC | Python + Tailscale | Ejecución controlada en hosts Windows y DCs. |
-| 🖥️ Gestión Docker | Portainer | Administración visual de contenedores.|
-| 🔐 Autenticación | Authelia | MFA e identidad independiente del AD.|
-| 🧯 Plan C | GL.iNet KVM | Acceso físico on-prem de contingencia.|
+- 🧩 Crear automáticamente War Rooms por incidente en Rocket.Chat.
+- 📡 Recibir alertas desde Wazuh y clasificarlas.
+- 🧠 Aplicar triage inteligente con apoyo de IA agéntica.
+- 🔎 Enriquecer alertas con CTI y fuentes externas.
+- ✅ Ejecutar acciones de respuesta con control y aprobación humana.
+- 🧾 Mantener trazabilidad completa del caso y de las evidencias.
 
 ---
 
-## 📈 Estado del proyecto
+## 🧱 Stack de Componentes
 
-| Fase | Nombre | Estado | Descripción |
-|---|---|---|---|
-| 1 | Infraestructura Base | ✅ Completada | Base Docker, seguridad, comunicación y SIEM.|
-| 2 | Orquestador MVP | ✅ Completada | FastAPI, War Rooms y aprobaciones.|
-| 3 | IA Agéntica | ✅ Completada | LangGraph, triage y CTI.|
-| 4 | Break-Glass DC Scripts | ✅ Completada | RustDesk, Tailscale y agentes Python.|
-| 5 | Forensics Automático | ⏳ Pendiente | Velociraptor, MinIO y pipeline de evidencias.|
-| 6 | DFIR-IRIS Case Mgmt | ⏳ Pendiente | Casos, timeline, IOCs y trazabilidad.|
-| 7 | Observabilidad | ⏳ Pendiente | OpenSearch y métricas del sistema.|
-| 8 | KVM Hardening | ⏳ Pendiente | Plan C hardware y endurecimiento final.|
-
----
-
-## 🔥 Fase 1 — Infraestructura Base
-
-La Fase 1 deja operativa la base del enclave out-of-band. El objetivo es disponer de servicios de entrada, autenticación, comunicación, indexación y validación final completamente separados del entorno corporativo que pudiera estar afectado.
-
-### Subfases y guías
-
-| Subfase | Componente | Resultado | Guía |
-|---|---|---|---|
-| 🧩 Fase 1a | Traefik + Portainer | Reverse proxy, TLS y administración Docker operativos. | [📘 README](/docs/README-fase1a-traefik-portainer.md) |
-| 🔐 Fase 1b | Authelia | IdP independiente con MFA/TOTP y control de acceso. | [📘 README](/docs/README-fase1b-authelia.md) |
-| 💬 Fase 1c | MongoDB + Rocket.Chat | Base de datos y canal OOB para el War Room. | [📘 README](/docs/README-fase1c-mongodb-rocketchat.md) |
-| 🛡️ Fase 1d | Wazuh | SIEM/EDR single-node con dashboard. | [📘 README](/docs/README-fase1d-wazuh.md) |
-| ✅ Fase 1e | Validación final | Comprobación integral y tag `fase1-base`. | [📘 README](/docs/README-fase1e-validacion.md) |
+| Capa | Tecnología | Rol | Deploy |
+|:---:|:---|:---|:---:|
+| 🛎️ **Detección** | Wazuh | Alertas, telemetría y respuesta inicial. | Docker |
+| 💬 **Comunicación OOB** | Rocket.Chat | War Rooms, coordinación y bot de orquestación. | Docker |
+| 🧭 **Orquestación** | FastAPI + PostgreSQL + Redis | Motor de decisión y workflows. | Docker |
+| 🧠 **IA Agéntica** | LangGraph + Ollama | Triage inteligente y apoyo a decisiones. | Docker |
+| 🧪 **Forensics** | Velociraptor | Recolección remota y adquisición de evidencias. | Docker |
+| 📦 **Evidence Store** | MinIO | Almacenamiento S3-compatible de evidencias. | Docker |
+| 📚 **Case Management**| DFIR-IRIS | Gestión de casos, timeline y evidencias. | Docker |
+| 📊 **Observabilidad** | OpenSearch Dashboards | Métricas, búsqueda y análisis. | Docker |
+| 🧰 **Acceso remoto** | RustDesk Server | Soporte remoto break-glass. | Docker |
+| 🌐 **Conectividad DC** | Python + Tailscale | Ejecución controlada en hosts Windows y DCs. | Servicio Win |
+| 🖥️ **Gestión Docker** | Portainer | Administración visual de contenedores. | Docker |
+| 🔐 **Autenticación** | Authelia | MFA e identidad independiente del AD. | Docker |
+| 🧯 **Plan C** | GL.iNet KVM | Acceso físico on-prem de contingencia. | Hardware |
 
 ---
 
-## 🚀 Fases de evolución
+## 🏗️ Arquitectura del Enclave (Out-of-Band)
 
-### 🧭 Fase 2 — Orquestador MVP
-Motor central que conecta Wazuh con Rocket.Chat y gestiona el ciclo básico del incidente con FastAPI, PostgreSQL y Redis.
+### Diagrama lógico de alto nivel
 
-### 🤖 Fase 3 — IA Agéntica
-Triage inteligente local con LangGraph y Ollama para enriquecer el análisis sin depender de servicios externos.
+```mermaid
+flowchart LR
+  subgraph CORP["🏢 Red Corporativa (potencialmente comprometida)"]
+    A[Endpoints / Servidores]
+    DC[W2025 Domain Controllers]
+    W[🛰️ Wazuh Agents]
+  end
 
-### 🌐 Fase 4 — Break-Glass DC Scripts
-Acceso remoto temporal y ejecución controlada de scripts en DCs/hosts Windows. La conectividad remota documentada es Tailscale, en sustitución de Cloudflare Tunnels.
+  subgraph ENCLAVE["🔒 Enclave Out-of-Band (VPS/Cloud - bajo control propio)"]
+    WZ[🛰️ Wazuh Server]
+    ORC[🧠 Orquestador]
+    AI[🤖 IA Agéntica\nLangGraph + Ollama]
+    RC[💬 Rocket.Chat]
+    IRIS[🗂️ DFIR-IRIS]
+    VR[🦖 Velociraptor Server]
+    RD[🧯 RustDesk Server]
+    OS[🧲 OpenSearch]
+    MINIO[🗄️ MinIO\nEvidence Store]
+    AUTH[🔑 Authelia]
+    PORT[🗄️ Portainer]
+  end
 
-### 🧪 Fase 5 — Forensics Automático
-Velociraptor y MinIO para adquisición y custodia de evidencias.
+  subgraph DC_AGENTS["🖥️ Agentes en DCs (W2025)"]
+    CFT[☁️ cloudflared / Tailscale\nservicio Windows]
+    PYA[🐍 Python Agent\nFlask - localhost:8000]
+  end
 
-### 📚 Fase 6 — DFIR-IRIS
-Gestión formal del caso con timeline, evidencias y trazabilidad.
+  A --> W --> WZ
+  DC --> CFT --> PYA
+  WZ -->|alert webhook| ORC
+  ORC <-->|triage/enrichment| AI
+  ORC --> RC
+  ORC --> IRIS
+  ORC --> VR
+  ORC -->|HTTPS via CF Tunnel/Tailscale| CFT
+  CFT --> PYA
+  PYA -->|callback resultado| ORC
+  RC -->|/approve /reject| ORC
+  VR -->|artefactos| MINIO
+  IRIS -->|case webhooks| ORC
+  WZ -->|logs| OS
+  ORC -->|métricas| OS
+```
+*Nota: La conectividad remota en DCs se actualizó para usar Tailscale (ver Fase 4).*
 
-### 📊 Fase 7 — Observabilidad
-OpenSearch Dashboards para métricas operacionales y calidad del sistema.
+### Principios de diseño del Enclave
 
-### 🧯 Fase 8 — KVM Hardening
-Plan C de resiliencia con GL.iNet KVM y endurecimiento final.
+- **Independencia total**: El enclave no depende del AD corporativo, correo, ni VPN de la empresa.
+- **Autenticación propia**: Authelia provee MFA independiente del AD; los analistas se autentican incluso si el AD está comprometido.
+- **Control total de servicios**: Todos los servicios corren en infraestructura bajo control del operador (VPS, Cloud propio, on-prem dedicado).
+- **Túneles salientes**: Los agentes en endpoints/DCs usan Cloudflare Tunnels/Tailscale (conexión *outbound*) — no hay puertos abiertos hacia internet en los endpoints.
 
 ---
 
-## 🎯 Métricas objetivo
+## 🔁 Flujo Principal
 
-| Métrica | Objetivo |
-|---|---|
-| ⏱️ MTTA alerta → War Room | 60 segundos |
-| ✅ MTTApprove | 5 minutos |
-| 🧠 Precisión del triage agente | 80% vs experto humano |
-| 🔁 Tasa de deduplicación | 95% |
-| ⚙️ Script success rate | 98% |
+1. 🛰️ **Wazuh** detecta alerta HIGH/CRITICAL → envía JSON al Orquestador (`POST /wazuh/alert`).
+2. 🧠 Orquestador correlaciona/deduplica (Redis TTL) y crea el incidente.
+3. 🤖 **Triage Agent** (LangGraph) recibe el evento y realiza triage autónomo consultando CTI y buscando históricos en IRIS.
+4. 💬 Se crea **War Room** (Rocket.Chat) con *Incident Card* enriquecida.
+5. 🗂️ Se crea **Caso DFIR-IRIS** enlazado al canal; el agente añade su nota.
+6. 🦖 **Velociraptor** lanza colección en paralelo sin esperar aprobación (acción no destructiva).
+7. 💬 Si se requiere acción en el DC, el Orquestador solicita aprobación en Rocket.Chat. Si se aprueba, se ejecuta el script vía el agente Python en el DC autenticado.
+8. 💬 Se puede solicitar acceso remoto temporal Break-Glass habilitando RustDesk por 30 minutos, previa aprobación.
+9. ⏱️ Si RustDesk falla (Timeout), se ofrece el **Plan C (KVM)**, requiriendo aprobaciones adicionales para ejecutar un power reset.
+
+---
+
+## 📈 Estado del Proyecto (Fases)
+
+A continuación, se resume el progreso del proyecto. Todas las fases han sido completadas con éxito, estableciendo un sistema integral y funcional.
+
+| Fase | Título | Estado | Descripción Breve | Enlace |
+|:---:|:---|:---:|:---|:---:|
+| **1** | **Infraestructura Base** | ✅ `Completada` | Despliegue de Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./README_fase1_CORREGIDO.md) |
+| **2** | **Orquestador MVP** | ✅ `Completada` | FastAPI, PostgreSQL, Redis. Ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./README_fase2_CORREGIDO.md) |
+| **3** | **IA Agéntica** | ✅ `Completada` | LangGraph, Ollama. Triage inteligente, CTI y `agentreasoning`. | [Ver Fase 3](./README_fase3_CORREGIDO.md) |
+| **4** | **Break-Glass & Scripts DC** | ✅ `Completada` | Acceso remoto con RustDesk, Python Agents y Tailscale en DCs. | [Ver Fase 4](./README_fase4_CORREGIDO.md) |
+| **5** | **Forensics Automático** | ✅ `Completada` | Velociraptor, MinIO (Evidence Store) y pipeline hacia IRIS. | [Ver Fase 5](./README_fase5_CORREGIDO.md) |
+| **6** | **DFIR-IRIS Case Mgmt** | ✅ `Completada` | Gestión de casos, sincronización bidireccional y timeline automático. | [Ver Fase 6](./README_fase6_CORREGIDO.md) |
+| **7** | **Observabilidad** | ✅ `Completada` | OpenSearch Dashboards, pipeline de métricas operativas. | [Ver Fase 7](./README_fase7_CORREGIDO.md) |
+| **8** | **Plan C (KVM) & Hardening** | ✅ `Completada` | Fallback a GL.iNet KVM, mTLS, y pruebas de resiliencia finales. | [Ver Fase 8](./README_fase8_CORREGIDO.md) |
+
+---
+
+## 🎯 Métricas Objetivo
+
+| Métrica | Descripción | Objetivo |
+|:---|:---|:---:|
+| ⏱️ **MTTA** | Alerta → War Room creado | < 60 segundos |
+| ✅ **MTTApprove** | Solicitud aprobación → decisión | < 5 minutos |
+| 🚀 **MTTAccess** | Aprobación → acceso activo | < 3 minutos |
+| 📦 **MTTCollection** | Trigger → artefactos en MinIO | < 10 minutos |
+| 🔁 **Dedup rate** | % alertas correctamente deduplicadas | > 95% |
+| 🧠 **Agent precision** | Triage agente vs. experto humano | > 80% |
+| 🚫 **False positive rate**| Alertas que no llegan a aprobación | < 15% |
+| ⚙️ **Script success rate**| Ejecuciones DC con resultado OK | > 98% |
 
 ---
 
@@ -128,28 +172,3 @@ Plan C de resiliencia con GL.iNet KVM y endurecimiento final.
 - 🧪 Evidencia de pruebas y validación por fase.
 - 🗺️ Diagramas de arquitectura, estados y flujos.
 - 📊 Métricas de evaluación del sistema y del triage agéntico.
-
----
-
-## 🗂️ Estructura de documentación
-
-- `README.md` en la raíz como índice maestro del proyecto.
-- `docs/` con la propuesta y los README de cada fase.
-- `fase1-infraestructura/README.md` como guía operativa de la Fase 1.
-
----
-
-## 🔗 Enlaces principales
-
-- [📘 README Fase 1](./fase1-infraestructura/README.md)
-- [📝 Propuesta TFM v3](/docs/propuesta_tfm_alerta_temprana_v3.md)
-- [🧩 Fase 1a — Traefik + Portainer](/docs/README-fase1a-traefik-portainer.md)
-- [🔐 Fase 1b — Authelia](/docs/README-fase1b-authelia.md)
-- [💬 Fase 1c — MongoDB + Rocket.Chat](/docs/README-fase1c-mongodb-rocketchat.md)
-- [🛡️ Fase 1d — Wazuh](/docs/README-fase1d-wazuh.md)
-- [✅ Fase 1e — Validación](/docs/README-fase1e-validacion.md)
-
----
-
-**TFM Alerta Temprana Out-of-Band**  
-**Estado actual:** Fase 4 completada · documentación raíz actualizada.

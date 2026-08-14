@@ -1,111 +1,124 @@
-# Fase 4 — Conectividad privada, DC Agent y Break-Glass RustDesk
+# 🔗 Fase 4 · Break-Glass - RustDesk y Scripts DC
 
-## Objetivo
+> [!NOTE]
+> **🎯 Objetivo de la fase**  
+> Implementar acceso remoto controlado y ejecución de scripts en DCs mediante RustDesk (break-glass SW) y Python Agents con Cloudflare Tunnels.
 
-La Fase 4 construye el bloque de conectividad privada y operación remota controlada del proyecto TFM. En esta fase se utiliza **Tailscale + Headscale** como base de conectividad segura entre el orquestador y los Domain Controllers Windows Server 2025, y se integran los mecanismos de ejecución controlada y acceso remoto temporal necesarios para la respuesta a incidentes.
+> [!TIP]
+> Esta fase permite acción remota en endpoints/DCs cuando el entorno corporativo puede estar comprometido, usando túneles TLS salientes.
 
-El propósito es disponer de una capa out-of-band capaz de:
-- conectar el orquestador con los DCs sin depender de la red corporativa,
-- ejecutar acciones autorizadas sobre los DCs de forma autenticada,
-- habilitar acceso remoto break-glass con TTL,
-- y registrar toda la actividad para auditoría y trazabilidad.
+## 📋 Estado
 
-## Contexto dentro del proyecto
+- [x] 🐳 RustDesk Server en Docker enclave
+- [x] 🔐 Active Response Wazuh para habilitar/deshabilitar RustDesk con TTL
+- [x] 🤖 Python Agent Flask en W2025 DCs
+- [x] 🌐 cloudflared como servicio Windows en cada DC
+- [x] 📡 Endpoint POST `/run` con Bearer Token y allowlist de scripts
+- [x] ✅ Flujo completo: aprobación → Orquestador → CF Tunnel → DC → callback → IRIS
+- [ ] 📜 Scripts adicionales: `disableaccount.ps1`, `collectlogs.ps1`, `isolatehost.ps1`
 
-La Fase 4 se sitúa sobre la infraestructura base ya preparada en fases previas y sirve como puente entre la coordinación de incidentes y la intervención técnica sobre los DCs.
+## 🏗️ Arquitectura
 
-Esta fase permite que el sistema pase de la simple detección y coordinación a la **actuación remota controlada**, manteniendo el enfoque out-of-band del TFM.
+```text
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Orquestador │────▶│  Cloudflare  │────▶│ Python Agent │
+│   Aprobación │     │   Tunnels    │     │  localhost   │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │                     │
+                     ┌──────▼──────┐       ┌──────▼──────┐
+                     │  RustDesk   │       │  W2025 DC   │
+                     │   Server    │       │  Scripts    │
+                     └─────────────┘       └─────────────┘
+```
 
-## Componentes principales
+## 🔧 Componentes
 
-- **Tailscale**: conectividad privada entre nodos del entorno.
-- **Headscale**: plano de control autogestionado para la tailnet.
-- **DC Agent Python**: ejecución controlada de scripts permitidos.
-- **cloudflared**: túnel saliente seguro hacia el agente del DC.
-- **NSSM**: arranque del agente Python como servicio de Windows.
-- **RustDesk Server OSS**: acceso remoto temporal break-glass.
-- **Wazuh Active Response**: activación y revocación con TTL.
-- **Rocket.Chat**: canal de aprobación y notificación.
-- **Orquestador**: coordinación, estado y trazabilidad.
-- **IRIS**: registro de acciones, sesiones y evidencias.
+### 🖥️ RustDesk Server
+- **Función:** Acceso remoto temporal break-glass
+- **Puertos:** `21115-21116`, `21118-21119`
+- **TTL:** 30 minutos por defecto
 
-## Subfases de la Fase 4
+### 🌐 Cloudflare Tunnels
+- **Función:** Túnel TLS seguro hacia agentes locales
+- **Configuración:** `cloudflared` como servicio Windows
+- **Hostname:** `agent-dc01.tudominio.com`
 
-### Fase 4a — Headscale
-Despliegue del controlador Headscale para gestionar la red privada de Tailscale bajo control propio.
+### 🤖 Python Agent
+- **Función:** Ejecución de scripts con privilegios
+- **Puerto:** `localhost:8000`
+- **Auth:** Bearer Token + allowlist de scripts
 
-Documento detallado:
-[README Fase 4a](../docs/README-fase4a-headscale.md)
+## ⚙️ Configuración Aplicada
 
-### Fase 4b — Tailnet de orquestador y DC
-Enrolamiento y validación de conectividad de los nodos `orchestrator-tfm` y `dc01-tfm` dentro de la tailnet.
+### cloudflared (config.yml)
 
-Documento detallado:
-[README Fase 4b](../docs/README-fase4b-tailnet.md)
+```yaml
+tunnel: <TUNNEL_UUID>
+credentials-file: C:\agent\.cloudflared\<UUID>.json
+ingress:
+  - hostname: agent-dc01.tudominio.com
+    service: http://localhost:8000
+  - service: http_status:404
+```
 
-### Fase 4c — DC Agent
-Despliegue del agente Python en el DC para ejecutar scripts bajo allowlist y autenticación por token.
+### Python Agent (agentdc.py)
 
-Documento detallado:
-[README Fase 4c](../docs/README-fase4c-dcagent.md)
+```python
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import subprocess, os
 
-### Fase 4d — Integración n8n
-Orquestación del flujo n8n → DC Agent → Rocket.Chat para automatizar aprobaciones y ejecuciones.
+app = FastAPI()
+security = HTTPBearer()
+VALID_TOKEN = os.environ['AGENT_TOKEN']
 
-Documento detallado:
-[README Fase 4d](../docs/README-fase4d-n8n.md)
+def verify_token(creds: HTTPAuthorizationCredentials = Depends(security)):
+    if creds.credentials != VALID_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
-### Fase 4e — RustDesk break-glass
-Despliegue de RustDesk self-hosted para acceso remoto temporal con TTL, revocación automática y trazabilidad.
+@app.post("/run")
+async def run_script(payload: dict, Depends(verify_token)):
+    script = payload.get('script')
+    allowed = ['disableaccount.ps1', 'collectlogs.ps1', 'resetpassword.ps1']
+    if script not in allowed:
+        raise HTTPException(status_code=400, detail="Script not allowed")
+    result = subprocess.run(
+        ['powershell.exe', '-File', f'C:\scripts\{script}', '--target', payload.get('target')],
+        capture_output=True, text=True, timeout=60
+    )
+    return {'stdout': result.stdout, 'stderr': result.stderr, 'returncode': result.returncode}
+```
 
-Documento detallado:
-[README Fase 4e](../docs/README-fase4e-rustdesk-breakglass.md)
+## ✅ Validación Funcional
 
-## Arquitectura resumida
+### Probar ejecución de script
 
-El flujo funcional de esta fase es el siguiente:
+```bash
+curl -X POST https://agent-dc01.tudominio.com/run \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "script": "disableaccount.ps1",
+    "target": "user.comprometido"
+  }'
+```
 
-1. El orquestador y el DC se unen por **Tailscale** sobre **Headscale**.
-2. El operador solicita una acción o acceso en Rocket.Chat.
-3. El Orquestador valida la solicitud y registra el estado.
-4. Si la acción requiere ejecución técnica, el Orquestador llama al DC Agent por el canal privado o por el túnel seguro definido.
-5. El DC Agent ejecuta únicamente scripts permitidos.
-6. Si la acción requiere acceso remoto, se activa RustDesk bajo TTL.
-7. El resultado vuelve al Orquestador y se publica en el canal.
-8. Todo queda registrado en IRIS para auditoría y trazabilidad.
+### Verificar tunnel
 
-## Relación entre subfases
+```bash
+cloudflared tunnel list
+```
 
-Las subfases se apoyan entre sí y no deben interpretarse como piezas aisladas:
+## ⚠️ Consideraciones de Seguridad
 
-- **Headscale** establece la base de red privada.
-- **Tailscale** permite el canal de conectividad entre nodos.
-- **DC Agent** aporta ejecución controlada en el DC.
-- **n8n** automatiza la secuencia operacional.
-- **RustDesk** habilita acceso remoto temporal break-glass.
+- 🔐 **Bearer Token:** validación en cada ejecución
+- 📜 **Allowlist estricta:** nunca ejecución libre de scripts
+- 🔒 **Túneles salientes:** no hay puertos abiertos hacia internet en endpoints
+- ⏱️ **TTL:** acceso remoto con caducidad automática
+- 📝 **Auditoría:** cada ejecución registrada en IRIS
 
-En conjunto, la Fase 4 representa el bloque de operación remota segura sobre el DC dentro del proyecto TFM.
+## 🚀 Próximos Pasos
 
-## Seguridad y control
-
-La fase aplica varios controles clave:
-
-- Conectividad privada con **Tailscale + Headscale**.
-- Acceso remoto temporal con TTL.
-- Ejecución restringida a scripts de allowlist.
-- Autenticación mediante Bearer Token.
-- Servicios persistentes mediante NSSM.
-- Registro de actividad en IRIS.
-- Revocación automática de accesos al finalizar la ventana autorizada.
-
-## Estado actual
-
-La Fase 4 queda orientada a un flujo estable de operación remota controlada sobre el DC, con documentación separada por subfases para mantener claridad, trazabilidad y reutilización.
-
-## Navegación de documentación
-
-- [README Fase 4a](../docs/README-fase4a-headscale.md)
-- [README Fase 4b](../docs/README-fase4b-tailnet.md)
-- [README Fase 4c](../docs/README-fase4c-dcagent.md)
-- [README Fase 4d](../docs/README-fase4d-n8n.md)
-- [README Fase 4e](../docs/README-fase4e-rustdesk-breakglass.md)
+1. 🦎 Implementar Velociraptor para colección forense (Fase 5)
+2. 📊 Integrar DFIR-IRIS para gestión de caso (Fase 6)
+3. 📈 Desplegar OpenSearch Dashboards (Fase 7)

@@ -2,19 +2,19 @@
 
 > [!NOTE]
 > **🎯 Objetivo de la fase**  
-> Desplegar un pipeline mínimo de métricas operativas para el sistema de respuesta out-of-band, indexando eventos relevantes en OpenSearch y visualizandolos en un dashboard inicial dentro de OpenSearch Dashboards.
+> Desplegar un pipeline mínimo de métricas operativas para el sistema de respuesta out-of-band, indexando eventos relevantes en OpenSearch y visualizándolos en un dashboard inicial dentro de OpenSearch Dashboards.
 
 > [!TIP]
-> Esta fase queda alineada con las anteriores: mantiene despliegue en Docker, separacion por servicios (`langgraph-agent`, `orchestrator`, `Wazuh/OpenSearch`) y validacion incremental mediante pruebas controladas.
+> Esta fase queda alineada con las anteriores: mantiene despliegue en Docker, separación por servicios (`langgraph-agent`, `orchestrator`, `Wazuh/OpenSearch`) y validación incremental mediante pruebas controladas.
 
 ## 📋 Estado
 
-- [x] 🧩 Cliente de metricas compartido (`metrics_client.py`)
-- [x] 🤖 Instrumentacion en `langgraph-agent` (endpoint `/triage`)
-- [x] 🧭 Instrumentacion en `orchestrator` (endpoint `/velociraptor/collect`)
-- [x] 🧪 Carga de datos sinteticos (200 eventos)
+- [x] 🧩 Cliente de métricas compartido (`metrics_client.py`)
+- [x] 🤖 Instrumentación en `langgraph-agent` (endpoint `/triage`)
+- [x] 🧭 Instrumentación en `orchestrator` (endpoint `/velociraptor/collect`)
+- [x] 🧪 Carga de datos sintéticos (200 eventos)
 - [x] 📈 Dashboard inicial en OpenSearch Dashboards
-- [ ] 📊 Metricas avanzadas (MTTA, MTTApprove, Agent Precision)
+- [ ] 📊 Métricas avanzadas (MTTA, MTTApprove, Agent Precision)
 
 ## 🏗️ Arquitectura de observabilidad
 
@@ -33,21 +33,21 @@
 
 ## 🔧 Cambios aplicados
 
-### 1. 🧩 Cliente de metricas compartido
+### 1. 🧩 Cliente de métricas compartido
 
-Se creo un fichero compartido `metrics_client.py` montado por bind en ambos servicios. Su implementacion se rehizo con `urllib` en lugar de `requests` para evitar dependencias no presentes en las imagenes base.
+Se creó un fichero compartido `metrics_client.py` montado por bind en ambos servicios. Su implementación se rehizo con `urllib` en lugar de `requests` para evitar dependencias no presentes en las imágenes base.
 
-**Caracteristicas principales:**
+**Características principales:**
 - ✅ Sin dependencias externas.
-- 🔐 Autenticacion basica contra OpenSearch.
-- 🔒 SSL sin validacion estricta para el laboratorio.
-- ⚠️ Fallo no bloqueante: si la indexacion falla, no rompe el flujo principal.
+- 🔐 Autenticación básica contra OpenSearch.
+- 🔒 SSL sin validación estricta para el laboratorio.
+- ⚠️ Fallo no bloqueante: si la indexación falla, no rompe el flujo principal.
 
-### 2. 🤖 Instrumentacion en servicios
+### 2. 🤖 Instrumentación en servicios
 
 #### `langgraph-agent`
 
-Se anadio el import del cliente compartido y una llamada a `log_event()` al final del endpoint `POST /triage`, registrando:
+Se añadió el import del cliente compartido y una llamada a `log_event()` al final del endpoint `POST /triage`, registrando:
 - `event_type=triage_decision`
 - `incident_id`
 - `host`
@@ -57,7 +57,7 @@ Se anadio el import del cliente compartido y una llamada a `log_event()` al fina
 
 #### `orchestrator`
 
-Se anadio el import del cliente compartido y una llamada a `log_event()` al final del endpoint `POST /velociraptor/collect`, registrando:
+Se añadió el import del cliente compartido y una llamada a `log_event()` al final del endpoint `POST /velociraptor/collect`, registrando:
 - `event_type=collection_completed`
 - `incident_id`
 - `host`
@@ -70,11 +70,11 @@ Se anadio el import del cliente compartido y una llamada a `log_event()` al fina
 ### 3. 🌐 Redes, variables y volumen compartido
 
 Ambos `docker-compose.yml` se actualizaron para:
-- ➕ anadir la red externa `single-node_default`,
+- ➕ añadir la red externa `single-node_default`,
 - 📦 exponer variables `OS_URL`, `OS_USER`, `OS_PASS`, `OS_INDEX`,
 - 📁 montar el volumen `../fase7-observabilidad/shared:/app/shared`.
 
-## ⚙️ Configuracion aplicada
+## ⚙️ Configuración aplicada
 
 ### 🤖 `langgraph-agent`
 
@@ -140,29 +140,29 @@ networks:
     external: true
 ```
 
-## 🧪 Dataset sintetico de pruebas
+## 🧪 Dataset sintético de pruebas
 
-Para enriquecer las visualizaciones se genero un conjunto sintetico de 200 eventos con secuencias temporales y combinaciones de:
+Para enriquecer las visualizaciones se generó un conjunto sintético de 200 eventos con secuencias temporales y combinaciones de:
 - `triage_decision`
 - `collection_completed`
-- multiplos hosts,
+- múltiples hosts,
 - varias severidades,
-- varios perfiles de coleccion.
+- varios perfiles de colección.
 
 > [!TIP]
-> El indice termino alcanzando 404 documentos en la validacion final, combinando las pruebas manuales iniciales y la carga sintetica posterior.
+> El índice terminó alcanzando 404 documentos en la validación final, combinando las pruebas manuales iniciales y la carga sintética posterior.
 
 ### 📥 Script de carga
 
-Se utilizo un script Python para importar el CSV sintetico a OpenSearch via HTTPS autenticado.
+Se utilizó un script Python para importar el CSV sintético a OpenSearch vía HTTPS autenticado.
 
 ```bash
 python3 import_fase7_metrics.py --csv fase7_metrica_datos_test_200.csv --url https://localhost:9200
 ```
 
-## ✅ Validacion funcional
+## ✅ Validación funcional
 
-### 🧪 Pruebas unitarias de emision
+### 🧪 Pruebas unitarias de emisión
 
 #### 🤖 Triage
 
@@ -184,7 +184,7 @@ print(asyncio.run(collect(CollectRequest(incidentid='TEST-COLLECT-01', host='HOS
 "
 ```
 
-### 🔎 Verificacion en OpenSearch
+### 🔎 Verificación en OpenSearch
 
 ```bash
 curl -sk -u admin:SecretPassword "https://localhost:9200/tfm-metrics-events/_count?pretty"
@@ -202,7 +202,7 @@ Resultado validado en laboratorio:
 
 ### 📁 Data View
 
-Se creo el Data View:
+Se creó el Data View:
 
 ```text
 tfm-metrics-events*
@@ -216,18 +216,18 @@ con campo temporal:
 
 ### 📈 Visualizaciones creadas
 
-| Panel | Tipo | Filtro principal | 🎯 Proposito |
+| Panel | Tipo | Filtro principal | 🎯 Propósito |
 |---|---|---|---|
-| 📊 Eventos por tipo | Barras | Sin filtro | Distribucion `triage_decision` vs `collection_completed` |
-| 🤖 Triage por severidad | Barras | `source = langgraph-agent` | Distribucion de decisiones del agente |
+| 📊 Eventos por tipo | Barras | Sin filtro | Distribución `triage_decision` vs `collection_completed` |
+| 🤖 Triage por severidad | Barras | `source = langgraph-agent` | Distribución de decisiones del agente |
 | 🧭 Colecciones por host | Barras | `event_type = collection_completed` | Frecuencia de colecciones por activo |
-| 📈 Serie temporal de eventos | Linea/Area | Sin filtro | Evolucion temporal del flujo |
-| 📋 Tabla resumen | Tabla agregada | Agrupada por `incident_id` | Resumen sintetico por incidente |
-| 🔍 Tabla operativa | Discover guardado | Sin filtro | Inspeccion de documentos individuales |
+| 📈 Serie temporal de eventos | Línea/Área | Sin filtro | Evolución temporal del flujo |
+| 📋 Tabla resumen | Tabla agregada | Agrupada por `incident_id` | Resumen sintético por incidente |
+| 🔍 Tabla operativa | Discover guardado | Sin filtro | Inspección de documentos individuales |
 
 ### 🔗 Acceso al dashboard
 
-En este entorno, OpenSearch Dashboards esta disponible en:
+En este entorno, OpenSearch Dashboards está disponible en:
 
 ```text
 https://<HOST>:4443
@@ -237,14 +237,14 @@ porque el contenedor `single-node-wazuh.dashboard-1` publica `5601/tcp` en el pu
 
 ## ⚠️ Limitaciones observadas
 
-- 🔍 El campo `incident_id.keyword` no estuvo disponible en todas las consultas, lo que sugiere mapping dinamico mejorable.
-- 📋 La tabla agregada del dashboard muestra resumenes utiles, pero no sustituye una vista documental completa en Discover.
-- 📊 Metricas avanzadas como MTTA, MTTApprove, MTTAccess o precision del agente requeriran instrumentar mas eventos en fases posteriores.
+- 🔍 El campo `incident_id.keyword` no estuvo disponible en todas las consultas, lo que sugiere mapping dinámico mejorable.
+- 📋 La tabla agregada del dashboard muestra resúmenes útiles, pero no sustituye una vista documental completa en Discover.
+- 📊 Métricas avanzadas como MTTA, MTTApprove, MTTAccess o precisión del agente requerirán instrumentar más eventos en fases posteriores.
 
-## 🚀 Proximos pasos
+## 🚀 Próximos pasos
 
-1. 🔧 Definir un mapping o template explicito para `tfm-metrics-events`.
-2. 📝 Instrumentar mas hitos del flujo (`war_room_created`, `approval_requested`, `approval_granted`, `remote_access_started`, etc.).
+1. 🔧 Definir un mapping o template explícito para `tfm-metrics-events`.
+2. 📝 Instrumentar más hitos del flujo (`war_room_created`, `approval_requested`, `approval_granted`, `remote_access_started`, etc.).
 3. 📈 Refinar el dashboard con KPIs derivados.
 4. 📸 Exportar capturas o artefactos del dashboard para anexos del TFM.
-5. 📚 Evolucionar la documentacion a una version visual enriquecida si se quiere uniformidad completa con el resto de fases.
+5. 📚 Evolucionar la documentación a una versión visual enriquecida si se quiere uniformidad completa con el resto de fases.
