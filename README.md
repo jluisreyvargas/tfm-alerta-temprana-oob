@@ -1,10 +1,10 @@
-# 🚨 Sistema de Alerta Temprana Out-of-Band para Respuesta a Incidentes (v3)
+# 🚨 Sistema de Alerta Temprana Out-of-Band para Respuesta a Incidentes
 
 ## Respuesta a Incidentes con War Rooms, IA Agéntica y Trazabilidad Total
 
-> **Objetivo:** Disponer de un entorno **completamente aislado** para coordinar incidentes cuando el entorno corporativo puede estar comprometido, automatizando **war rooms**, **aprobaciones**, **acceso remoto temporal**, **captura forense**, **gestión de caso** y **triage inteligente mediante IA agéntica**.
+> **Objetivo:** Disponer de un entorno **completamente aislado** para coordinar incidentes cuando el entorno corporativo puede estar comprometido, automatizando **war rooms**, **aprobaciones**, **acceso remoto temporal**, **captura forense**, **gestión de casos** y **triage inteligente mediante IA agéntica**.
 >
-> **Principio fundamental:** Todo el proyecto se basa en arquitectura **Out-of-Band** — el operador controla todos los servicios y dónde se ejecutan (VPS, Cloud, on-prem). Cero dependencias de servicios externos críticos.
+> **Principio fundamental:** Todo el proyecto se basa en una arquitectura **Out-of-Band**: el operador controla todos los servicios y dónde se ejecutan (VPS, cloud u on-premise), evitando dependencias de servicios externos críticos.
 
 [![Estado](https://img.shields.io/badge/Estado-Actualizado-success)]()
 [![Fase actual](https://img.shields.io/badge/Fase%20actual-Fase%208-blue)]()
@@ -14,14 +14,14 @@
 ---
 
 <details open>
-<summary><b>🗺️ Índice Interactivo</b> <i>(Haz clic para colapsar/expandir)</i></summary>
+<summary><b>🗺️ Índice interactivo</b> <i>(Haz clic para colapsar o expandir)</i></summary>
 
 - [🎯 Objetivos del proyecto](#-objetivos-del-proyecto)
-- [🧱 Stack de Componentes](#-stack-de-componentes)
-- [🏗️ Arquitectura del Enclave (Out-of-Band)](#️-arquitectura-del-enclave-out-of-band)
-- [🔁 Flujo Principal](#-flujo-principal)
-- [📈 Estado del Proyecto (Fases)](#-estado-del-proyecto-fases)
-- [🎯 Métricas Objetivo](#-métricas-objetivo)
+- [🧱 Stack de componentes](#-stack-de-componentes)
+- [🏗️ Arquitectura del enclave](#️-arquitectura-del-enclave)
+- [🔁 Flujo principal](#-flujo-principal)
+- [📈 Estado del proyecto](#-estado-del-proyecto)
+- [🎯 Métricas objetivo](#-métricas-objetivo)
 - [📦 Entregables del TFM](#-entregables-del-tfm)
 
 </details>
@@ -33,48 +33,48 @@
 - 🧩 Crear automáticamente War Rooms por incidente en Rocket.Chat.
 - 📡 Recibir alertas desde Wazuh y clasificarlas.
 - 🧠 Aplicar triage inteligente con apoyo de IA agéntica.
-- 🔎 Enriquecer alertas con CTI y fuentes externas.
+- 🔎 Enriquecer alertas con CTI y fuentes de inteligencia.
 - ✅ Ejecutar acciones de respuesta con control y aprobación humana.
 - 🧾 Mantener trazabilidad completa del caso y de las evidencias.
 
 ---
 
-## 🧱 Stack de Componentes
+## 🧱 Stack de componentes
 
-| Capa | Tecnología | Rol | Deploy |
+| Capa | Tecnología | Rol | Despliegue |
 |:---:|:---|:---|:---:|
 | 🛎️ **Detección** | Wazuh | Alertas, telemetría y respuesta inicial. | Docker |
 | 💬 **Comunicación OOB** | Rocket.Chat | War Rooms, coordinación y bot de orquestación. | Docker |
 | 🧭 **Orquestación** | FastAPI + PostgreSQL + Redis | Motor de decisión y workflows. | Docker |
-| 🧠 **IA Agéntica** | LangGraph + Ollama | Triage inteligente y apoyo a decisiones. | Docker |
+| 🧠 **IA agéntica** | LangGraph + Ollama | Triage inteligente y apoyo a decisiones. | Docker |
 | 🧪 **Forensics** | Velociraptor | Recolección remota y adquisición de evidencias. | Docker |
-| 📦 **Evidence Store** | MinIO | Almacenamiento S3-compatible de evidencias. | Docker |
-| 📚 **Case Management**| DFIR-IRIS | Gestión de casos, timeline y evidencias. | Docker |
-| 📊 **Observabilidad** | OpenSearch Dashboards | Métricas, búsqueda y análisis. | Docker |
+| 📦 **Evidence Store** | MinIO | Almacenamiento compatible con S3 para evidencias. | Docker |
+| 📚 **Case Management** | DFIR-IRIS | Gestión de casos, timeline y evidencias. | Docker |
+| 📊 **Observabilidad** | OpenSearch Dashboards | Métricas, búsquedas y análisis. | Docker |
 | 🧰 **Acceso remoto** | RustDesk Server | Soporte remoto break-glass. | Docker |
-| 🌐 **Conectividad DC** | Python + Tailscale | Ejecución controlada en hosts Windows y DCs. | Servicio Win |
+| 🌐 **Conectividad DC** | Python + Tailscale | Ejecución controlada en hosts Windows y DCs. | Servicio Windows |
 | 🖥️ **Gestión Docker** | Portainer | Administración visual de contenedores. | Docker |
 | 🔐 **Autenticación** | Authelia | MFA e identidad independiente del AD. | Docker |
-| 🧯 **Plan C** | GL.iNet KVM | Acceso físico on-prem de contingencia. | Hardware |
+| 🧯 **Plan C** | GL.iNet KVM | Acceso físico on-premise de contingencia. | Hardware |
 
 ---
 
-## 🏗️ Arquitectura del Enclave (Out-of-Band)
+## 🏗️ Arquitectura del enclave
 
 ### Diagrama lógico de alto nivel
 
 ```mermaid
 flowchart LR
-  subgraph CORP["🏢 Red Corporativa (potencialmente comprometida)"]
-    A[Endpoints / Servidores]
-    DC[W2025 Domain Controllers]
-    W[🛰️ Wazuh Agents]
+  subgraph CORP["🏢 Red corporativa potencialmente comprometida"]
+    A[Endpoints / servidores]
+    DC[Controladores de dominio Windows Server]
+    W[🛰️ Agentes Wazuh]
   end
 
-  subgraph ENCLAVE["🔒 Enclave Out-of-Band (VPS/Cloud - bajo control propio)"]
+  subgraph ENCLAVE["🔒 Enclave Out-of-Band bajo control propio"]
     WZ[🛰️ Wazuh Server]
-    ORC[🧠 Orquestador]
-    AI[🤖 IA Agéntica\nLangGraph + Ollama]
+    ORC[🧠 Orquestador FastAPI]
+    AI[🤖 IA agéntica\nLangGraph + Ollama]
     RC[💬 Rocket.Chat]
     IRIS[🗂️ DFIR-IRIS]
     VR[🦖 Velociraptor Server]
@@ -85,90 +85,122 @@ flowchart LR
     PORT[🗄️ Portainer]
   end
 
-  subgraph DC_AGENTS["🖥️ Agentes en DCs (W2025)"]
-    CFT[☁️ cloudflared / Tailscale\nservicio Windows]
-    PYA[🐍 Python Agent\nFlask - localhost:8000]
+  subgraph DC_AGENTS["🖥️ Agentes en controladores de dominio"]
+    TS[🔐 Tailscale\nservicio Windows]
+    PYA[🐍 Python Agent\nlocalhost:8000]
   end
 
   A --> W --> WZ
-  DC --> CFT --> PYA
+  DC --> TS --> PYA
   WZ -->|alert webhook| ORC
-  ORC <-->|triage/enrichment| AI
+  ORC <-->|triage y enriquecimiento| AI
   ORC --> RC
   ORC --> IRIS
   ORC --> VR
-  ORC -->|HTTPS via CF Tunnel/Tailscale| CFT
-  CFT --> PYA
-  PYA -->|callback resultado| ORC
+  ORC -->|HTTPS mediante Tailscale| TS
+  PYA -->|callback de resultado| ORC
   RC -->|/approve /reject| ORC
   VR -->|artefactos| MINIO
-  IRIS -->|case webhooks| ORC
+  IRIS -->|webhooks de caso| ORC
   WZ -->|logs| OS
   ORC -->|métricas| OS
 ```
-*Nota: La conectividad remota en DCs se actualizó para usar Tailscale (ver Fase 4).*
 
-### Principios de diseño del Enclave
+> **Nota:** La conectividad remota hacia los controladores de dominio se implementa mediante Tailscale con Headscale autoalojado, sustituyendo la propuesta inicial basada en Cloudflare Tunnels.
 
-- **Independencia total**: El enclave no depende del AD corporativo, correo, ni VPN de la empresa.
-- **Autenticación propia**: Authelia provee MFA independiente del AD; los analistas se autentican incluso si el AD está comprometido.
-- **Control total de servicios**: Todos los servicios corren en infraestructura bajo control del operador (VPS, Cloud propio, on-prem dedicado).
-- **Túneles salientes**: Los agentes en endpoints/DCs usan Cloudflare Tunnels/Tailscale (conexión *outbound*) — no hay puertos abiertos hacia internet en los endpoints.
+### Principios de diseño
 
----
-
-## 🔁 Flujo Principal
-
-1. 🛰️ **Wazuh** detecta alerta HIGH/CRITICAL → envía JSON al Orquestador (`POST /wazuh/alert`).
-2. 🧠 Orquestador correlaciona/deduplica (Redis TTL) y crea el incidente.
-3. 🤖 **Triage Agent** (LangGraph) recibe el evento y realiza triage autónomo consultando CTI y buscando históricos en IRIS.
-4. 💬 Se crea **War Room** (Rocket.Chat) con *Incident Card* enriquecida.
-5. 🗂️ Se crea **Caso DFIR-IRIS** enlazado al canal; el agente añade su nota.
-6. 🦖 **Velociraptor** lanza colección en paralelo sin esperar aprobación (acción no destructiva).
-7. 💬 Si se requiere acción en el DC, el Orquestador solicita aprobación en Rocket.Chat. Si se aprueba, se ejecuta el script vía el agente Python en el DC autenticado.
-8. 💬 Se puede solicitar acceso remoto temporal Break-Glass habilitando RustDesk por 30 minutos, previa aprobación.
-9. ⏱️ Si RustDesk falla (Timeout), se ofrece el **Plan C (KVM)**, requiriendo aprobaciones adicionales para ejecutar un power reset.
+- **Independencia total:** el enclave no depende del AD corporativo, del correo ni de la VPN de la empresa.
+- **Autenticación propia:** Authelia proporciona MFA independiente del AD.
+- **Control de servicios:** los servicios se ejecutan sobre infraestructura bajo control del operador.
+- **Conectividad restringida:** los agentes de los controladores de dominio usan conexiones salientes mediante Tailscale; no se exponen puertos entrantes innecesarios.
+- **Trazabilidad:** las decisiones de la IA, las aprobaciones humanas y las evidencias se registran en el caso del incidente.
 
 ---
 
-## 📈 Estado del Proyecto (Fases)
+## 🔁 Flujo principal
 
-A continuación, se resume el progreso del proyecto. Todas las fases han sido completadas con éxito, estableciendo un sistema integral y funcional.
+1. 🛰️ **Wazuh** detecta una alerta y envía el JSON al Orquestador mediante `POST /wazuh/alert`.
+2. 🧭 El Orquestador correlaciona y deduplica las alertas mediante Redis TTL.
+3. 🤖 El **Triage Agent** realiza el análisis y el enriquecimiento con CTI.
+4. 💬 Se crea una **War Room** en Rocket.Chat con una tarjeta de incidente enriquecida.
+5. 🗂️ Se crea o actualiza el **caso DFIR-IRIS** asociado.
+6. 🦖 Velociraptor lanza la colección forense no destructiva según el perfil seleccionado.
+7. 📦 Los artefactos y metadatos se almacenan en MinIO.
+8. ✅ Las acciones sensibles requieren aprobación humana desde la War Room.
+9. 🧯 El acceso break-glass mediante RustDesk se habilita temporalmente con TTL.
+10. ⏱️ Si RustDesk falla, se ofrece el **Plan C mediante KVM**, con doble aprobación para acciones disruptivas.
 
-| Fase | Título | Estado | Descripción Breve | Enlace |
+---
+
+## 📈 Estado del proyecto
+
+Todas las fases principales están completadas. La Fase 5 se divide en dos repositorios complementarios, por lo que se muestran como **Fase 5A** y **Fase 5B** para evitar confundir sus responsabilidades.
+
+| Fase | Título | Estado | Responsabilidad | Enlace |
 |:---:|:---|:---:|:---|:---:|
-| **1** | **Infraestructura Base** | ✅ `Completada` | Despliegue de Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./README_fase1_CORREGIDO.md) |
-| **2** | **Orquestador MVP** | ✅ `Completada` | FastAPI, PostgreSQL, Redis. Ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./README_fase2_CORREGIDO.md) |
-| **3** | **IA Agéntica** | ✅ `Completada` | LangGraph, Ollama. Triage inteligente, CTI y `agentreasoning`. | [Ver Fase 3](./README_fase3_CORREGIDO.md) |
-| **4** | **Break-Glass & Scripts DC** | ✅ `Completada` | Acceso remoto con RustDesk, Python Agents y Tailscale en DCs. | [Ver Fase 4](./README_fase4_CORREGIDO.md) |
-| **5** | **Forensics Automático** | ✅ `Completada` | Velociraptor, MinIO (Evidence Store) y pipeline hacia IRIS. | [Ver Fase 5](./README_fase5_CORREGIDO.md) |
-| **6** | **DFIR-IRIS Case Mgmt** | ✅ `Completada` | Gestión de casos, sincronización bidireccional y timeline automático. | [Ver Fase 6](./README_fase6_CORREGIDO.md) |
-| **7** | **Observabilidad** | ✅ `Completada` | OpenSearch Dashboards, pipeline de métricas operativas. | [Ver Fase 7](./README_fase7_CORREGIDO.md) |
-| **8** | **Plan C (KVM) & Hardening** | ✅ `Completada` | Fallback a GL.iNet KVM, mTLS, y pruebas de resiliencia finales. | [Ver Fase 8](./README_fase8_CORREGIDO.md) |
+| **1** | **Infraestructura base** | ✅ Completada | Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./README_fase1_CORREGIDO.md) |
+| **2** | **Orquestador MVP** | ✅ Completada | FastAPI, PostgreSQL, Redis, ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./README_fase2_CORREGIDO.md) |
+| **3** | **IA agéntica** | ✅ Completada | LangGraph, Ollama, triage inteligente y CTI. | [Ver Fase 3](./README_fase3_CORREGIDO.md) |
+| **4** | **Break-glass y scripts DC** | ✅ Completada | RustDesk, agentes Python y Tailscale en controladores de dominio. | [Ver Fase 4](./README_fase4_CORREGIDO.md) |
+| **5A** | **Fase 5 - Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver fase5-orchestrator-api](./fase5-orchestrator-api/README.md) |
+| **5B** | **Fase 5 - Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver fase5-velociraptor](./fase5-velociraptor/README.md) |
+| **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, sincronización bidireccional y timeline. | [Ver Fase 6](./README_fase6_CORREGIDO.md) |
+| **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./README_fase7_CORREGIDO.md) |
+| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, mTLS y pruebas de resiliencia. | [Ver Fase 8](./README_fase8_CORREGIDO.md) |
+
+### Relación entre las dos partes de la Fase 5
+
+```mermaid
+flowchart LR
+  N8N[n8n / Orquestador principal] --> O[5A · fase5-orchestrator-api]
+  O -->|Solicitud validada| V[5B · fase5-velociraptor]
+  V -->|Colección y artefactos| M[MinIO · Evidence Store]
+  O -->|manifest.json y sha256.txt| M
+  M --> I[DFIR-IRIS · Fase 6]
+```
+
+| Componente | Hace | No hace |
+|---|---|---|
+| **5A - Orchestrator API** | Recibe la solicitud, valida el perfil, coordina el flujo y genera la trazabilidad. | No sustituye al servidor Velociraptor ni representa por sí solo la colección forense real. |
+| **5B - Velociraptor** | Ejecuta o gestiona la colección forense y produce los artefactos. | No es la API principal de recepción y coordinación del incidente. |
 
 ---
 
-## 🎯 Métricas Objetivo
+## 🎯 Métricas objetivo
 
 | Métrica | Descripción | Objetivo |
 |:---|:---|:---:|
-| ⏱️ **MTTA** | Alerta → War Room creado | < 60 segundos |
-| ✅ **MTTApprove** | Solicitud aprobación → decisión | < 5 minutos |
+| ⏱️ **MTTA** | Alerta → War Room creada | < 60 segundos |
+| ✅ **MTTApprove** | Solicitud de aprobación → decisión | < 5 minutos |
 | 🚀 **MTTAccess** | Aprobación → acceso activo | < 3 minutos |
-| 📦 **MTTCollection** | Trigger → artefactos en MinIO | < 10 minutos |
-| 🔁 **Dedup rate** | % alertas correctamente deduplicadas | > 95% |
-| 🧠 **Agent precision** | Triage agente vs. experto humano | > 80% |
-| 🚫 **False positive rate**| Alertas que no llegan a aprobación | < 15% |
-| ⚙️ **Script success rate**| Ejecuciones DC con resultado OK | > 98% |
+| 📦 **MTTCollection** | Disparo → artefactos en MinIO | < 10 minutos |
+| 🔁 **Dedup rate** | Alertas correctamente deduplicadas | > 95 % |
+| 🧠 **Agent precision** | Triage del agente frente a experto humano | > 80 % |
+| 🚫 **False positive rate** | Alertas que no llegan a aprobación | < 15 % |
+| ⚙️ **Script success rate** | Ejecuciones en DC con resultado correcto | > 98 % |
 
 ---
 
 ## 📦 Entregables del TFM
 
 - 📁 Repositorio GitHub con despliegue reproducible.
-- 📄 README principal y README de cada fase.
-- 🧾 Documentación técnica por fases y subfases.
-- ⚙️ Scripts, `docker-compose.yml` y configuraciones del enclave.
-- 🧪 Evidencia de pruebas y validación por fase.
+- 📄 README principal y README específico de cada fase.
+- 🧾 Documentación técnica de las dos partes de la Fase 5.
+- ⚙️ Scripts, archivos `docker-compose.yml` y configuraciones del enclave.
+- 🧪 Evidencias de pruebas y validación por fase.
 - 🗺️ Diagramas de arquitectura, estados y flujos.
 - 📊 Métricas de evaluación del sistema y del triage agéntico.
+
+---
+
+## 🧭 Navegación rápida de la Fase 5
+
+- [📘 README del Orchestrator API](./fase5-orchestrator-api/README.md)
+- [🦎 README de Velociraptor](./fase5-velociraptor/README.md)
+
+---
+
+**Proyecto:** `tfm-alerta-temprana-oob`  
+**Fase actual:** Fase 8 - Plan C y hardening  
+**Autor:** Jose Luis Rey Vargas
