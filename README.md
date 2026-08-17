@@ -138,19 +138,19 @@ flowchart LR
 
 Todas las fases principales están completadas. La Fase 5 se divide en **dos carpetas independientes** dentro del repositorio, por lo que se muestran como **Fase 5A** y **Fase 5B** para no confundir sus responsabilidades.
 
-Los enlaces siguientes apuntan a la ruta real `carpeta/README.md` dentro de este mismo repositorio.
+> **Importante sobre los enlaces:** cada enlace apunta **directamente a la carpeta de la fase**, no al fichero `README.md`. GitHub renderiza automáticamente el `README.md` de cualquier carpeta al abrirla, por lo que este formato es más robusto que enlazar al archivo explícito.
 
 | Fase | Título | Estado | Responsabilidad | Enlace |
 |:---:|:---|:---:|:---|:---:|
-| **1** | **Infraestructura base** | ✅ Completada | Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./fase1-infraestructura/README.md) |
-| **2** | **Orquestador MVP** | ✅ Completada | FastAPI, PostgreSQL, Redis, ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./fase2-orquestador/README.md) |
-| **3** | **IA agéntica** | ✅ Completada | LangGraph, Ollama, triage inteligente y CTI. | [Ver Fase 3](./fase3-agentic/README.md) |
-| **4** | **Break-glass y scripts DC** | ✅ Completada | RustDesk, agentes Python y Tailscale en controladores de dominio. | [Ver Fase 4](./fase4-breakglass-dc/README.md) |
-| **5A** | **Fase 5 · Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver Fase 5A](./fase5-orchestrator-api/README.md) |
-| **5B** | **Fase 5 · Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver Fase 5B](./fase5-velociraptor/README.md) |
-| **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, sincronización bidireccional y timeline. | [Ver Fase 6](./fase6-iris/README-Iris.md) |
-| **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./fase7-observabilidad/README.md) |
-| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, mTLS y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm/README.md) |
+| **1** | **Infraestructura base** | ✅ Completada | Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./fase1-infraestructura) |
+| **2** | **Orquestador MVP** | ✅ Completada | FastAPI, PostgreSQL, Redis, ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./fase2-orquestador) |
+| **3** | **IA agéntica** | ✅ Completada | LangGraph, Ollama, triage inteligente y CTI. | [Ver Fase 3](./fase3-agentic) |
+| **4** | **Break-glass y scripts DC** | ✅ Completada | RustDesk, agentes Python y Tailscale en controladores de dominio. | [Ver Fase 4](./fase4-breakglass-dc) |
+| **5A** | **Fase 5 · Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver Fase 5A](./fase5-orchestrator-api) |
+| **5B** | **Fase 5 · Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver Fase 5B](./fase5-velociraptor) |
+| **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, sincronización bidireccional y timeline. | [Ver Fase 6](./fase6-iris) — ⚠️ ver nota abajo, el README propio es `README-Iris.md` |
+| **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./fase7-observabilidad) |
+| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, mTLS y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm) |
 
 ### Relación entre las dos partes de la Fase 5
 
@@ -199,15 +199,17 @@ flowchart LR
 
 ## ⚠️ Nota técnica sobre la carpeta fase6-iris
 
-La carpeta [`fase6-iris/`](./fase6-iris) contiene una copia completa del código fuente de **DFIR-IRIS** (proyecto upstream), incluyendo sus propios ficheros de metadatos (`LICENSE.txt`, `CODESTYLE.md`, `.deepsource.toml`, `.bumpversion.cfg`, `.github/`) y su propio `README.md` original del proyecto IRIS. Por eso esta carpeta contiene **dos README distintos**:
+La carpeta [`fase6-iris`](./fase6-iris) contiene una copia completa del código fuente de **DFIR-IRIS** (proyecto upstream), incluyendo sus propios ficheros de metadatos (`LICENSE.txt`, `CODESTYLE.md`, `.deepsource.toml`, `.bumpversion.cfg`, `.github/`) y su propio `README.md` original del proyecto IRIS. Por eso esta carpeta contiene **dos README distintos**:
 
 - `fase6-iris/README.md` → README original de DFIR-IRIS (upstream, no editar).
 - `fase6-iris/README-Iris.md` → README específico de la Fase 6 de este TFM (documentación propia).
 
-> **Recomendación:** si GitHub muestra el aviso *"Cannot retrieve latest commit at this time"* al navegar por esta carpeta, es probable que se deba al volumen y a los metadatos de CI/CD (`.github/workflows`, `.deepsource.toml`) heredados del repositorio de IRIS. Para resolverlo de forma definitiva se recomienda una de estas opciones:
+> **Importante:** como esta carpeta tiene por defecto el `README.md` de IRIS (no el tuyo), al hacer clic en [Ver Fase 6](./fase6-iris) GitHub mostrará primero el README de IRIS. Para llegar a la documentación propia de la Fase 6, hay que abrir explícitamente [`fase6-iris/README-Iris.md`](./fase6-iris/README-Iris.md) desde dentro de la carpeta.
+>
+> **Recomendación para resolver el aviso *"Cannot retrieve latest commit at this time"*:** es probable que se deba al volumen y a los metadatos de CI/CD (`.github/workflows`, `.deepsource.toml`) heredados del repositorio de IRIS. Para resolverlo de forma definitiva:
 > 1. Añadir `fase6-iris` como **submódulo git** apuntando al repositorio oficial de DFIR-IRIS, en lugar de copiar sus archivos directamente.
 > 2. Eliminar del código copiado los metadatos específicos de CI/CD que no aplican a este repositorio (`.github/workflows`, `.deepsource.toml`, `.bumpversion.cfg`).
-> 3. Volver a subir la carpeta en un commit limpio si el error persiste tras varias horas (puede ser un problema temporal de indexación de GitHub).
+> 3. Renombrar `README-Iris.md` a `README.md` únicamente si se elimina o mueve el README original de IRIS a otro nombre (por ejemplo `README-UPSTREAM.md`), para que el enlace directo a la carpeta muestre tu documentación por defecto.
 
 ---
 
