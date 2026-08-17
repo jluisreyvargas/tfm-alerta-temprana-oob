@@ -23,6 +23,7 @@
 - [📈 Estado del proyecto](#-estado-del-proyecto)
 - [🎯 Métricas objetivo](#-métricas-objetivo)
 - [📦 Entregables del TFM](#-entregables-del-tfm)
+- [⚠️ Nota técnica sobre la carpeta fase6-iris](#️-nota-técnica-sobre-la-carpeta-fase6-iris)
 
 </details>
 
@@ -135,19 +136,21 @@ flowchart LR
 
 ## 📈 Estado del proyecto
 
-Todas las fases principales están completadas. La Fase 5 se divide en dos repositorios complementarios, por lo que se muestran como **Fase 5A** y **Fase 5B** para evitar confundir sus responsabilidades.
+Todas las fases principales están completadas. La Fase 5 se divide en **dos carpetas independientes** dentro del repositorio, por lo que se muestran como **Fase 5A** y **Fase 5B** para no confundir sus responsabilidades.
+
+Los enlaces siguientes apuntan a la ruta real `carpeta/README.md` dentro de este mismo repositorio.
 
 | Fase | Título | Estado | Responsabilidad | Enlace |
 |:---:|:---|:---:|:---|:---:|
-| **1** | **Infraestructura base** | ✅ Completada | Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./README_fase1_CORREGIDO.md) |
-| **2** | **Orquestador MVP** | ✅ Completada | FastAPI, PostgreSQL, Redis, ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./README_fase2_CORREGIDO.md) |
-| **3** | **IA agéntica** | ✅ Completada | LangGraph, Ollama, triage inteligente y CTI. | [Ver Fase 3](./README_fase3_CORREGIDO.md) |
-| **4** | **Break-glass y scripts DC** | ✅ Completada | RustDesk, agentes Python y Tailscale en controladores de dominio. | [Ver Fase 4](./README_fase4_CORREGIDO.md) |
-| **5A** | **Fase 5 - Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver fase5-orchestrator-api](./fase5-orchestrator-api/README.md) |
-| **5B** | **Fase 5 - Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver fase5-velociraptor](./fase5-velociraptor/README.md) |
-| **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, sincronización bidireccional y timeline. | [Ver Fase 6](./README_fase6_CORREGIDO.md) |
-| **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./README_fase7_CORREGIDO.md) |
-| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, mTLS y pruebas de resiliencia. | [Ver Fase 8](./README_fase8_CORREGIDO.md) |
+| **1** | **Infraestructura base** | ✅ Completada | Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./fase1-infraestructura/README.md) |
+| **2** | **Orquestador MVP** | ✅ Completada | FastAPI, PostgreSQL, Redis, ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./fase2-orquestador/README.md) |
+| **3** | **IA agéntica** | ✅ Completada | LangGraph, Ollama, triage inteligente y CTI. | [Ver Fase 3](./fase3-agentic/README.md) |
+| **4** | **Break-glass y scripts DC** | ✅ Completada | RustDesk, agentes Python y Tailscale en controladores de dominio. | [Ver Fase 4](./fase4-breakglass-dc/README.md) |
+| **5A** | **Fase 5 · Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver Fase 5A](./fase5-orchestrator-api/README.md) |
+| **5B** | **Fase 5 · Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver Fase 5B](./fase5-velociraptor/README.md) |
+| **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, sincronización bidireccional y timeline. | [Ver Fase 6](./fase6-iris/README-Iris.md) |
+| **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./fase7-observabilidad/README.md) |
+| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, mTLS y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm/README.md) |
 
 ### Relación entre las dos partes de la Fase 5
 
@@ -162,8 +165,8 @@ flowchart LR
 
 | Componente | Hace | No hace |
 |---|---|---|
-| **5A - Orchestrator API** | Recibe la solicitud, valida el perfil, coordina el flujo y genera la trazabilidad. | No sustituye al servidor Velociraptor ni representa por sí solo la colección forense real. |
-| **5B - Velociraptor** | Ejecuta o gestiona la colección forense y produce los artefactos. | No es la API principal de recepción y coordinación del incidente. |
+| **5A - Orchestrator API** (`fase5-orchestrator-api/`) | Recibe la solicitud, valida el perfil, coordina el flujo y genera la trazabilidad. | No sustituye al servidor Velociraptor ni representa por sí solo la colección forense real. |
+| **5B - Velociraptor** (`fase5-velociraptor/`) | Ejecuta o gestiona la colección forense y produce los artefactos. | No es la API principal de recepción y coordinación del incidente. |
 
 ---
 
@@ -185,7 +188,7 @@ flowchart LR
 ## 📦 Entregables del TFM
 
 - 📁 Repositorio GitHub con despliegue reproducible.
-- 📄 README principal y README específico de cada fase.
+- 📄 README principal y README específico de cada fase (dentro de su propia carpeta).
 - 🧾 Documentación técnica de las dos partes de la Fase 5.
 - ⚙️ Scripts, archivos `docker-compose.yml` y configuraciones del enclave.
 - 🧪 Evidencias de pruebas y validación por fase.
@@ -194,13 +197,20 @@ flowchart LR
 
 ---
 
-## 🧭 Navegación rápida de la Fase 5
+## ⚠️ Nota técnica sobre la carpeta fase6-iris
 
-- [📘 README del Orchestrator API](./fase5-orchestrator-api/README.md)
-- [🦎 README de Velociraptor](./fase5-velociraptor/README.md)
+La carpeta [`fase6-iris/`](./fase6-iris) contiene una copia completa del código fuente de **DFIR-IRIS** (proyecto upstream), incluyendo sus propios ficheros de metadatos (`LICENSE.txt`, `CODESTYLE.md`, `.deepsource.toml`, `.bumpversion.cfg`, `.github/`) y su propio `README.md` original del proyecto IRIS. Por eso esta carpeta contiene **dos README distintos**:
+
+- `fase6-iris/README.md` → README original de DFIR-IRIS (upstream, no editar).
+- `fase6-iris/README-Iris.md` → README específico de la Fase 6 de este TFM (documentación propia).
+
+> **Recomendación:** si GitHub muestra el aviso *"Cannot retrieve latest commit at this time"* al navegar por esta carpeta, es probable que se deba al volumen y a los metadatos de CI/CD (`.github/workflows`, `.deepsource.toml`) heredados del repositorio de IRIS. Para resolverlo de forma definitiva se recomienda una de estas opciones:
+> 1. Añadir `fase6-iris` como **submódulo git** apuntando al repositorio oficial de DFIR-IRIS, en lugar de copiar sus archivos directamente.
+> 2. Eliminar del código copiado los metadatos específicos de CI/CD que no aplican a este repositorio (`.github/workflows`, `.deepsource.toml`, `.bumpversion.cfg`).
+> 3. Volver a subir la carpeta en un commit limpio si el error persiste tras varias horas (puede ser un problema temporal de indexación de GitHub).
 
 ---
 
 **Proyecto:** `tfm-alerta-temprana-oob`  
-**Fase actual:** Fase 8 - Plan C y hardening  
+**Fase actual:** Fase 8 · Plan C y hardening  
 **Autor:** Jose Luis Rey Vargas
