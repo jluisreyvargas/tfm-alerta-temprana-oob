@@ -1,0 +1,13 @@
+# Datos de runtime y secretos de la instancia MISP: no se publican
+misp-docker/.env
+misp-docker/ssl/
+misp-docker/gnupg/
+misp-docker/configs/
+misp-docker/files/
+misp-docker/logs/
+misp-docker/tmp/
+
+# Material upstream no utilizado en este despliegue
+misp-docker/kubernetes/
+misp-docker/experimental/
+misp-docker/.github/
