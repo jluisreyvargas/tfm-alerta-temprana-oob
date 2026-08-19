@@ -22,3 +22,9 @@ fase8-kvm/glkvm-cloud/docker-compose/database/*.db*
 **/*.key
 **/*.pem
 **/certificate/
+
+# Secretos y material criptográfico: nunca se commitean
+**/.env
+**/*.key
+**/*.pem
+**/certificate/
