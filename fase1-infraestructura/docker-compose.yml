@@ -108,6 +108,7 @@ services:
       - "traefik.http.routers.rocketchat.tls=true"
       - "traefik.http.services.rocketchat.loadbalancer.server.port=3000"
       - "traefik.docker.network=oob-network"    
+      - "traefik.http.routers.rocketchat.middlewares=authelia@file"
 
 volumes:
   portainer_data:

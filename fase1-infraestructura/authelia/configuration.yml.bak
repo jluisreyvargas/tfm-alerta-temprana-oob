@@ -17,15 +17,15 @@ authentication_backend:
 access_control:
   default_policy: deny
   rules:
-    - domain: 'chat.oob.local'
-      subject: 'group:ir_lead'
+    - domain: '*.oob.local'
+      subject: 'group:irlead'
       policy: two_factor
 
 session:
   cookies:
     - domain: oob.local
       authelia_url: https://auth.oob.local
-      default_redirection_url: https://chat.oob.local
+      default_redirection_url: https://portainer.oob.local:9443
       expiration: 3600
       inactivity: 1800
 
