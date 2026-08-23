@@ -10,6 +10,8 @@
 #   - cada credentials.*.id se sustituye por la cadena REEMPLAZAR,
 #     conservando el name (el id de credencial es local a cada instancia)
 #   - active se deja en false (el import no debe reactivar nada solo)
+#   - se elimina shared (incluye el email del propietario del workflow en
+#     esta instancia de n8n; no debe publicarse en el repo)
 set -euo pipefail
 
 WORKFLOW_ID="TUzKK9OBP39SYILa"
@@ -27,7 +29,7 @@ mkdir -p "$(dirname "$OUTPUT")"
 
 jq '
   .[0]
-  | del(.id, .versionId, .meta.instanceId)
+  | del(.id, .versionId, .meta.instanceId, .shared)
   | .active = false
   | .nodes = [
       .nodes[]

@@ -439,25 +439,6 @@
   "versionCounter": 199,
   "triggerCount": 1,
   "tags": [],
-  "shared": [
-    {
-      "updatedAt": "2026-08-21T13:01:19.366Z",
-      "createdAt": "2026-08-21T13:01:19.366Z",
-      "role": "workflow:owner",
-      "workflowId": "TUzKK9OBP39SYILa",
-      "projectId": "G4Y2pAOpASy86hXf",
-      "project": {
-        "updatedAt": "2026-08-21T12:46:08.027Z",
-        "createdAt": "2026-08-21T12:44:54.127Z",
-        "id": "G4Y2pAOpASy86hXf",
-        "name": "Jose Luis Rey <jluisreyvargas@gmail.com>",
-        "type": "personal",
-        "icon": null,
-        "description": null,
-        "creatorId": "ea8f8702-4db4-4e3c-b9b5-34c174084ad1"
-      }
-    }
-  ],
   "versionMetadata": {
     "name": "Version c7f97529",
     "description": ""
