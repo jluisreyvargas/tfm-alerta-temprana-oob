@@ -1,14 +1,15 @@
 services:
   n8n:
-    image: docker.n8n.io/n8nio/n8n:latest
+    image: docker.n8n.io/n8nio/n8n:latest@sha256:fe36dc659e17c046255eb56ef65e7776eb7d13e4ca83a76bef137effa090972d
     container_name: n8n
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - N8N_HOST=n8n.oob.local
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - WEBHOOK_URL=https://n8n.oob.local/
-      - N8N_ENCRYPTION_KEY=cambia_esta_clave_segura_32chars
       - GENERIC_TIMEZONE=Europe/Madrid
       - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/misp.crt
     volumes:

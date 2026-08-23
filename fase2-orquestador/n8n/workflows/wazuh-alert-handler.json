@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-23T20:58:09.000Z",
+  "updatedAt": "2026-08-23T21:50:56.948Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -70,7 +70,7 @@
     {
       "parameters": {
         "channel": "general",
-        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 Timestamp: {{$json.wazuh.timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Votos inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
+        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Votos inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
         "options": {},
         "attachments": []
       },
@@ -151,7 +151,6 @@
       ],
       "id": "decce2a4-2e35-406f-9439-d7bd2efc95b4",
       "name": "AbuseIPDB",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 1000,
@@ -161,7 +160,8 @@
           "id": "REEMPLAZAR",
           "name": "Header Auth account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -178,7 +178,6 @@
       ],
       "id": "efcab7cb-c20b-434f-a60e-afdc1601ab95",
       "name": "VirusTotal",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 1000,
@@ -188,7 +187,8 @@
           "id": "REEMPLAZAR",
           "name": "VirusTotal account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -251,12 +251,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://misp:443",
+        "url": "=https://misp/attributes/restSearch",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "mispApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"returnFormat\": \"json\",\n  \"value\": \"{{ ($json.wazuh.src_ip || '').trim() }}\",\n  \"type\": [\"ip-src\", \"ip-dst\"],\n  \"includeContext\": true,\n  \"limit\": 10\n}",
+        "jsonBody": "={\"returnFormat\":\"json\",\"value\":\"{{ $json.wazuh.src_ip }}\",\"type\":[\"ip-src\",\"ip-dst\"],\"limit\":5}",
         "options": {
           "allowUnauthorizedCerts": true
         }
@@ -269,7 +269,6 @@
       ],
       "id": "67f4fff8-9c3a-4226-ad7e-831d32b58176",
       "name": "MISP",
-      "onError": "continueRegularOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 1000,
@@ -279,7 +278,8 @@
           "id": "REEMPLAZAR",
           "name": "MISP account"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -435,12 +435,12 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "203b6d71-f182-445b-a229-d59794fc01d9",
-  "versionCounter": 199,
+  "activeVersionId": "1d002bb8-1e9e-489c-be5d-e86339a44c65",
+  "versionCounter": 212,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version c7f97529",
+    "name": "Version 1d002bb8",
     "description": ""
   }
 }
