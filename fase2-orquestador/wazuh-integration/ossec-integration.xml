@@ -1,0 +1,10 @@
+<!--
+  Fragmento a añadir dentro de <ossec_config> en /var/ossec/etc/ossec.conf
+  del servidor Wazuh, para activar la integración custom-n8n.
+-->
+<integration>
+  <name>custom-n8n</name>
+  <hook_url>https://n8n.oob.local/webhook/wazuh-alerts</hook_url>
+  <level>7</level>
+  <alert_format>json</alert_format>
+</integration>

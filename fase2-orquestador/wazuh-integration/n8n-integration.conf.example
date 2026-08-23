@@ -1,0 +1,9 @@
+# Copiar a /var/ossec/etc/n8n-integration.conf en el servidor Wazuh.
+# Permisos: chmod 640 && chown root:wazuh /var/ossec/etc/n8n-integration.conf
+#
+# Leido por fase2-orquestador/wazuh-integration/custom-n8n. Los secretos no
+# viven en el script para poder versionarlo en el repositorio del TFM.
+
+WEBHOOK_URL=
+WEBHOOK_SECRET=
+CA_BUNDLE=

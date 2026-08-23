@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""Integracion Wazuh -> n8n del enclave OOB.
+
+Ubicacion:  /var/ossec/integrations/custom-n8n
+Permisos:   chmod 750 && chown root:wazuh
+
+Cambios frente a la version anterior:
+
+  1. Se verifica el certificado TLS contra la CA interna del enclave en lugar
+     de usar ssl.CERT_NONE. Un canal de alertas sin verificacion es suplantable
+     por cualquiera que pueda interponerse en la red de gestion, lo que en un
+     sistema OOB anula buena parte de su razon de ser.
+  2. Se firma el cuerpo con HMAC-SHA256. El webhook de n8n verifica la firma,
+     de modo que no basta con alcanzar la URL para inyectar alertas falsas.
+  3. datetime.now(timezone.utc) en lugar de utcnow(), que esta deprecado desde
+     Python 3.12 y devuelve un datetime naive (sin zona), ambiguo en registros
+     forenses.
+  4. Reintentos con espera incremental: una caida breve de n8n ya no implica
+     perder la alerta de forma silenciosa.
+  5. Los fallos se registran en integrations.log ademas de stderr.
+
+Configuracion via /var/ossec/etc/n8n-integration.conf (modo 640, root:wazuh):
+
+    WEBHOOK_URL=https://n8n.oob.local/webhook/wazuh-alerts
+    WEBHOOK_SECRET=<openssl rand -hex 32>
+    CA_BUNDLE=/var/ossec/etc/oob-rootCA.crt
+"""
+
+import hashlib
+import hmac
+import json
+import os
+import ssl
+import sys
+import time
+import urllib.error
+import urllib.request
+from datetime import datetime, timezone
+
+CONFIG_PATH = "/var/ossec/etc/n8n-integration.conf"
+LOG_PATH = "/var/ossec/logs/integrations.log"
+
+MAX_RETRIES = 3
+BACKOFF_SECONDS = 2
+TIMEOUT_SECONDS = 10
+
+
+def log(message):
+    line = f"{datetime.now(timezone.utc).isoformat()} [custom-n8n] {message}\n"
+    sys.stderr.write(line)
+    try:
+        with open(LOG_PATH, "a", encoding="utf-8") as handle:
+            handle.write(line)
+    except OSError:
+        pass
+
+
+def load_config():
+    """Lee la configuracion del fichero externo.
+
+    Los secretos no viven en el script: asi puede versionarse en el repositorio
+    del TFM sin exponer material sensible.
+    """
+    config = {}
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as handle:
+            for raw in handle:
+                raw = raw.strip()
+                if not raw or raw.startswith("#") or "=" not in raw:
+                    continue
+                key, _, value = raw.partition("=")
+                config[key.strip()] = value.strip()
+    except OSError as exc:
+        log(f"No se pudo leer {CONFIG_PATH}: {exc}")
+        sys.exit(1)
+
+    for required in ("WEBHOOK_URL", "WEBHOOK_SECRET"):
+        if not config.get(required):
+            log(f"Falta {required} en {CONFIG_PATH}")
+            sys.exit(1)
+    return config
+
+
+def build_ssl_context(ca_bundle):
+    """Contexto TLS que valida contra la CA interna del enclave."""
+    if ca_bundle and os.path.exists(ca_bundle):
+        return ssl.create_default_context(cafile=ca_bundle)
+    log(
+        "CA_BUNDLE no configurado o inexistente. Se usa el almacen del sistema; "
+        "si n8n presenta un certificado autofirmado la conexion fallara. "
+        "Anadir la CA del enclave en lugar de desactivar la verificacion."
+    )
+    return ssl.create_default_context()
+
+
+def send_alert(alert, config, context):
+    payload = json.dumps(alert, separators=(",", ":")).encode("utf-8")
+    signature = hmac.new(
+        config["WEBHOOK_SECRET"].encode("utf-8"), payload, hashlib.sha256
+    ).hexdigest()
+
+    request = urllib.request.Request(
+        config["WEBHOOK_URL"],
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "X-OOB-Signature": f"sha256={signature}",
+            "User-Agent": "wazuh-oob-integration/2.0",
+        },
+        method="POST",
+    )
+
+    last_error = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            with urllib.request.urlopen(
+                request, context=context, timeout=TIMEOUT_SECONDS
+            ) as response:
+                return response.status
+        except (urllib.error.URLError, ssl.SSLError, OSError) as exc:
+            last_error = exc
+            if attempt < MAX_RETRIES:
+                time.sleep(BACKOFF_SECONDS * attempt)
+
+    log(f"Alerta no entregada tras {MAX_RETRIES} intentos: {last_error}")
+    return None
+
+
+def main():
+    if len(sys.argv) < 2:
+        log("Uso: custom-n8n <alert_file> [api_key] [hook_url]")
+        sys.exit(1)
+
+    config = load_config()
+
+    try:
+        with open(sys.argv[1], "r", encoding="utf-8") as handle:
+            alert = json.load(handle)
+    except (OSError, json.JSONDecodeError) as exc:
+        log(f"No se pudo leer la alerta {sys.argv[1]}: {exc}")
+        sys.exit(1)
+
+    # Marca de tiempo de ingesta en el enclave, con zona horaria explicita.
+    # No sustituye al campo timestamp original de Wazuh, que se conserva.
+    alert["oob_timestamp"] = datetime.now(timezone.utc).isoformat()
+
+    status = send_alert(alert, config, build_ssl_context(config.get("CA_BUNDLE")))
+    if status:
+        log(f"Alerta {alert.get('id', 'sin-id')} entregada (HTTP {status})")
+    else:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
