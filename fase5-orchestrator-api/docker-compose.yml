@@ -9,6 +9,9 @@ services:
       - oob-network
       - single-node_default
 
+    env_file:
+      - .env
+
     environment:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: minioadmin
@@ -19,7 +22,7 @@ services:
       # --- Fase 7: Observabilidad / Métricas ---
       OS_URL: https://single-node-wazuh.indexer-1:9200
       OS_USER: admin
-      OS_PASS: SecretPassword
+      OS_PASS: ${OS_PASS}
       OS_INDEX: tfm-metrics-events
 
     volumes:

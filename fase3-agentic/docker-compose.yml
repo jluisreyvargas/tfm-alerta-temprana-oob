@@ -3,25 +3,38 @@ services:
     build: .
     container_name: langgraph-agent
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+
+    # Sin publicar puerto al host. La version anterior exponia 8000:8000, con lo
+    # que /triage quedaba accesible sin autenticacion desde cualquier proceso del
+    # host. n8n lo alcanza por DNS interno de Docker: http://langgraph-agent:8000
+    expose:
+      - "8000"
+
+    env_file:
+      - .env
     environment:
+      # deterministic | llm | hybrid   (ver app/config.py)
+      - TRIAGE_MODE=${TRIAGE_MODE:-deterministic}
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=mistral:7b
+      - OLLAMA_TIMEOUT_SECONDS=${OLLAMA_TIMEOUT_SECONDS:-60}
+      - MAX_SEVERITY_DOWNGRADE=1
       - TZ=Europe/Madrid
 
-      # --- Fase 7: Observabilidad / Métricas ---
+      # Fase 7 - observabilidad. Credenciales via .env, nunca en el compose.
       - OS_URL=https://single-node-wazuh.indexer-1:9200
-      - OS_USER=admin
-      - OS_PASS=SecretPassword
       - OS_INDEX=tfm-metrics-events
-
     volumes:
-      - ../fase7-observabilidad/shared:/app/shared
-
+      - ../fase7-observabilidad/shared:/app/shared:ro
     networks:
       - oob-network
       - single-node_default
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
 networks:
   oob-network:
