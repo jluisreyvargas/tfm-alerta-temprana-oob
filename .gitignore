@@ -5,6 +5,10 @@ fase4-breakglass-dc/rustdesk/data/
 *.log
 *.tidx
 
+fase2-orquestador/n8n/wf-backup-*.json
+fase2-orquestador/n8n/cred-inventory.json
+fase2-orquestador/n8n/wf-FUNCIONANDO*.json
+
 fase5-velociraptor/velociraptor-config/client_info/
 fase5-velociraptor/velociraptor-config/logs/
 fase5-velociraptor/velociraptor-config/server_artifact_logs/
@@ -28,3 +32,9 @@ fase8-kvm/glkvm-cloud/docker-compose/database/*.db*
 **/*.key
 **/*.pem
 **/certificate/
+
+# Exportaciones de trabajo de n8n. Contienen referencias a credenciales por ID
+# y estructura interna de la instancia; el workflow versionado y saneado vive en
+# fase2-orquestador/n8n/workflows/
+fase2-orquestador/n8n/*.json
+!fase2-orquestador/n8n/workflows/*.json
