@@ -38,3 +38,8 @@ fase8-kvm/glkvm-cloud/docker-compose/database/*.db*
 # fase2-orquestador/n8n/workflows/
 fase2-orquestador/n8n/*.json
 !fase2-orquestador/n8n/workflows/*.json
+
+# Claves privadas de la CA del enclave. El certificado y el CA son publicos;
+# las claves nunca se versionan.
+fase1-infraestructura/traefik/certs/*.key
+fase1-infraestructura/traefik/certs/*.srl

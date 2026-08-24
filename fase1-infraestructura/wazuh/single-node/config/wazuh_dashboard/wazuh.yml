@@ -3,6 +3,6 @@ hosts:
       url: "https://wazuh.manager"
       port: 55000
       username: wazuh-wui
-      password: "MyS3cr37P450r.*-"
+      password: "IG9qyAbjZo7Iww2FDJ1JLx9Aa1.*"
       run_as: false
 enrollment.dns: "192.168.127.138"

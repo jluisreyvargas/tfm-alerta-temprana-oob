@@ -1,0 +1,15 @@
+# Certificado del enclave, emitido por la CA interna (generate-oob-ca.sh).
+#
+# Sin este fichero Traefik sirve "TRAEFIK DEFAULT CERT", un certificado de
+# relleno cuyo CN no corresponde a ningun nombre de host y que se regenera en
+# cada reinicio. Ningun cliente puede verificarlo, lo que obliga a desactivar
+# la verificacion TLS en toda la cadena.
+tls:
+  certificates:
+    - certFile: /etc/traefik/certs/oob-wildcard.crt
+      keyFile: /etc/traefik/certs/oob-wildcard.key
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/certs/oob-wildcard.crt
+        keyFile: /etc/traefik/certs/oob-wildcard.key
