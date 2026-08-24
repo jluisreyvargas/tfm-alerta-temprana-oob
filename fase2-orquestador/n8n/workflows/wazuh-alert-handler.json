@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-23T21:50:56.948Z",
+  "updatedAt": "2026-08-24T16:48:23.232Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -10,12 +10,14 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "wazuh-alerts",
-        "options": {}
+        "options": {
+          "rawBody": true
+        }
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1072,
+        -1136,
         -1024
       ],
       "id": "45f31686-d997-46bc-8b6a-283cf4bc072e",
@@ -28,7 +30,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -864,
+        -656,
         -1024
       ],
       "id": "e2047e33-1686-45e8-acbc-2123d087bd00",
@@ -61,7 +63,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -656,
+        -448,
         -1024
       ],
       "id": "be927338-a61c-4a95-a22f-20cde7e8bb22",
@@ -77,7 +79,7 @@
       "type": "n8n-nodes-base.rocketchat",
       "typeVersion": 1,
       "position": [
-        144,
+        352,
         -640
       ],
       "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
@@ -99,7 +101,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        128,
+        336,
         -1184
       ],
       "id": "af430703-2616-44da-974f-f0d1056ff22e",
@@ -113,7 +115,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        288,
+        496,
         -992
       ],
       "id": "d8f4f830-bee1-4e14-8e9f-8563cca7285e",
@@ -146,7 +148,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -240,
+        -32,
         -1328
       ],
       "id": "decce2a4-2e35-406f-9439-d7bd2efc95b4",
@@ -173,7 +175,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -240,
+        -32,
         -1168
       ],
       "id": "efcab7cb-c20b-434f-a60e-afdc1601ab95",
@@ -199,7 +201,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -272,
+        -64,
         -640
       ],
       "id": "0915b25c-6ce4-4aca-a58b-d2c51da06a47",
@@ -229,7 +231,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -576,
+        -368,
         -624
       ],
       "id": "7910d63e-d5c5-4b0f-9b8f-34cc94eeecf3",
@@ -242,7 +244,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -64,
+        144,
         -640
       ],
       "id": "71356f00-f2b5-4240-ab78-5d80b61a4cd7",
@@ -264,7 +266,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -240,
+        -32,
         -992
       ],
       "id": "67f4fff8-9c3a-4226-ad7e-831d32b58176",
@@ -280,6 +282,19 @@
         }
       },
       "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst secret = $env.OOB_WEBHOOK_SECRET;\nif (!secret) throw new Error('OOB_WEBHOOK_SECRET no configurado en el entorno de n8n');\n\nconst item     = $input.first().json;\nconst received = String(item.headers?.['x-oob-signature'] ?? '');\n\n// Con Raw Body activo, body es la cadena literal recibida. Firmar sobre una\n// reserializacion cambiaria separadores y orden de claves, y la firma no\n// coincidiria nunca.\nconst rawBody = typeof item.body === 'string' ? item.body : JSON.stringify(item.body);\n\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret)\n                                   .update(rawBody, 'utf8')\n                                   .digest('hex');\n\n// Comparacion en tiempo constante: un === filtra informacion sobre el prefijo\n// correcto de la firma y permite reconstruirla byte a byte.\nconst a = Buffer.from(received, 'utf8');\nconst b = Buffer.from(expected, 'utf8');\nif (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {\n  throw new Error('Firma HMAC invalida: alerta descartada');\n}\n\n// Reemite el cuerpo ya parseado para los nodos siguientes.\nreturn [{ json: { body: JSON.parse(rawBody), headers: item.headers } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        -1024
+      ],
+      "id": "39a292c2-c4c0-4a3f-990c-b57d1693e195",
+      "name": "Code in JavaScript"
     }
   ],
   "connections": {
@@ -287,7 +302,7 @@
       "main": [
         [
           {
-            "node": "Normalize Alert",
+            "node": "Code in JavaScript",
             "type": "main",
             "index": 0
           }
@@ -423,6 +438,17 @@
           }
         ]
       ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Normalize Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -435,12 +461,12 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "1d002bb8-1e9e-489c-be5d-e86339a44c65",
-  "versionCounter": 212,
+  "activeVersionId": "15d2a773-9154-40a2-8061-eb764fdd6565",
+  "versionCounter": 222,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 1d002bb8",
+    "name": "Version 15d2a773",
     "description": ""
   }
 }
