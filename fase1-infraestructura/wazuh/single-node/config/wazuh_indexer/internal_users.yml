@@ -11,7 +11,7 @@ _meta:
 # Generar el hash con:
 #   bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh
 admin:
-  hash: "REEMPLAZAR_HASH_BCRYPT"
+  hash: "$2y$12$mh0TXsPuvdvmICwD6hz1ueYRtNP94uDNpyN6Mrj5vb5K9PD3ReFsO"
   reserved: true
   backend_roles:
   - "admin"
@@ -20,6 +20,6 @@ admin:
 # Generar el hash con:
 #   bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/hash.sh
 kibanaserver:
-  hash: "REEMPLAZAR_HASH_BCRYPT"
+  hash: "$2y$12$fijsXEfGqnLl9ZcdSyaUvOewsrU5kCmf4X7FjZwfqjMQvUkdSfPgq"
   reserved: true
   description: "Usuario de servicio del dashboard"
