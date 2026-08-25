@@ -303,3 +303,51 @@ existe y falta únicamente la acción.
 > (`chat.postMessage` sobre `#general`). El nombre del grupo combina
 > `rule_id` y `alert_id` (`inc-{{rule_id}}-{{alert_id}}`, saneado), no solo
 > `alert_id`.
+
+### `roomId` frente a `channel` en `chat.postMessage`
+
+`chat.postMessage` acepta dos parámetros para dirigir el mensaje y **no son
+intercambiables**:
+
+- `roomId` — identificador interno (`_id`) del grupo o canal. Sin prefijo.
+- `channel` — nombre del canal, y **requiere el prefijo `#`** para canales
+  públicos.
+
+`Contexto en War Room` usa `roomId` (`{{ $json.group?._id ?? $json.channel?._id ?? '' }}`);
+`Anuncio en General` usa `channel` (`"#general"`). Cruzarlos —enviar un nombre
+en `roomId`, o un `_id` en `channel`— produce un 400:
+
+```json
+{"success":false,"error":"[invalid-channel]","errorType":"invalid-channel"}
+```
+
+Este es el error observado y confirmado en esta instalación, no uno
+hipotético. Se produce cuando `Crear War Room` falla (por ejemplo, nombre de
+grupo duplicado) y devuelve, entre otros:
+
+```json
+{"success":false,"error":"A channel with name 'X' exists [error-duplicate-channel-name]","errorType":"error-duplicate-channel-name"}
+```
+
+`Crear War Room` tiene `On Error → Continue` (`continueRegularOutput`): si
+falla, la ejecución sigue hacia `Contexto en War Room` con un ítem sin
+`group`. La expresión `$json.group?._id ?? $json.channel?._id ?? ''` resuelve
+entonces a cadena vacía, `roomId` viaja vacío, y `[invalid-channel]` aparece
+dos nodos más allá del fallo real de `Crear War Room` — lejos de su causa.
+
+> [!WARNING]
+> **Brecha conocida, no un fix aplicado.** El workflow desplegado
+> (`wazuh-alert-handler.json`) no tiene ningún nodo `If` que compruebe
+> `{{ $json.success }}` tras `Crear War Room` antes de continuar: los únicos
+> nodos `If` del workflow son `If` (nivel de severidad), `Abrir War Room`
+> (`create_war_room`) y `CTI Aplicable` (`enrichable`). La comprobación de
+> `success` que evitaría este fallo silencioso está pendiente de implementar.
+
+### `error-not-allowed`
+
+Es el error real de Rocket.Chat cuando el bot carece del permiso
+`create-c`/`create-p` para crear canales o grupos. No se ha observado en esta
+instalación: el rol `bot` siempre tuvo permisos suficientes. Queda documentado
+como caso previsto sin salida capturada — para reproducirlo de forma
+deliberada, retirar temporalmente ese permiso al bot y repetir la creación
+del War Room.
