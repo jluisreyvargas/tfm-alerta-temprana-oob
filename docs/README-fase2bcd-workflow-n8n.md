@@ -197,6 +197,9 @@ chown root:wazuh /var/ossec/integrations/custom-n8n
 > **Nota:** El campo Channel debe ir **sin almohadilla** (`general`, no `#general`).
 > Con `#general` Rocket.Chat devuelve `error-not-allowed` (HTTP 400).
 
+> [!NOTE]
+> **Sin reproducir.** `error-not-allowed` es el error real de Rocket.Chat cuando el bot carece del permiso `create-c`/`create-p` para crear canales o grupos — no está confirmado que un `#` de más en el campo `Channel` de este nodo lo dispare. En esta instalación el bot siempre tuvo permisos suficientes, así que este caso concreto nunca se llegó a ver; queda documentado como previsto, no como observado. El error que sí se observó y confirmó por un `#`/`roomId` mal usado en `chat.postMessage` es `[invalid-channel]`, en el flujo de War Room posterior — ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md`.
+
 ---
 
 ## Problemas encontrados y soluciones
@@ -205,7 +208,7 @@ chown root:wazuh /var/ossec/integrations/custom-n8n
 |----------|-------|----------|
 | Webhook 404 con `/webhook/` | Workflow no publicado | Pulsar **Publish** en n8n |
 | Expresiones `$json.rule.*` vacías | n8n envuelve payload en `body` | Usar `$json.body.rule.*` en nodo Set |
-| `error-not-allowed` Rocket.Chat | Canal con `#` en el nombre | Usar `general` sin `#` |
+| `error-not-allowed` Rocket.Chat (previsto, no observado — ver nota arriba) | Canal con `#` en el nombre | Usar `general` sin `#` |
 | Conexión rechazada a `chat.oob.local` | Hostname no resuelto dentro del contenedor n8n | Usar URL interna Docker `http://rocketchat:3000` |
 
 ---
