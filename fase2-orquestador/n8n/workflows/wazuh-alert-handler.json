@@ -721,8 +721,7 @@
   "staticData": {
     "global": {
       "seen": {
-        "550|ubuntuserver|test.nocti.1787688025": 1787688026337,
-        "550|ubuntuserver|test.nocti.1787688138": 1787688139355
+        "550|ubuntuserver|/etc/hosts.allow": 1787690773116
       }
     }
   },
@@ -731,7 +730,7 @@
   },
   "pinData": {},
   "activeVersionId": "4fb10676-8217-4f55-bb58-548719013cb0",
-  "versionCounter": 462,
+  "versionCounter": 463,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
