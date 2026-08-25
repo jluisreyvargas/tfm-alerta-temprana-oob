@@ -94,9 +94,12 @@ if __name__ == "__main__":
 ### Permisos
 
 ```bash
-chmod 750 /var/ossec/integrations/custom-n8n
+chmod 755 /var/ossec/integrations/custom-n8n
 chown root:wazuh /var/ossec/integrations/custom-n8n
 ```
+
+> [!NOTE]
+> **Corrección.** Este documento indicaba `chmod 750`, el modo que recomienda Wazuh. Con el script montado como bind mount desde el repositorio, la propiedad la hereda del host (`uid 1000`), mientras que `wazuh-integratord` corre como `uid 999`: con `750` el demonio cae en la categoría «otros» y no puede ejecutarlo. El modo correcto es `755`. Es un compromiso deliberado: se gana reproducibilidad (el bind mount evita que `docker cp` se pierda en cada recreación del contenedor) a cambio de que el script sea legible por cualquier usuario del contenedor. Es aceptable porque el script no contiene secretos — viven en `n8n-integration.conf`, que sí queda en `640 root:wazuh`.
 
 ### Configuración en ossec.conf
 
