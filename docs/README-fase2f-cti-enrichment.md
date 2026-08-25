@@ -5,6 +5,9 @@
 **Fecha:** 2026-05-24
 **Estado:** Completada y validada
 
+> [!NOTE]
+> Las validaciones de este documento se realizaron con payloads sintéticos enviados por `curl` desde el host, no sobre tráfico real de Wazuh. La validación de extremo a extremo sobre tráfico real está documentada en `fase2-orquestador/README.md`.
+
 ---
 
 ## Descripción
@@ -34,6 +37,9 @@ En esta fase se amplió el pipeline de triage para incorporar inteligencia de am
 | AI Agent | Mistral 7B analiza con contexto enriquecido |
 | Code Merge Final | Combina CTI + análisis IA en un único payload |
 | Rocket.Chat | Publica mensaje final estructurado |
+
+> [!NOTE]
+> **Estado actual.** El nodo `Edit Fields` fue sustituido por `Normalize Alert`. Ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "Normalización y deduplicación" de `fase2-orquestador/README.md`.
 
 ## Arquitectura validada
 
@@ -67,6 +73,9 @@ AbuseIPDB Check   VirusTotal Check   (MISP — pendiente)
         Rocket.Chat
 ```
 
+> [!NOTE]
+> **Estado actual.** MISP dejó de estar pendiente: se integró consultando `/attributes/restSearch`, no la raíz de MISP. Ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "Enriquecimiento CTI" de `fase2-orquestador/README.md`.
+
 ## Configuración HTTP Request — AbuseIPDB
 
 | Campo | Valor |
@@ -89,10 +98,14 @@ La respuesta devuelve: `abuseConfidenceScore`, `totalReports`, `countryCode`, `i
 | Auth | Header Auth |
 | Header Name | x-apikey |
 
-La respuesta devuelve en `data.attributes`: `total_votes` (malicious/harmless), `asn`, `as_owner`, `network`, `country`.
+La respuesta devuelve en `data.attributes`, entre otros, `last_analysis_stats` (malicious/suspicious/harmless/undetected/timeout) y `total_votes` (malicious/harmless), además de `asn`, `as_owner`, `network`, `country`.
 
-> IMPORTANTE: La estructura real de VirusTotal v3 para IPs usa `total_votes` y NO `last_analysis_stats`.
-> El código debe acceder a `vtAttr.total_votes.malicious` y no a `last_analysis_stats.malicious`.
+> [!NOTE]
+> **Corrección.** Este documento afirmaba que el objeto IP de VirusTotal v3 usa `total_votes` y no tiene `last_analysis_stats`. Es incorrecto: el objeto contiene **ambos** campos y significan cosas distintas.
+> - `last_analysis_stats` → recuento de motores antivirus que clasifican la IP como maliciosa, sospechosa, inocua, no detectada o con timeout.
+> - `total_votes` → votos de la comunidad de usuarios de VirusTotal.
+>
+> El pipeline actual usa `last_analysis_stats` (motores), que es la señal más fuerte. El código mostrado más abajo (`vtAttr.total_votes.malicious`) refleja el estado de esta fase, ya superado — ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "Enriquecimiento CTI" de `fase2-orquestador/README.md`.
 
 ## Nodo Merge
 
@@ -246,8 +259,8 @@ REGLAS DE SEVERIDAD OBLIGATORIAS:
 └ Nodo TOR: {{ $json.abuse_is_tor }}
 
 🦠 *CTI — VirusTotal*
-├ Votos maliciosos: {{ $json.vt_malicious }}
-├ Votos harmless: {{ $json.vt_harmless }}
+├ Detecciones maliciosas (motores): {{ $json.vt_malicious }}
+├ Detecciones limpias (motores): {{ $json.vt_harmless }}
 ├ ASN: {{ $json.vt_asn }} ({{ $json.vt_as_owner }})
 ├ Red: {{ $json.vt_network }}
 └ País: {{ $json.vt_country }}
@@ -282,16 +295,16 @@ Mensaje real recibido durante la validación (2026-05-24):
 └ Nodo TOR: false
 
 🦠 CTI — VirusTotal
-├ Votos maliciosos: 39
-├ Votos harmless: 144
+├ Detecciones maliciosas (motores): 39
+├ Detecciones limpias (motores): 144
 ├ ASN: 13335 (Cloudflare, Inc.)
 ├ Red: 1.1.1.0/24
 └ País: N/A
 
 🤖 Análisis IA (Mistral 7B):
 ├ Severidad Real: MEDIA
-├ Táctica MITRE: T1110 - Brute Force
-├ Técnica: TXXXX - SSH
+├ Táctica MITRE: TA0006 - Credential Access
+├ Técnica MITRE: T1110 - Brute Force
 ├ Resumen: SSH brute force attack detected on web-server-01 from IP 1.1.1.1,
 │          potential malicious activity based on VirusTotal report
 ├ Recomendación: Monitor the affected agent and increase login attempts rate limits.
@@ -301,6 +314,9 @@ Mensaje real recibido durante la validación (2026-05-24):
 > La IP 1.1.1.1 pertenece a Cloudflare con abuseConfidenceScore = 0, lo que explica la severidad
 > MEDIA. Con IPs maliciosas reales el score de AbuseIPDB y vt_malicious serán más altos y el
 > modelo escalará la severidad según las reglas del System Message.
+
+> [!NOTE]
+> **Corrección.** Los campos "Táctica MITRE" y "Técnica" aparecían cruzados en el mensaje original (`Táctica MITRE: T1110 - Brute Force` / `Técnica: TXXXX - SSH`): T1110 es una técnica, no una táctica, y "SSH" no es una técnica ATT&CK. Se corrige a `Táctica MITRE: TA0006 - Credential Access` / `Técnica MITRE: T1110 - Brute Force`.
 
 ## Incidencias resueltas
 
@@ -312,9 +328,12 @@ el payload devolviendo solo su campo `output`.
 
 ### 2. Campos VirusTotal todos a 0 y N/A
 
-**Causa:** El código accedía a `last_analysis_stats` pero la respuesta real de VirusTotal v3
+> [!NOTE]
+> **Reformulado.** Esta incidencia se documentó originalmente como "el código accedía a un campo que no existe (`last_analysis_stats`) y hubo que cambiar a `total_votes`". Esa causa es incorrecta: `last_analysis_stats` sí existe en el objeto IP de VirusTotal v3 (ver la nota de corrección en "Configuración HTTP Request — VirusTotal", más arriba). La incidencia real era que la documentación de esta fase afirmaba, sin serlo, que ese campo no existía; el cambio a `total_votes` fue en sí mismo un paso equivocado, corregido después al volver a `last_analysis_stats`. Se conserva el texto original de esta fase por su valor histórico.
+
+**Causa (documentada en esta fase):** El código accedía a `last_analysis_stats` pero la respuesta real de VirusTotal v3
 para IPs usa `total_votes`.
-**Solución:** Actualizar rutas a `vtAttr.total_votes.malicious` y `vtAttr.total_votes.harmless`.
+**Solución (documentada en esta fase):** Actualizar rutas a `vtAttr.total_votes.malicious` y `vtAttr.total_votes.harmless`.
 
 ### 3. Valores numéricos no renderizados en Rocket.Chat
 
