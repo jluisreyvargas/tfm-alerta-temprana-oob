@@ -236,6 +236,11 @@ docker compose logs -f rocketchat
 # Espera: "SERVER RUNNING"
 ```
 
+> [!NOTE]
+> **Corrección.** Este bloque no coincide con el `docker-compose.yml` real en dos puntos:
+> - Falta la variable de entorno `OVERWRITE_SETTING_Show_Setup_Wizard: completed`.
+> - Falta la label `"traefik.http.routers.rocketchat.middlewares=authelia@file"`. No es un detalle menor: es precisamente lo que protege Rocket.Chat detrás de Authelia, tal como documenta `fase1-infraestructura/README.md` ("Cableado del middleware").
+
 ### Paso 7 — Configuración inicial Rocket.Chat
 1. Accede a `http://localhost:3000` o `https://chat.oob.local`
 2. Registra el primer usuario — se convierte automáticamente en admin:
@@ -258,12 +263,15 @@ docker compose logs -f rocketchat
 ```env
 # === ROCKET.CHAT ===
 ROCKETCHAT_VERSION=8.4.1
-ROOT_URL=http://chat.oob.local
+ROOT_URL=https://chat.oob.local
 
 # === MONGODB ===
 MONGO_INITDB_ROOT_USERNAME=rcuser
 MONGO_INITDB_ROOT_PASSWORD=MongoOOB2026!
 ```
+
+> [!NOTE]
+> **Corrección.** `ROOT_URL` estaba en `http://` (sin TLS). El valor real es `https://chat.oob.local`, coherente con `fase1-infraestructura/README.md` y con que Traefik solo enruta la entrada TLS en `:443` — Rocket.Chat nunca se sirve directamente en HTTP fuera del contenedor.
 
 ---
 
