@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-25T20:02:05.486Z",
+  "updatedAt": "2026-08-25T22:38:55.984Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -72,7 +72,7 @@
     {
       "parameters": {
         "channel": "general",
-        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$('Code Merge Final').first().json.decision.analysis_mode}}\n📋 Regla: {{$('Code Merge Final').first().json.wazuh.rule_id}} — {{$('Code Merge Final').first().json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$('Code Merge Final').first().json.wazuh.rule_level}}\n🖥 Agente: {{$('Code Merge Final').first().json.wazuh.agent_name}}\n🌐 IP Fuente: {{$('Code Merge Final').first().json.wazuh.src_ip}}\n🕐 *Evento:* {{$('Code Merge Final').first().json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$('Code Merge Final').first().json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$('Code Merge Final').first().json.cti.abuse_confidence}}%\n├ Total Reportes: {{$('Code Merge Final').first().json.cti.abuse_total_reports}}\n└ País: {{$('Code Merge Final').first().json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$('Code Merge Final').first().json.cti.vt_malicious}}\n├ Votos inocuos: {{$('Code Merge Final').first().json.cti.vt_harmless}}\n└ ASN: {{$('Code Merge Final').first().json.cti.vt_asn}} ({{$('Code Merge Final').first().json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$('Code Merge Final').first().json.severity}}\n├ MITRE Táctica: {{$('Code Merge Final').first().json.mitre_tactic}}\n├ MITRE Técnica: {{$('Code Merge Final').first().json.mitre_technique}}\n├ Resumen: {{$('Code Merge Final').first().json.summary}}\n├ Recomendación: {{$('Code Merge Final').first().json.recommendation}}\n├ Requiere Bloqueo: {{$('Code Merge Final').first().json.requires_block}}\n└ Abrir War Room: {{$('Code Merge Final').first().json.create_war_room}}",
+        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Motores inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ ATT&CK: {{ $json.decision.mitre_technique }} / {{ $json.decision.mitre_tactic }}\n├ Fuente ATT&CK: {{ $json.decision.mitre_source }}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
         "options": {},
         "attachments": []
       },
@@ -360,7 +360,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"roomId\": \"{{ $json.group?._id ?? $json.channel?._id ?? '' }}\",\n  \"text\": \"🚨 *War Room — {{ $('Code Merge Final').first().json.wazuh.rule_desc }}*\\n\\n📋 Regla: {{ $('Code Merge Final').first().json.wazuh.rule_id }}\\n🖥 Agente: {{ $('Code Merge Final').first().json.wazuh.agent_name }}\\n🌐 IP origen: {{ $('Code Merge Final').first().json.wazuh.src_ip }}\\n🕐 Evento: {{ $('Code Merge Final').first().json.wazuh.event_timestamp }}\\n\\n🔍 AbuseIPDB {{ $('Code Merge Final').first().json.cti.abuse_confidence }}% · VirusTotal {{ $('Code Merge Final').first().json.cti.vt_malicious }} motores · MISP {{ $('Code Merge Final').first().json.cti.misp_total }}\\n\\n🤖 Triage ({{ $('Code Merge Final').first().json.decision.analysis_mode }})\\n├ Severidad: {{ $('Code Merge Final').first().json.decision.severity_real }}\\n├ ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_technique }} / {{ $('Code Merge Final').first().json.decision.mitre_tactic }}\\n└ Recomendación: {{ $('Code Merge Final').first().json.decision.recommendation }}\"\n}",
+        "jsonBody": "={\n  \"roomId\": \"{{ $json.group?._id ?? $json.channel?._id ?? '' }}\",\n  \"text\": \"🚨 *War Room — {{ $('Code Merge Final').first().json.wazuh.rule_desc }}*\\n\\n📋 Regla: {{ $('Code Merge Final').first().json.wazuh.rule_id }}\\n🖥 Agente: {{ $('Code Merge Final').first().json.wazuh.agent_name }}\\n🌐 IP origen: {{ $('Code Merge Final').first().json.wazuh.src_ip }}\\n🕐 Evento: {{ $('Code Merge Final').first().json.wazuh.event_timestamp }}\\n📥 Ingesta: {{ $('Code Merge Final').first().json.wazuh.ingest_timestamp }}\\n\\n🔍 AbuseIPDB {{ $('Code Merge Final').first().json.cti.abuse_confidence }}% · VirusTotal {{ $('Code Merge Final').first().json.cti.vt_malicious }} motores maliciosos / {{ $('Code Merge Final').first().json.cti.vt_harmless }} inocuos · MISP {{ $('Code Merge Final').first().json.cti.misp_total }}\\n\\n🤖 Triage ({{ $('Code Merge Final').first().json.decision.analysis_mode }})\\n├ Severidad: {{ $('Code Merge Final').first().json.decision.severity_real }}\\n├ ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_technique }} / {{ $('Code Merge Final').first().json.decision.mitre_tactic }}\\n├ Fuente ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_source }}\\n├ Score: {{ $('Code Merge Final').first().json.decision.score }}\\n└ Recomendación: {{ $('Code Merge Final').first().json.decision.recommendation }}\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -449,40 +449,6 @@
         }
       },
       "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "2f8aa6b6-f2f8-47f8-b03b-45107782ef99",
-              "leftValue": "={{ $json.success }}",
-              "rightValue": "",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        -96,
-        -1024
-      ],
-      "id": "3da6c2c9-4f7f-4733-b264-c02bbc3ec448",
-      "name": "War Room creado"
     },
     {
       "parameters": {
@@ -711,7 +677,7 @@
       "main": [
         [
           {
-            "node": "War Room creado",
+            "node": "Contexto en War Room",
             "type": "main",
             "index": 0
           }
@@ -745,24 +711,6 @@
           }
         ]
       ]
-    },
-    "War Room creado": {
-      "main": [
-        [
-          {
-            "node": "Contexto en War Room",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Post a message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "settings": {
@@ -773,7 +721,7 @@
   "staticData": {
     "global": {
       "seen": {
-        "550|ubuntuserver|/etc/hosts.allow": 1787690773116
+        "550|ubuntuserver|/etc/prueba-1787697629.conf": 1787697629974
       }
     }
   },
@@ -781,12 +729,12 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "4fb10676-8217-4f55-bb58-548719013cb0",
-  "versionCounter": 463,
+  "activeVersionId": "104add13-bbd8-4d96-8e40-8e32dc0de486",
+  "versionCounter": 474,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 4fb10676",
+    "name": "Version 104add13",
     "description": ""
   }
 }
