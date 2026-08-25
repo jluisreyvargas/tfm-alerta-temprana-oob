@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-24T16:48:23.232Z",
+  "updatedAt": "2026-08-25T20:02:05.486Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -17,21 +17,21 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1136,
-        -1024
+        -1440,
+        -1264
       ],
       "id": "45f31686-d997-46bc-8b6a-283cf4bc072e",
       "name": "Webhook"
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body ?? {};\n\nconst rule  = body.rule  ?? {};\nconst agent = body.agent ?? {};\nconst data  = body.data  ?? {};\nconst mitre = rule.mitre ?? {};\n\n// RFC1918, loopback, link-local y CGNAT. Consultar reputación de estas\n// direcciones no aporta nada y consume cuota de las APIs externas.\nfunction isPrivateIp(ip) {\n  if (!ip) return true;\n  const m = ip.match(/^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/);\n  if (!m) return true;\n  const [a, b] = [Number(m[1]), Number(m[2])];\n  return a === 10 || a === 127 || (a === 172 && b >= 16 && b <= 31) ||\n         (a === 192 && b === 168) || (a === 169 && b === 254) ||\n         (a === 100 && b >= 64 && b <= 127);\n}\n\nconst srcIp = String(data.srcip ?? data.src_ip ?? '').trim();\nconst enrichable = Boolean(srcIp) && !isPrivateIp(srcIp);\n\nreturn [{ json: {\n  wazuh: {\n    alert_id:   String(body.id ?? ''),\n    rule_id:    String(rule.id ?? ''),\n    rule_desc:  String(rule.description ?? ''),\n    rule_level: Number(rule.level ?? 0),\n    rule_groups: Array.isArray(rule.groups) ? rule.groups : [],\n    agent_name: String(agent.name ?? ''),\n    agent_ip:   String(agent.ip ?? ''),\n    src_ip:     srcIp,\n    // Tiempo del evento según Wazuh. Es el que debe figurar en el informe.\n    event_timestamp: String(body.timestamp ?? ''),\n    // Tiempo de ingesta en el enclave, añadido por custom-n8n.\n    ingest_timestamp: String(body.oob_timestamp ?? ''),\n    // Mapeo ATT&CK nativo del ruleset de Wazuh. Wazuh lo entrega como arrays.\n    mitre_id:        mitre.id        ?? [],\n    mitre_tactic:    mitre.tactic    ?? [],\n    mitre_technique: mitre.technique ?? [],\n  },\n  enrichable,\n  enrichment_skipped: enrichable ? '' :\n    (srcIp ? `IP origen privada (${srcIp})` : 'alerta sin IP origen'),\n}}];"
+        "jsCode": "const body = $input.first().json.body ?? {};\n\nconst rule  = body.rule  ?? {};\nconst agent = body.agent ?? {};\nconst data  = body.data  ?? {};\nconst mitre = rule.mitre ?? {};\n\n// RFC1918, loopback, link-local y CGNAT. Consultar reputación de estas\n// direcciones no aporta nada y consume cuota de las APIs externas.\nfunction isPrivateIp(ip) {\n  if (!ip) return true;\n  const m = ip.match(/^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/);\n  if (!m) return true;\n  const [a, b] = [Number(m[1]), Number(m[2])];\n  return a === 10 || a === 127 || (a === 172 && b >= 16 && b <= 31) ||\n         (a === 192 && b === 168) || (a === 169 && b === 254) ||\n         (a === 100 && b >= 64 && b <= 127);\n}\n\nconst srcIp = String(data.srcip ?? data.src_ip ?? '').trim();\nconst enrichable = Boolean(srcIp) && !isPrivateIp(srcIp);\n\nreturn [{ json: {\n  wazuh: {\n    syscheck_path: String(body.syscheck?.path ?? ''),\n    alert_id:   String(body.id ?? ''),\n    rule_id:    String(rule.id ?? ''),\n    rule_desc:  String(rule.description ?? ''),\n    rule_level: Number(rule.level ?? 0),\n    rule_groups: Array.isArray(rule.groups) ? rule.groups : [],\n    agent_name: String(agent.name ?? ''),\n    agent_ip:   String(agent.ip ?? ''),\n    src_ip:     srcIp,\n    // Tiempo del evento según Wazuh. Es el que debe figurar en el informe.\n    event_timestamp: String(body.timestamp ?? ''),\n    // Tiempo de ingesta en el enclave, añadido por custom-n8n.\n    ingest_timestamp: String(body.oob_timestamp ?? ''),\n    // Mapeo ATT&CK nativo del ruleset de Wazuh. Wazuh lo entrega como arrays.\n    mitre_id:        mitre.id        ?? [],\n    mitre_tactic:    mitre.tactic    ?? [],\n    mitre_technique: mitre.technique ?? [],\n  },\n  enrichable,\n  enrichment_skipped: enrichable ? '' :\n    (srcIp ? `IP origen privada (${srcIp})` : 'alerta sin IP origen'),\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -656,
-        -1024
+        -1040,
+        -1264
       ],
       "id": "e2047e33-1686-45e8-acbc-2123d087bd00",
       "name": "Normalize Alert"
@@ -63,8 +63,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -448,
-        -1024
+        -880,
+        -1264
       ],
       "id": "be927338-a61c-4a95-a22f-20cde7e8bb22",
       "name": "If"
@@ -79,8 +79,8 @@
       "type": "n8n-nodes-base.rocketchat",
       "typeVersion": 1,
       "position": [
-        352,
-        -640
+        -208,
+        -720
       ],
       "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
       "name": "Post a message",
@@ -101,8 +101,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        336,
-        -1184
+        240,
+        -1392
       ],
       "id": "af430703-2616-44da-974f-f0d1056ff22e",
       "name": "Merge",
@@ -110,13 +110,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const norm = $('Normalize Alert').first().json;\n\nconst abuse = $('AbuseIPDB').first()?.json?.data ?? {};\nconst vt    = $('VirusTotal').first()?.json?.data?.attributes ?? {};\n\nlet mispCount = 0;\ntry {\n  const resp = $('MISP').first()?.json?.response ?? {};\n  mispCount = Array.isArray(resp.Attribute) ? resp.Attribute.length : 0;\n} catch (e) { mispCount = 0; }\n\nreturn [{ json: {\n  wazuh: norm.wazuh,\n  cti: {\n    abuse_confidence:    Number(abuse.abuseConfidenceScore ?? 0),\n    abuse_total_reports: Number(abuse.totalReports ?? 0),\n    abuse_country:       String(abuse.countryCode ?? 'N/A'),\n    abuse_isp:           String(abuse.isp ?? 'N/A'),\n    abuse_is_tor:        Boolean(abuse.isTor ?? false),\n    // last_analysis_stats son detecciones de motores; total_votes son votos de\n    // la comunidad. El doc de Fase 2f afirmaba que el objeto IP de VirusTotal v3\n    // no tiene last_analysis_stats, lo cual es incorrecto: tiene ambos campos y\n    // significan cosas distintas. Aquí se usan motores, y así se etiqueta.\n    vt_malicious:  Number(vt.last_analysis_stats?.malicious  ?? 0),\n    vt_suspicious: Number(vt.last_analysis_stats?.suspicious ?? 0),\n    vt_harmless:   Number(vt.last_analysis_stats?.harmless   ?? 0),\n    vt_asn:        String(vt.asn ?? 'N/A'),\n    vt_as_owner:   String(vt.as_owner ?? 'N/A'),\n    vt_network:    String(vt.network ?? 'N/A'),\n    misp_total:    mispCount,\n    src_ip_is_private:  !norm.enrichable && Boolean(norm.wazuh.src_ip),\n    enrichment_skipped: norm.enrichment_skipped,\n  }\n}}];"
+        "jsCode": "const norm = $('Normalize Alert').first().json;\n\n// $('Nodo').first() lanza excepcion si el nodo no llego a ejecutarse, cosa que\n// ocurre cuando la rama CTI se salta por no haber IP publica que consultar.\n// El encadenamiento opcional no protege: el error se produce antes de evaluarlo.\nfunction salidaDe(nombre) {\n  try {\n    return $(nombre).first()?.json ?? {};\n  } catch (e) {\n    return {};\n  }\n}\n\nconst abuse = salidaDe('AbuseIPDB').data ?? {};\nconst vt    = salidaDe('VirusTotal').data?.attributes ?? {};\n\nlet mispCount = 0;\ntry {\n  const resp = salidaDe('MISP').response ?? {};\n  mispCount = Array.isArray(resp.Attribute) ? resp.Attribute.length : 0;\n} catch (e) {\n  mispCount = 0;\n}\n\nreturn [{ json: {\n  wazuh: norm.wazuh,\n  cti: {\n    abuse_confidence:    Number(abuse.abuseConfidenceScore ?? 0),\n    abuse_total_reports: Number(abuse.totalReports ?? 0),\n    abuse_country:       String(abuse.countryCode ?? 'N/A'),\n    abuse_isp:           String(abuse.isp ?? 'N/A'),\n    abuse_is_tor:        Boolean(abuse.isTor ?? false),\n\n    // last_analysis_stats son detecciones de motores; total_votes son votos de\n    // la comunidad. Son cosas distintas: aqui se usan motores.\n    vt_malicious:  Number(vt.last_analysis_stats?.malicious  ?? 0),\n    vt_suspicious: Number(vt.last_analysis_stats?.suspicious ?? 0),\n    vt_harmless:   Number(vt.last_analysis_stats?.harmless   ?? 0),\n    vt_asn:        String(vt.asn ?? 'N/A'),\n    vt_as_owner:   String(vt.as_owner ?? 'N/A'),\n    vt_network:    String(vt.network ?? 'N/A'),\n\n    misp_total: mispCount,\n\n    src_ip_is_private:  !norm.enrichable && Boolean(norm.wazuh.src_ip),\n    enrichment_skipped: norm.enrichment_skipped ?? '',\n  }\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        496,
-        -992
+        400,
+        -1248
       ],
       "id": "d8f4f830-bee1-4e14-8e9f-8563cca7285e",
       "name": "Code CTI Context"
@@ -148,8 +148,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -32,
-        -1328
+        -128,
+        -1760
       ],
       "id": "decce2a4-2e35-406f-9439-d7bd2efc95b4",
       "name": "AbuseIPDB",
@@ -175,8 +175,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -32,
-        -1168
+        -128,
+        -1584
       ],
       "id": "efcab7cb-c20b-434f-a60e-afdc1601ab95",
       "name": "VirusTotal",
@@ -201,8 +201,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -64,
-        -640
+        -896,
+        -896
       ],
       "id": "0915b25c-6ce4-4aca-a58b-d2c51da06a47",
       "name": "Merge1",
@@ -231,21 +231,21 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -368,
-        -624
+        -1200,
+        -880
       ],
       "id": "7910d63e-d5c5-4b0f-9b8f-34cc94eeecf3",
       "name": "HTTP Request"
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first().json;\n\nconst decision = input.decision ?? {};\n\nreturn [{\n  json: {\n    ...input,\n    severity     : decision.severity_real ?? 'N/A',\n    mitre_tactic : decision.mitre_tactic ?? 'N/A',\n    mitre_technique: decision.mitre_technique ?? 'N/A',\n    summary      : decision.summary ?? 'Sin análisis',\n    cti_summary  : decision.cti_summary ?? '',\n    recommendation: decision.recommendation ?? 'Sin recomendación',\n    requires_block: decision.requires_block ?? false,\n    create_war_room: decision.create_war_room ?? false\n  }\n}];"
+        "jsCode": "const input = $input.first().json;\nconst decision = input.decision ?? {};\nconst wazuh = input.wazuh ?? {};\n\n// Rocket.Chat no admite puntos en nombres de canal, y alert_id de Wazuh tiene\n// forma \"1787305487.1121\". Se sanea a caracteres validos y se acota la longitud.\nconst base = `inc-${wazuh.rule_id}-${wazuh.alert_id || Date.now()}`;\nconst warRoomName = base.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 60);\n\nreturn [{\n  json: {\n    ...input,\n    severity     : decision.severity_real ?? 'N/A',\n    mitre_tactic : decision.mitre_tactic ?? 'N/A',\n    mitre_technique: decision.mitre_technique ?? 'N/A',\n    summary      : decision.summary ?? 'Sin análisis',\n    cti_summary  : decision.cti_summary ?? '',\n    recommendation: decision.recommendation ?? 'Sin recomendación',\n    requires_block: decision.requires_block ?? false,\n    create_war_room: decision.create_war_room ?? false,\n    war_room_name: warRoomName\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        144,
-        -640
+        -688,
+        -896
       ],
       "id": "71356f00-f2b5-4240-ab78-5d80b61a4cd7",
       "name": "Code Merge Final"
@@ -258,7 +258,7 @@
         "nodeCredentialType": "mispApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"returnFormat\":\"json\",\"value\":\"{{ $json.wazuh.src_ip }}\",\"type\":[\"ip-src\",\"ip-dst\"],\"limit\":5}",
+        "jsonBody": "={\"returnFormat\":\"json\",\"value\":\"{{ $('Normalize Alert').first().json.wazuh.src_ip }}\",\"type\":[\"ip-src\",\"ip-dst\"],\"limit\":5}",
         "options": {
           "allowUnauthorizedCerts": true
         }
@@ -266,8 +266,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -32,
-        -992
+        -128,
+        -1424
       ],
       "id": "67f4fff8-9c3a-4226-ad7e-831d32b58176",
       "name": "MISP",
@@ -290,11 +290,199 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -928,
-        -1024
+        -1232,
+        -1264
       ],
       "id": "39a292c2-c4c0-4a3f-990c-b57d1693e195",
       "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const store = $getWorkflowStaticData('global');\nstore.seen = store.seen || {};\n\nconst VENTANA_MS = 15 * 60 * 1000;\nconst ahora = Date.now();\n\nfor (const k of Object.keys(store.seen)) {\n  if (ahora - store.seen[k] > VENTANA_MS) delete store.seen[k];\n}\n\nconst salida = [];\nfor (const item of $input.all()) {\n  const w = item.json.wazuh ?? {};\n\n  // Discriminante adicional para alertas sin IP origen: sin el, todas las\n  // alertas de integridad del mismo agente y regla colapsan en una sola clave,\n  // y una modificacion de /etc/passwd quedaria suprimida por otra anterior en\n  // un fichero irrelevante.\n  const objetivo = w.src_ip || w.syscheck_path || w.alert_id || '';\n  const clave = `${w.rule_id}|${w.agent_name}|${objetivo}`;\n\n  if (store.seen[clave]) continue;\n  store.seen[clave] = ahora;\n  salida.push(item);\n}\n\nreturn salida;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        -1264
+      ],
+      "id": "642df071-dd5b-4b47-9a5f-3893ab6027dc",
+      "name": "Dedup"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "373858aa-5e4b-4777-a87c-2a32e1f61778",
+              "leftValue": "={{ $json.decision.create_war_room }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -480,
+        -896
+      ],
+      "id": "5fa80c64-d894-49e6-aa5d-a5e362adb682",
+      "name": "Abrir War Room"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"roomId\": \"{{ $json.group?._id ?? $json.channel?._id ?? '' }}\",\n  \"text\": \"🚨 *War Room — {{ $('Code Merge Final').first().json.wazuh.rule_desc }}*\\n\\n📋 Regla: {{ $('Code Merge Final').first().json.wazuh.rule_id }}\\n🖥 Agente: {{ $('Code Merge Final').first().json.wazuh.agent_name }}\\n🌐 IP origen: {{ $('Code Merge Final').first().json.wazuh.src_ip }}\\n🕐 Evento: {{ $('Code Merge Final').first().json.wazuh.event_timestamp }}\\n\\n🔍 AbuseIPDB {{ $('Code Merge Final').first().json.cti.abuse_confidence }}% · VirusTotal {{ $('Code Merge Final').first().json.cti.vt_malicious }} motores · MISP {{ $('Code Merge Final').first().json.cti.misp_total }}\\n\\n🤖 Triage ({{ $('Code Merge Final').first().json.decision.analysis_mode }})\\n├ Severidad: {{ $('Code Merge Final').first().json.decision.severity_real }}\\n├ ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_technique }} / {{ $('Code Merge Final').first().json.decision.mitre_tactic }}\\n└ Recomendación: {{ $('Code Merge Final').first().json.decision.recommendation }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        16,
+        -912
+      ],
+      "id": "7d3ea1e0-2e5d-4750-9abc-5d04853ae23d",
+      "name": "Contexto en War Room",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channel\": \"#general\",\n  \"text\": \"🚨 Incidente {{ $('Code Merge Final').first().json.decision.severity_real }} — {{ $('Code Merge Final').first().json.wazuh.rule_desc }} desde {{ $('Code Merge Final').first().json.wazuh.src_ip }}. War Room abierto: #{{ $('Code Merge Final').first().json.war_room_name }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        256,
+        -912
+      ],
+      "id": "410ac306-cad7-49f1-bf46-ddad0b617840",
+      "name": "Anuncio en General",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/groups.create",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.war_room_name }}\",\n  \"members\": [\"ir_lead\", \"ir_tech\"],\n  \"readOnly\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -208,
+        -912
+      ],
+      "id": "4134429c-bfec-4210-b463-64774bc47570",
+      "name": "Crear War Room",
+      "alwaysOutputData": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c96a78ed-fcc3-4abc-9827-c65658a375df",
+              "leftValue": "={{ $json.enrichable }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        -1264
+      ],
+      "id": "f1c0c3ae-b94b-4549-967c-975f978d9533",
+      "name": "CTI Aplicable"
     }
   ],
   "connections": {
@@ -324,17 +512,7 @@
       "main": [
         [
           {
-            "node": "AbuseIPDB",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "VirusTotal",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "MISP",
+            "node": "Dedup",
             "type": "main",
             "index": 0
           }
@@ -421,7 +599,7 @@
       "main": [
         [
           {
-            "node": "Post a message",
+            "node": "Abrir War Room",
             "type": "main",
             "index": 0
           }
@@ -449,6 +627,90 @@
           }
         ]
       ]
+    },
+    "Dedup": {
+      "main": [
+        [
+          {
+            "node": "CTI Aplicable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Abrir War Room": {
+      "main": [
+        [
+          {
+            "node": "Crear War Room",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contexto en War Room": {
+      "main": [
+        [
+          {
+            "node": "Anuncio en General",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anuncio en General": {
+      "main": [
+        []
+      ]
+    },
+    "Crear War Room": {
+      "main": [
+        [
+          {
+            "node": "Contexto en War Room",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CTI Aplicable": {
+      "main": [
+        [
+          {
+            "node": "AbuseIPDB",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "VirusTotal",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "MISP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code CTI Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -456,17 +718,24 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "staticData": null,
+  "staticData": {
+    "global": {
+      "seen": {
+        "550|ubuntuserver|test.nocti.1787688025": 1787688026337,
+        "550|ubuntuserver|test.nocti.1787688138": 1787688139355
+      }
+    }
+  },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "15d2a773-9154-40a2-8061-eb764fdd6565",
-  "versionCounter": 222,
+  "activeVersionId": "4fb10676-8217-4f55-bb58-548719013cb0",
+  "versionCounter": 462,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 15d2a773",
+    "name": "Version 4fb10676",
     "description": ""
   }
 }
