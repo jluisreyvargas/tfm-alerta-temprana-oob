@@ -335,13 +335,51 @@ falla, la ejecución sigue hacia `Contexto en War Room` con un ítem sin
 entonces a cadena vacía, `roomId` viaja vacío, y `[invalid-channel]` aparece
 dos nodos más allá del fallo real de `Crear War Room` — lejos de su causa.
 
-> [!WARNING]
-> **Brecha conocida, no un fix aplicado.** El workflow desplegado
-> (`wazuh-alert-handler.json`) no tiene ningún nodo `If` que compruebe
-> `{{ $json.success }}` tras `Crear War Room` antes de continuar: los únicos
-> nodos `If` del workflow son `If` (nivel de severidad), `Abrir War Room`
-> (`create_war_room`) y `CTI Aplicable` (`enrichable`). La comprobación de
-> `success` que evitaría este fallo silencioso está pendiente de implementar.
+> [!NOTE]
+> **Causa raíz real del `[invalid-channel]` observado.** No fue, en origen, el
+> cruce `roomId`/`channel` en sí, sino que `Code Merge Final` no tenía
+> declarada la variable `wazuh` (usaba `wazuh.rule_id`/`wazuh.alert_id` sin
+> extraer `input.wazuh` primero), así que `war_room_name` nunca se generaba
+> con un valor válido y `groups.create` fallaba. Al corregir esa declaración
+> en `Code Merge Final`, `groups.create` empezó a funcionar con normalidad.
+> El mecanismo `roomId`/`channel` descrito arriba sigue siendo real y
+> reproducible por otras causas — ver más abajo.
+
+### Degradación cuando `groups.create` falla
+
+Aunque la causa original ya está corregida, `groups.create` puede fallar por
+otros motivos: nombre de grupo duplicado fuera de la ventana de
+deduplicación, permisos revocados al bot, o Rocket.Chat caído. Con
+`On Error → Continue`, cualquiera de esos fallos interrumpía toda la cadena
+del War Room (`Contexto en War Room` reventaba con `[invalid-channel]` y
+`Anuncio en General` no llegaba a ejecutarse): la alerta no llegaba ni al
+grupo privado ni a `#general`. Es exactamente el fallo que un sistema de
+alerta temprana no puede permitirse: perder la notificación por un fallo en
+la coordinación, en lugar de degradarla.
+
+> [!NOTE]
+> **Implementado.** Nuevo nodo `If` **`War Room creado`**, entre
+> `Crear War Room` y `Contexto en War Room`, con condición booleana sobre
+> `{{ $json.success }}`:
+> - Rama verdadera → `Contexto en War Room` → `Anuncio en General` (cadena sin cambios)
+> - Rama falsa → `Post a message` (publicación directa en `#general`, la misma
+>   ruta que ya usa `Abrir War Room` cuando `create_war_room` es falso)
+>
+> Con esto, si el grupo no se puede crear, la alerta se publica igualmente en
+> `#general` en lugar de perderse: el mismo principio de degradación
+> controlada ya aplicado al enriquecimiento CTI (punto 3) y al motor de
+> triage — un fallo en la coordinación no debe implicar la pérdida de la
+> notificación.
+>
+> Efecto secundario necesario: `Post a message` usaba expresiones `{{$json.*}}`
+> directas, válidas solo cuando `$json` era la salida de `Code Merge Final`
+> (el único camino hasta ahora, vía `Abrir War Room` en rama falsa). Alcanzado
+> ahora también desde `War Room creado` en rama falsa, `$json` sería en su
+> lugar la respuesta de `groups.create` — sin los campos `wazuh`, `cti`,
+> `severity`, etc. Se corrigieron las expresiones de `Post a message` a
+> `{{$('Code Merge Final').first().json.*}}`, igual que ya hacían
+> `Contexto en War Room` y `Anuncio en General`, para que funcione desde
+> ambos caminos.
 
 ### `error-not-allowed`
 

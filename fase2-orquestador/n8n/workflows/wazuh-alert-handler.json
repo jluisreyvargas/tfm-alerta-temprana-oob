@@ -72,7 +72,7 @@
     {
       "parameters": {
         "channel": "general",
-        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Votos inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
+        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$('Code Merge Final').first().json.decision.analysis_mode}}\n📋 Regla: {{$('Code Merge Final').first().json.wazuh.rule_id}} — {{$('Code Merge Final').first().json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$('Code Merge Final').first().json.wazuh.rule_level}}\n🖥 Agente: {{$('Code Merge Final').first().json.wazuh.agent_name}}\n🌐 IP Fuente: {{$('Code Merge Final').first().json.wazuh.src_ip}}\n🕐 *Evento:* {{$('Code Merge Final').first().json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$('Code Merge Final').first().json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$('Code Merge Final').first().json.cti.abuse_confidence}}%\n├ Total Reportes: {{$('Code Merge Final').first().json.cti.abuse_total_reports}}\n└ País: {{$('Code Merge Final').first().json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$('Code Merge Final').first().json.cti.vt_malicious}}\n├ Votos inocuos: {{$('Code Merge Final').first().json.cti.vt_harmless}}\n└ ASN: {{$('Code Merge Final').first().json.cti.vt_asn}} ({{$('Code Merge Final').first().json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$('Code Merge Final').first().json.severity}}\n├ MITRE Táctica: {{$('Code Merge Final').first().json.mitre_tactic}}\n├ MITRE Técnica: {{$('Code Merge Final').first().json.mitre_technique}}\n├ Resumen: {{$('Code Merge Final').first().json.summary}}\n├ Recomendación: {{$('Code Merge Final').first().json.recommendation}}\n├ Requiere Bloqueo: {{$('Code Merge Final').first().json.requires_block}}\n└ Abrir War Room: {{$('Code Merge Final').first().json.create_war_room}}",
         "options": {},
         "attachments": []
       },
@@ -461,6 +461,40 @@
           },
           "conditions": [
             {
+              "id": "2f8aa6b6-f2f8-47f8-b03b-45107782ef99",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -96,
+        -1024
+      ],
+      "id": "3da6c2c9-4f7f-4733-b264-c02bbc3ec448",
+      "name": "War Room creado"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
               "id": "c96a78ed-fcc3-4abc-9827-c65658a375df",
               "leftValue": "={{ $json.enrichable }}",
               "rightValue": "",
@@ -677,7 +711,7 @@
       "main": [
         [
           {
-            "node": "Contexto en War Room",
+            "node": "War Room creado",
             "type": "main",
             "index": 0
           }
@@ -706,6 +740,24 @@
         [
           {
             "node": "Code CTI Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "War Room creado": {
+      "main": [
+        [
+          {
+            "node": "Contexto en War Room",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post a message",
             "type": "main",
             "index": 0
           }
