@@ -5,6 +5,9 @@
 **Fecha:** 2026-05-17  
 **Estado:** ✅ Operativo  
 
+> [!NOTE]
+> Las validaciones de este documento se realizaron con payloads sintéticos enviados por `curl` desde el host, no sobre tráfico real de Wazuh: `wazuh-integratord` no estaba corriendo y `n8n.oob.local` resolvía a `127.0.0.1` dentro del contenedor del manager. La validación de extremo a extremo sobre tráfico real está documentada en `fase2-orquestador/README.md`.
+
 ---
 
 ## Descripción
@@ -85,6 +88,9 @@ if __name__ == "__main__":
     main()
 ```
 
+> [!NOTE]
+> **Estado actual.** `ssl.CERT_NONE` desactiva la verificación TLS por completo. La versión actual del script verifica contra la CA propia del enclave en lugar de omitir la verificación. Ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "PKI del enclave" de `fase2-orquestador/README.md`.
+
 ### Permisos
 
 ```bash
@@ -104,6 +110,12 @@ chown root:wazuh /var/ossec/integrations/custom-n8n
   </integration>
 </ossec_config>
 ```
+
+> [!CAUTION]
+> El bloque `<integration>` debe ir dentro de `<ossec_config>`. Si `wazuh-integratord` no encuentra ningún bloque `<integration>` válido, no arranca: registra `Remote integrations not configured. Clean exit.` y termina sin error visible. Comprobar siempre que el demonio está activo tras un reinicio o recreación del contenedor:
+> ```bash
+> docker exec single-node-wazuh.manager-1 /var/ossec/bin/wazuh-control status | grep integrator
+> ```
 
 ---
 
@@ -126,6 +138,9 @@ chown root:wazuh /var/ossec/integrations/custom-n8n
 | Respond | `Immediately` |
 | URL producción | `https://n8n.oob.local/webhook/wazuh-alerts` |
 
+> [!NOTE]
+> **Estado actual.** El webhook aceptaba originalmente cualquier petición sin autenticación. La versión actual verifica una firma HMAC-SHA256 (cabecera `X-OOB-Signature`) antes de procesar la alerta. Ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "Seguridad del canal de ingesta" de `fase2-orquestador/README.md`.
+
 #### 2. Set Node (Edit Fields)
 | Campo de salida | Expresión |
 |----------------|-----------|
@@ -137,6 +152,9 @@ chown root:wazuh /var/ossec/integrations/custom-n8n
 
 > **Nota:** n8n envuelve el payload del webhook dentro de `body`,
 > por eso las expresiones usan `$json.body.*`
+
+> [!NOTE]
+> **Estado actual.** El nodo `Edit Fields` fue sustituido por `Normalize Alert`, que además maneja alertas sin `data.srcip` (las de integridad, regla 550), separa `event_timestamp` de `ingest_timestamp` y propaga `rule.mitre` nativo de Wazuh. Ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "Normalización y deduplicación" de `fase2-orquestador/README.md`.
 
 #### 3. IF Node
 | Parámetro | Valor |
