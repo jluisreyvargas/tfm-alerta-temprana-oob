@@ -8,6 +8,9 @@
 > [!NOTE]
 > Las validaciones de este documento se realizaron con payloads sintéticos enviados por `curl` desde el host, no sobre tráfico real de Wazuh. La validación de extremo a extremo sobre tráfico real está documentada en `fase2-orquestador/README.md`.
 
+> [!WARNING]
+> **El nodo `AI Agent` descrito en este documento nunca llegó a ejecutarse.** Estaba huérfano en las conexiones del workflow (sin entrada ni salida `main`), por lo que el triage real de esta fase lo realizaba un servicio con heurísticas deterministas, sin ninguna llamada a un modelo. El motor seleccionable actual (`TRIAGE_MODE`), con Mistral integrado dentro del grafo LangGraph en lugar de en un nodo de n8n, está documentado en `fase2-orquestador/README.md`. La configuración de Ollama descrita aquí sigue siendo válida para el modo `llm` de ese motor.
+
 ---
 
 ## Descripción
