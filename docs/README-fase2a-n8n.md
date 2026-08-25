@@ -5,6 +5,9 @@
 **Fecha:** 2026-05-17  
 **Estado:** ✅ Operativo
 
+> [!NOTE]
+> Las comprobaciones de este documento son de conectividad básica (Traefik/n8n), no un flujo de alerta real. Ninguna alerta de Wazuh atravesó el pipeline durante esta fase: la validación de extremo a extremo sobre tráfico real de Wazuh está documentada en `fase2-orquestador/README.md`.
+
 ## Descripción
 
 Despliegue de n8n (workflow automation) como orquestador central del sistema de
