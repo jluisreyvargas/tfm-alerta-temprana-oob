@@ -56,13 +56,6 @@ identity_validation:
 totp:
   issuer: TFM-OOB-Lab
 
-webauthn:
-  disable: false
-  display_name: TFM-OOB-Lab
-  attestation_conveyance_preference: indirect
-  user_verification: preferred
-  timeout: 60s
-
 authentication_backend:
   file:
     path: /config/users_database.yml
@@ -70,15 +63,15 @@ authentication_backend:
 access_control:
   default_policy: deny
   rules:
-    - domain: '*.oob.local'
-      subject: 'group:irlead'
+    - domain: 'chat.oob.local'
+      subject: 'group:ir_lead'
       policy: two_factor
 
 session:
   cookies:
     - domain: oob.local
       authelia_url: https://auth.oob.local
-      default_redirection_url: https://portainer.oob.local
+      default_redirection_url: https://chat.oob.local
       expiration: 3600
       inactivity: 1800
 
@@ -91,6 +84,13 @@ notifier:
     filename: /config/notification.txt
 ```
 
+> [!NOTE]
+> **Corrección.** Esta sección presentaba tres valores que no coinciden con la `configuration.yml` real:
+> - **`webauthn`**: el bloque completo mostrado más arriba nunca se aplicó — la configuración real no declara ningún bloque `webauthn`. La tabla "Estado de métodos 2FA" más abajo lo daba por habilitado; no lo está.
+> - **`access_control.rules[0].domain`**: era `'*.oob.local'` (todo el enclave); el valor real es `'chat.oob.local'` — la política solo protege Rocket.Chat, el único servicio detrás de Authelia (ver `fase1-infraestructura/README.md`).
+> - **`access_control.rules[0].subject`**: era `'group:irlead'`; el valor real es `'group:ir_lead'` (con guión bajo), igual que en `users_database.yml` — ver la nota de corrección más abajo.
+> - **`session.cookies[0].default_redirection_url`**: era `https://portainer.oob.local`; el valor real es `https://chat.oob.local`. Tiene sentido: Portainer nunca estuvo detrás de Authelia, así que redirigir ahí tras autenticarse no encajaba con el único servicio protegido. Ver también la nota en "Error 4" más abajo.
+
 ### `authelia/users_database.yml`
 
 ```yaml
@@ -100,11 +100,14 @@ users:
     password: "$argon2id$v=19$m=65536,t=3,p=4$HASH_GENERADO"
     email: jose@oob.local
     groups:
-      - irlead
-      - irteam
+      - ir_lead
+      - ir_team
 ```
 
 > ⚠️ **Nunca commitear el hash real** — el archivo `users_database.yml` está en `.gitignore`. Usar `users_database.yml.example` con valor de placeholder.
+
+> [!NOTE]
+> **Corrección.** Los nombres de grupo eran `irlead`/`irteam` (sin guión bajo); el `users_database.yml.example` real usa `ir_lead`/`ir_team`, coherente con el `subject: 'group:ir_lead'` de `access_control`. El fichero real también incluye más campos de claims OIDC vacíos (`given_name`, `family_name`, etc.) que este ejemplo simplificado omite, y `email: jose@localhost` en lugar de `jose@oob.local`.
 
 ### Variables de entorno (`.env`)
 
@@ -169,7 +172,10 @@ AUTHELIA_STORAGE_ENCRYPTION_KEY=<hex-32-bytes>
 
 ### Error 4 — `default_redirection_url effectively equal to authelia_url`
 **Causa:** La URL de redirección post-login no puede ser igual a la URL de Authelia.  
-**Solución:** `default_redirection_url` apunta a `https://portainer.oob.local` en lugar de `https://auth.oob.local`.
+**Solución (en esta fase):** `default_redirection_url` apunta a `https://portainer.oob.local` en lugar de `https://auth.oob.local`.
+
+> [!NOTE]
+> **Corrección.** El valor final desplegado es `https://chat.oob.local`, no `https://portainer.oob.local`: Portainer nunca quedó detrás de Authelia (ver `fase1-infraestructura/README.md`), así que no tenía sentido como destino tras un login que solo protege Rocket.Chat.
 
 ### Error 5 — WebAuthn no disponible en `https://auth.oob.local`
 **Causa:** WebAuthn requiere contexto seguro: HTTPS con certificado válido o `localhost` exacto. Los certificados self-signed no son aceptados por los navegadores para WebAuthn.  
@@ -252,7 +258,7 @@ ss -tulpn | grep 9091
 | Método | Estado | Notas |
 |--------|--------|-------|
 | TOTP (OTP 6 dígitos) | ✅ Registrado y funcional | Compatible con Google Authenticator, Authy, Microsoft Authenticator |
-| WebAuthn (passkey/FIDO2) | ✅ Habilitado | Registro via `http://localhost:9091` en entorno de laboratorio |
+| WebAuthn (passkey/FIDO2) | ⚠️ Sin configurar (corregido) | La `configuration.yml` real no declara ningún bloque `webauthn`. El registro descrito vía `http://localhost:9091` corresponde al plan inicial, no al estado final. |
 | Email OTP | ⚪ No configurado | Notifier filesystem usado para lab — Mailhog opcional en fases posteriores |
 
 ---
