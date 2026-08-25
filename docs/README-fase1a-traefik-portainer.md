@@ -14,6 +14,9 @@ Levantar la base del enclave out-of-band con:
 - **Portainer CE** como gestor visual de contenedores Docker
 - **Red Docker `oob-network`** compartida entre todas las fases del proyecto
 
+> [!WARNING]
+> **El TLS automático vía Let's Encrypt descrito en este documento nunca se desplegó así.** `oob.local` no es resoluble públicamente, así que el `httpChallenge` de ACME no podría completarse nunca — Let's Encrypt necesita alcanzar el servidor desde Internet. La configuración real de `traefik.yml` no tiene ningún bloque `certificatesResolvers`; Traefik sirve certificados autofirmados, y desde la incorporación de la CA propia del enclave (`generate-oob-ca.sh`), un certificado `*.oob.local` emitido por ella. Ver la sección "Medidas aplicadas" de `fase1-infraestructura/README.md`. El resto de este documento (`acme.json`, `certificatesResolvers`, `ACME_EMAIL`) refleja un plan inicial no implementado; se conserva como registro histórico.
+
 ---
 
 ## ⚠️ Problemas encontrados y resueltos
@@ -146,7 +149,7 @@ PORTAINER_VERSION=latest
 ```yaml
 api:
   dashboard: true
-  insecure: false
+  insecure: false     # el traefik.yml real usa `true`: dashboard sin auth en :8080, ver fase1-infraestructura/README.md
 
 entryPoints:
   web:
