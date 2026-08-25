@@ -5,6 +5,12 @@
 **Fecha:** 2026-05-21  
 **Estado:** Completada y validada
 
+> [!NOTE]
+> Las validaciones de este documento se realizaron con payloads sintéticos enviados por `curl` desde el host, no sobre tráfico real de Wazuh. La validación de extremo a extremo sobre tráfico real está documentada en `fase2-orquestador/README.md`.
+
+> [!WARNING]
+> **El nodo `AI Agent` descrito en este documento nunca llegó a ejecutarse.** Estaba huérfano en las conexiones del workflow (sin entrada ni salida `main`), por lo que el triage real de esta fase lo realizaba un servicio con heurísticas deterministas, sin ninguna llamada a un modelo. El motor seleccionable actual (`TRIAGE_MODE`), con Mistral integrado dentro del grafo LangGraph en lugar de en un nodo de n8n, está documentado en `fase2-orquestador/README.md`. La configuración de Ollama descrita aquí sigue siendo válida para el modo `llm` de ese motor.
+
 ## Descripción
 
 En esta fase se integró un modelo de lenguaje local mediante **Ollama** con el workflow de orquestación de **n8n**, sustituyendo la necesidad de una API externa de IA para el triage inicial de alertas. El objetivo fue validar un flujo soberano y autocontenido: **Wazuh → n8n → AI Agent → Rocket.Chat**, con análisis automatizado de incidentes usando un LLM local.[cite:84][cite:130]
@@ -56,6 +62,9 @@ Code in Javascript
    ▼
 Rocket.Chat
 ```
+
+> [!NOTE]
+> **Estado actual.** El nodo `Edit Fields` fue sustituido por `Normalize Alert`. Ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "Normalización y deduplicación" de `fase2-orquestador/README.md`.
 
 Este diseño permite que cada alerta relevante sea enriquecida semánticamente por un agente local antes de publicarse en el canal de operaciones. El uso del nodo **Ollama Model** de n8n para integrar LLMs locales está documentado oficialmente por n8n.[cite:84]
 
@@ -195,12 +204,15 @@ Mensaje final publicado en Rocket.Chat tras el procesamiento completo:
 
 🤖 Análisis IA (Mistral 7B):
 ├ Severidad Real: ALTA
-├ Táctica MITRE: Persistence
-├ Técnica: T1547 - Process Hollowing
+├ Táctica MITRE: TA0006 - Credential Access
+├ Técnica: T1110 - Brute Force
 ├ Resumen: Procesado de huecos en ejecuciones paralelas
 ├ Recomendación: Investigar proceso malicioso y tomar medidas para eliminarlo
 └ Requiere Bloqueo: true
 ```
+
+> [!NOTE]
+> **Corrección.** El ejemplo original atribuía esta alerta de fuerza bruta SSH a `Persistence / T1547 - Process Hollowing`. Ambos datos eran incorrectos: T1547 es *Boot or Logon Autostart Execution* (Process Hollowing es en realidad T1055.012, una subtécnica de Process Injection), y ninguna de las dos corresponde a fuerza bruta SSH, que es `T1110 - Brute Force` bajo la táctica `TA0006 - Credential Access`. La versión actual del motor de triage consume `rule.mitre` nativo de Wazuh en lugar de inferir la técnica, precisamente para evitar este tipo de atribución fabricada — ver la sección "Atribución MITRE ATT&CK" de `fase2-orquestador/README.md`.
 
 Este resultado demuestra que el flujo completo **captura, filtra, analiza y comunica** una alerta con apoyo de IA local, validando el enfoque arquitectónico planteado para el TFM.
 
