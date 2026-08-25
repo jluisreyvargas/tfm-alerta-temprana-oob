@@ -20,7 +20,9 @@
 - [x] 🛡️ Wazuh 4.14.0 single-node para detección SIEM/EDR
 - [x] 🌐 Redes Docker segmentadas (`oob-network` y `fase1-internal`)
 - [x] 🔒 Rocket.Chat protegido tras Authelia con doble factor
+- [x] 🏛️ CA propia del enclave sirviendo el certificado de Traefik (`*.oob.local`)
 - [ ] 🔗 Extensión del middleware de autenticación al resto de servicios
+- [ ] 🔏 Certificados emitidos por la CA del enclave para los backends (Wazuh, MISP...)
 
 ---
 
@@ -253,6 +255,7 @@ Ni Rocket.Chat ni Authelia publican puertos en el host: solo son accesibles a tr
 - 🔒 **Aislamiento de la base de datos:** MongoDB reside en una red interna sin salida.
 - 🛡️ **`no-new-privileges`** activado en Traefik y Portainer.
 - 🔑 **Autenticación por keyfile** en el replica set de MongoDB.
+- 🏛️ **CA propia del enclave** (`traefik/generate-oob-ca.sh`): Traefik sirve un certificado `*.oob.local` emitido por esta CA como certificado por defecto (`traefik/dynamic/tls.yml`), en lugar de `TRAEFIK DEFAULT CERT` — el certificado de relleno no verificable que forzaba a desactivar la comprobación TLS en los clientes que hablan con el enclave (ver Fase 2).
 - 📄 **Secretos fuera del control de versiones:** `.env`, keyfile, base de datos de Authelia y certificados están excluidos por `.gitignore`.
 
 ### Riesgos aceptados
@@ -261,7 +264,7 @@ Las siguientes decisiones se apartan de la configuración recomendada para produ
 
 | Riesgo | Justificación | Mitigación en producción |
 | --- | --- | --- |
-| **Verificación TLS desactivada** (`serversTransport.insecureSkipVerify: true`) | Todos los servicios del enclave usan certificados autofirmados sin una CA común. Con verificación activa, Traefik rechaza las conexiones hacia los backends, en particular hacia el dashboard de Wazuh, cuyos certificados genera el propio indexer. | Desplegar una CA interna, emitir certificados para cada servicio y reducir la excepción al transporte nombrado de Wazuh. |
+| **Verificación TLS de backend desactivada** (`serversTransport.insecureSkipVerify: true`) | La CA propia del enclave (`generate-oob-ca.sh`) ya emite el certificado que Traefik presenta a los clientes (`*.oob.local`), pero los backends —en particular el dashboard de Wazuh, cuyos certificados genera el propio indexer— siguen presentando certificados autofirmados no emitidos por esa CA. Con verificación activa, Traefik rechazaría esas conexiones internas. | Emitir certificados para cada backend desde la CA del enclave y retirar la excepción global, acotándola como mucho al transporte nombrado de Wazuh mientras dure la migración. |
 | **Dashboard de Traefik sin autenticación** (`api.insecure: true`, puerto 8080) | Acceso directo al estado de routers y servicios durante el desarrollo del laboratorio, sin depender de que la cadena de autenticación esté operativa. | Enrutar el dashboard a través de Traefik con el middleware de Authelia, o deshabilitar la publicación del puerto. |
 | **Portainer publicado directamente en `:9443`** | Mantener una herramienta de diagnóstico de contenedores accesible aunque Traefik o Authelia fallen. Un fallo en la cadena de autenticación no debe impedir el diagnóstico de la propia infraestructura. | Enrutar por Traefik con Authelia, manteniendo un procedimiento documentado de acceso de emergencia. |
 | **Montaje de `docker.sock`** en Traefik y Portainer | Traefik lo requiere para el descubrimiento dinámico de servicios y Portainer para su función. Está montado en solo lectura. | Interponer un proxy de socket Docker que limite las operaciones permitidas. El montaje en solo lectura no impide la escalada a root del host. |
@@ -281,7 +284,7 @@ Las siguientes decisiones se apartan de la configuración recomendada para produ
 2. 🤖 Incorporar el triage asistido por IA agéntica (Fase 3).
 3. 🌐 Establecer conectividad out-of-band con los controladores de dominio mediante Headscale (Fase 4).
 4. 🔒 Extender el middleware de Authelia al resto de servicios del enclave.
-5. 🏛️ Desplegar una CA interna que permita eliminar las excepciones de verificación TLS.
+5. 🔏 Emitir certificados de la CA del enclave para los backends (Wazuh, MISP...) y retirar `serversTransport.insecureSkipVerify` global.
 
 ---
 
