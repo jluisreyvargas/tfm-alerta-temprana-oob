@@ -86,6 +86,9 @@ docker exec n8n wget -qO- http://ollama:11434/api/tags
 
 El uso de `curl` falló porque el contenedor `n8n` no incluía ese binario en `PATH`; sin embargo, `wget` confirmó conectividad completa entre servicios.
 
+> [!NOTE]
+> Este detalle corresponde a la imagen de n8n disponible en el momento de esta fase (2026-05-21) y no se ha podido reverificar contra el estado actual del contenedor.
+
 ## Configuración en n8n
 
 ### Credencial Ollama
