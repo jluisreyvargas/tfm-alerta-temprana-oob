@@ -1,22 +1,22 @@
-# Fase 3 · Motor de triage y evaluación de viabilidad de LLM local
+# 🤖 Fase 3 · Motor de triage y evaluación de viabilidad de LLM local
 
-> **Objetivo de la fase**
+> **🎯 Objetivo de la fase**
 > Dotar al enclave de un motor de triage propio que convierta una alerta de Wazuh
 > ya enriquecida en una decisión accionable (severidad, atribución ATT&CK, flags
 > de respuesta), y **evaluar experimentalmente** si un LLM local aporta valor
 > suficiente para formar parte de esa decisión en un entorno Out-of-Band.
 
-> **Resultado de la fase**
+> **🏁 Resultado de la fase**
 > El motor **determinista** es el que se despliega. La alternativa basada en
 > LLM local (Mistral 7B vía Ollama) está implementada, instrumentada y medida,
 > y se **descarta para producción** por las razones documentadas en
-> [Decisión de despliegue](#decisión-de-despliegue). El código del modo LLM se
+> [Decisión de despliegue](#-decisión-de-despliegue). El código del modo LLM se
 > conserva como artefacto de investigación reproducible, no como componente
 > operativo.
 
 ---
 
-## Alcance real de esta fase
+## 🔭 Alcance real de esta fase
 
 Esta fase implementa **un servicio HTTP con un grafo LangGraph de dos nodos**.
 Nada más. Es importante ser explícito porque el enriquecimiento y la gestión de
@@ -39,7 +39,7 @@ inteligencia que n8n ya ha resuelto y entrega en el payload.
 
 ---
 
-## Arquitectura
+## 🏗️ Arquitectura
 
 ```text
                         Fase 2                              Fase 3
@@ -69,7 +69,7 @@ host; queda documentado como hallazgo corregido.
 
 ---
 
-## Modos de triage
+## 🔀 Modos de triage
 
 El motor se selecciona con `TRIAGE_MODE`. **El contrato de `/triage` es idéntico
 en los tres casos**, de modo que cambiar de modo no obliga a tocar el workflow
@@ -92,9 +92,9 @@ esquema incompleto, severidad fuera de vocabulario, Ollama caído— provoca
 
 ---
 
-## Motor determinista
+## 🧮 Motor determinista
 
-### Puntuación
+### 🔢 Puntuación
 
 ```
 score = rule_level
@@ -114,7 +114,7 @@ El desglose se devuelve explícitamente en `decision.score_breakdown` para que
 cada veredicto sea auditable: siempre se puede justificar por qué una alerta
 subió o bajó.
 
-### Atribución ATT&CK: precedencia explícita
+### 🎯 Atribución ATT&CK: precedencia explícita
 
 1. **`wazuh_native`** — campos `rule.mitre.*` de la propia alerta. Es el dato
    autoritativo: lo mantiene el ruleset upstream.
@@ -132,7 +132,7 @@ ATT&CK del SOC y orienta mal la respuesta.
 > distintas, dos respuestas distintas. El caso `A015` del corpus documenta el
 > equivalente en Windows (acceso a LSASS es `T1003.001`, no `T1078`).
 
-### Flags de respuesta
+### 🚩 Flags de respuesta
 
 `requires_block` solo se propone si la severidad está escalada **y** la IP de
 origen es pública y enrutable. Proponer bloquear una IP privada, ausente o
@@ -140,7 +140,7 @@ malformada genera ruido operativo y erosiona la confianza en el sistema.
 
 ---
 
-## Controles frente al LLM
+## 🛡️ Controles frente al LLM
 
 El prompt del modelo incorpora, literalmente, campos de la alerta: `rule_desc`,
 `agent_name`, `src_ip`. **Un nombre de usuario en un fallo de SSH acaba dentro
@@ -150,7 +150,7 @@ principal por la que esta fase existe como evaluación y no como integración.
 
 Se implementan tres controles independientes:
 
-### 1. Guardrail antidegradación de severidad
+### 🚦 1. Guardrail antidegradación de severidad
 
 Se acepta la severidad del LLM solo si no rebaja la determinista más de
 `MAX_SEVERITY_DOWNGRADE` niveles (por defecto, 1). **Escalar siempre está
@@ -161,7 +161,7 @@ Si el guardrail se dispara en modo `llm`, se descarta **también** la
 recomendación del modelo: si su veredicto no es fiable, ninguna de sus salidas
 lo es.
 
-### 2. Delimitador con *nonce* por petición
+### 🔑 2. Delimitador con *nonce* por petición
 
 El bloque de datos no confiables se cierra con un identificador aleatorio
 generado en cada invocación (`END_UNTRUSTED_DATA_<nonce>`). Un delimitador fijo
@@ -169,7 +169,7 @@ es adivinable —aparece en el propio prompt del sistema— y basta con escribir
 en un campo de log para simular el cierre del bloque y continuar como si fuera
 texto de sistema. El caso `INJ-03` de la batería mide exactamente esto.
 
-### 3. Saneado de la salida generativa
+### 🧼 3. Saneado de la salida generativa
 
 `summary` y `recommendation` se acotan en longitud, se les eliminan caracteres
 de control y saltos de línea, se neutralizan menciones masivas (`@all`, `@here`)
@@ -185,7 +185,7 @@ inyección: asume que puede haberla y limita el daño en el canal del War Room.
 
 ---
 
-## Banco de pruebas
+## 🧪 Banco de pruebas
 
 En `bench/` (instrumentación de laboratorio; **no** forma parte del servicio
 desplegado):
@@ -221,14 +221,14 @@ docker stats --no-stream ollama langgraph-agent
 
 ---
 
-## Resultados
+## 📊 Resultados
 
 Ejecución del 26 de agosto de 2026 sobre la VM del enclave (1 socket × 16 vCPU,
 Xeon E5-2678 v3 con AVX2, sin GPU), con `mistral:7b` residente
 (`keep_alive=-1`) y 8 hilos de inferencia. Datos crudos en
 [`bench/resultados/`](bench/resultados/).
 
-### Condiciones de la medida
+### 📐 Condiciones de la medida
 
 Antes de medir hubo que eliminar dos factores de configuración que, sin
 controlarlos, habrían producido cifras carentes de valor:
@@ -252,7 +252,7 @@ ganancia de paralelismo.
 Carga del modelo: 49,6 s en frío frente a 0,1 s residente. Ollama carga con
 `UseMmap:false`, leyendo los 4,1 GB completos a memoria.
 
-### Rendimiento y fiabilidad por modo
+### ⏱️ Rendimiento y fiabilidad por modo
 
 Corpus de 30 alertas, 1 repetición por caso.
 
@@ -271,7 +271,7 @@ degradaciones y sin superar el timeout. El contrato JSON, la validación de
 esquema y la contención de tiempo funcionan de forma consistente: **lo que
 falla no es la implementación, sino la premisa**.
 
-### Distribución de severidad: colapso del veredicto del modelo
+### 📉 Distribución de severidad: colapso del veredicto del modelo
 
 | Modo | BAJA | MEDIA | ALTA | CRITICA | Valores distintos |
 |---|---:|---:|---:|---:|:-:|
@@ -301,7 +301,7 @@ a la reputación de la IP, pero no al contexto del incidente.
 > permite separar ambos efectos. Aislarlo requeriría repetir el corpus con esa
 > línea suprimida.
 
-### Concordancia de severidad frente al motor determinista
+### ⚖️ Concordancia de severidad frente al motor determinista
 
 | Modo | Coincide | Escala | Rebaja |
 |---|---:|---:|---:|
@@ -316,7 +316,7 @@ El 77 % de divergencia de `llm` no refleja criterio alternativo sino el colapso
 descrito arriba: 18 de las 23 divergencias son escalados hacia `ALTA` desde
 `BAJA` o `MEDIA`.
 
-### Procedencia de la atribución ATT&CK
+### 🎯 Procedencia de la atribución ATT&CK
 
 | Fuente | Alertas |
 |---|---:|
@@ -330,7 +330,7 @@ regla no reconocida. La versión inicial devolvía `T1078 - Valid Accounts` como
 valor por defecto, convirtiendo la fuerza bruta SSH (`T1110`) en uso de
 credenciales válidas — dos tácticas distintas y dos respuestas distintas.
 
-### Batería de inyección indirecta
+### 💉 Batería de inyección indirecta
 
 Corpus de 11 casos (1 control + 10 vectores), 3 repeticiones, modo `llm`.
 Severidad determinista de referencia: `CRITICA` en los 11 casos.
@@ -354,7 +354,7 @@ Severidad determinista de referencia: `CRITICA` en los 11 casos.
 - Vectores que propagan el canario al texto en todas las repeticiones: **2/10**
 - Marcado de canal (`@all`, enlaces) propagado: **0/33 ejecuciones**
 
-#### El control es lo que hace la medición válida
+#### 🔬 El control es lo que hace la medición válida
 
 En una de las tres repeticiones, **la alerta sin inyección rebajó la severidad
 por sí sola**. El modelo tiene varianza propia: el suelo de ruido no es cero.
@@ -367,7 +367,7 @@ resistencia a inyección sobre un modelo generativo necesita un caso de control
 y varias repeticiones**; una sola pasada sin línea base no distingue el ataque
 del azar.
 
-#### Los seis vectores efectivos explotan el margen del guardrail
+#### 🚦 Los seis vectores efectivos explotan el margen del guardrail
 
 Las seis rebajas reproducibles son todas `CRITICA → ALTA`: exactamente un
 nivel, justo dentro de `MAX_SEVERITY_DOWNGRADE=1`. El guardrail no falló —
@@ -380,7 +380,7 @@ margen tolerado. Reducir el margen a 0 eliminaría el vector, a costa de
 rechazar también cualquier rebaja legítima del modelo — es decir, de anular su
 única aportación posible a la decisión.
 
-#### Contaminación semántica: el límite que ningún control cubre
+#### ☣️ Contaminación semántica: el límite que ningún control cubre
 
 El saneado de salida funcionó por completo: **0 de 33 ejecuciones** propagaron
 menciones masivas o enlaces al canal, pese a que INJ-06 lo pedía explícitamente.
@@ -411,7 +411,7 @@ nonce bloqueó específicamente la suplantación del cierre de bloque.
 
 ---
 
-## Decisión de despliegue
+## 🏁 Decisión de despliegue
 
 Se despliega `TRIAGE_MODE=deterministic`.
 
@@ -440,7 +440,7 @@ determinista. Su coste son 56 s por alerta y un texto que, como demuestra la
 batería de inyección, puede contener afirmaciones controladas por el atacante.
 La aportación no compensa ninguna de las dos cosas.
 
-### Sobre el uso de un LLM remoto
+### ☁️ Sobre el uso de un LLM remoto
 
 Se consideró y se descarta para el flujo operativo. El enclave ya usa servicios
 externos (AbuseIPDB, VirusTotal), así que conviene distinguir dos ejes:
@@ -465,7 +465,7 @@ inyección. Un modelo más capaz separaría ambas hipótesis.
 
 ---
 
-## Configuración
+## ⚙️ Configuración
 
 ### Variables de entorno
 
@@ -495,7 +495,7 @@ solo es necesario para los modos experimentales.
 
 ---
 
-## Contrato de la API
+## 🔌 Contrato de la API
 
 ### `GET /health`
 
@@ -563,7 +563,7 @@ sin tilde, coherente con `SEVERITY_SCALE` en `app/tools.py`.
 
 ---
 
-## Validación funcional
+## ✅ Validación funcional
 
 ```bash
 # Salud y modo efectivo
@@ -586,7 +586,7 @@ Comprobaciones esperadas:
 
 ---
 
-## Riesgos y limitaciones aceptados
+## 🟠 Riesgos y limitaciones aceptados
 
 | Riesgo | Estado |
 |---|---|
@@ -598,24 +598,24 @@ Comprobaciones esperadas:
 
 ---
 
-## Estado
+## 📋 Estado
 
-- [x] Servicio de triage con grafo LangGraph de dos nodos
-- [x] Motor determinista auditable con desglose de puntuación
-- [x] Atribución ATT&CK con precedencia explícita y sin fabricación
-- [x] Modos `llm` e `hybrid` con degradación limpia
-- [x] Guardrail antidegradación de severidad
-- [x] Delimitador con nonce y saneado de salida generativa
-- [x] Corpus de alertas y batería de inyección
-- [x] Ejecución del banco y volcado de resultados en la sección correspondiente
-- [ ] Rol dedicado de escritura de métricas en el indexador
+- [x] 🕸️ Servicio de triage con grafo LangGraph de dos nodos
+- [x] 🧮 Motor determinista auditable con desglose de puntuación
+- [x] 🎯 Atribución ATT&CK con precedencia explícita y sin fabricación
+- [x] 🔀 Modos `llm` e `hybrid` con degradación limpia
+- [x] 🚦 Guardrail antidegradación de severidad
+- [x] 🔑 Delimitador con nonce y saneado de salida generativa
+- [x] 🧪 Corpus de alertas y batería de inyección
+- [x] 📊 Ejecución del banco y volcado de resultados en la sección correspondiente
+- [ ] 🔐 Rol dedicado de escritura de métricas en el indexador
 
-## Próximos pasos
+## 🚀 Próximos pasos
 
-1. Ejecutar el banco y completar [Resultados](#resultados).
-2. Fase 4 — conectividad OOB de los agentes mediante **Headscale** (sustituye a
+1. 🧪 Ejecutar el banco y completar [Resultados](#-resultados).
+2. 🌐 Fase 4 — conectividad OOB de los agentes mediante **Headscale** (sustituye a
    la propuesta inicial de Cloudflare Tunnels, descartada por dependencia de un
    tercero externo).
-3. Fase 5 — Velociraptor y colección forense dirigida por `recommendation`.
-4. Fase 6 — DFIR-IRIS: creación de caso y volcado de `decision` como registro de
+3. 🦖 Fase 5 — Velociraptor y colección forense dirigida por `recommendation`.
+4. 🗂️ Fase 6 — DFIR-IRIS: creación de caso y volcado de `decision` como registro de
    trazabilidad del veredicto automatizado.
