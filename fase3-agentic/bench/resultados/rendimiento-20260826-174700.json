@@ -1,0 +1,2702 @@
+[
+  {
+    "id": "A001",
+    "mode": "deterministic",
+    "latency_s": 0.004419640999913099,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=12: nivel_wazuh=10, abuseipdb=2, virustotal=0, misp=0).",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=96 | reportes=4210 | VirusTotal motores maliciosos=8 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 45.134.26.11 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A002",
+    "mode": "deterministic",
+    "latency_s": 0.0023356430001513218,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=7: nivel_wazuh=5, abuseipdb=2, virustotal=0, misp=0).",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=72 | reportes=311 | VirusTotal motores maliciosos=2 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A003",
+    "mode": "deterministic",
+    "latency_s": 0.0016285109995806124,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Severidad BAJA (score=5: nivel_wazuh=5, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | reportes=0 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A004",
+    "mode": "deterministic",
+    "latency_s": 0.001618545999917842,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=7: nivel_wazuh=7, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A005",
+    "mode": "deterministic",
+    "latency_s": 0.0015862379996178788,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Severidad BAJA (score=5: nivel_wazuh=5, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A006",
+    "mode": "deterministic",
+    "latency_s": 0.0016389360007451614,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Severidad ALTA (score=10: nivel_wazuh=6, abuseipdb=2, virustotal=2, misp=0).",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 6,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 0
+      },
+      "mitre_tactic": "Initial Access",
+      "mitre_technique": "T1190 - Exploit Public-Facing Application",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=88 | reportes=1502 | VirusTotal motores maliciosos=14 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 91.242.162.5 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A007",
+    "mode": "deterministic",
+    "latency_s": 0.0015754579999338603,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=14: nivel_wazuh=10, abuseipdb=2, virustotal=0, misp=2).",
+      "score": 14,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 2
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=55 | reportes=208 | VirusTotal motores maliciosos=6 | MISP coincidencias=1",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 141.98.10.60 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A008",
+    "mode": "deterministic",
+    "latency_s": 0.0016030409997256356,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=21: nivel_wazuh=15, abuseipdb=2, virustotal=2, misp=2).",
+      "score": 21,
+      "score_breakdown": {
+        "nivel_wazuh": 15,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 2
+      },
+      "mitre_tactic": "Initial Access",
+      "mitre_technique": "T1190 - Exploit Public-Facing Application",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=100 | reportes=8890 | VirusTotal motores maliciosos=22 | MISP coincidencias=2",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 193.32.162.7 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A009",
+    "mode": "deterministic",
+    "latency_s": 0.0014648889991804026,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Severidad BAJA (score=5: nivel_wazuh=5, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A010",
+    "mode": "deterministic",
+    "latency_s": 0.001497703000495676,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Severidad ALTA (score=10: nivel_wazuh=10, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=41 | reportes=27 | VirusTotal motores maliciosos=1 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 213.209.150.22 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A011",
+    "mode": "deterministic",
+    "latency_s": 0.001558138999826042,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Severidad BAJA (score=3: nivel_wazuh=3, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A012",
+    "mode": "deterministic",
+    "latency_s": 0.0016099949998533702,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=7: nivel_wazuh=7, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A013",
+    "mode": "deterministic",
+    "latency_s": 0.0014223439993656939,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Severidad BAJA (score=3: nivel_wazuh=3, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A014",
+    "mode": "deterministic",
+    "latency_s": 0.001446266000129981,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=6: nivel_wazuh=4, abuseipdb=0, virustotal=0, misp=2).",
+      "score": 6,
+      "score_breakdown": {
+        "nivel_wazuh": 4,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 2
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=12 | reportes=4 | VirusTotal motores maliciosos=0 | MISP coincidencias=3",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A015",
+    "mode": "deterministic",
+    "latency_s": 0.0015040159996715374,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=12: nivel_wazuh=12, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Credential Access",
+      "mitre_technique": "T1003.001 - LSASS Memory",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A016",
+    "mode": "deterministic",
+    "latency_s": 0.001640526000301179,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=12: nivel_wazuh=12, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Execution",
+      "mitre_technique": "T1059.001 - PowerShell",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A017",
+    "mode": "deterministic",
+    "latency_s": 0.002146675000403775,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=8: nivel_wazuh=8, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 8,
+      "score_breakdown": {
+        "nivel_wazuh": 8,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Persistence",
+      "mitre_technique": "T1136.002 - Domain Account",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A018",
+    "mode": "deterministic",
+    "latency_s": 0.002516007999474823,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=12: nivel_wazuh=12, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Defense Evasion",
+      "mitre_technique": "T1070.001 - Clear Windows Event Logs",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A019",
+    "mode": "deterministic",
+    "latency_s": 0.0023869189999459195,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Severidad BAJA (score=3: nivel_wazuh=3, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A020",
+    "mode": "deterministic",
+    "latency_s": 0.0019983210004284047,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=7: nivel_wazuh=7, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A021",
+    "mode": "deterministic",
+    "latency_s": 0.0015045190002638265,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=7: nivel_wazuh=5, abuseipdb=2, virustotal=0, misp=0).",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=65 | reportes=940 | VirusTotal motores maliciosos=3 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A022",
+    "mode": "deterministic",
+    "latency_s": 0.0014955719998397399,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Severidad BAJA (score=3: nivel_wazuh=3, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | reportes=0 | VirusTotal motores maliciosos=0 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A023",
+    "mode": "deterministic",
+    "latency_s": 0.001497461999861116,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=7: nivel_wazuh=7, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A024",
+    "mode": "deterministic",
+    "latency_s": 0.001588679999258602,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=18: nivel_wazuh=12, abuseipdb=2, virustotal=2, misp=2).",
+      "score": 18,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 2
+      },
+      "mitre_tactic": "Command and Control",
+      "mitre_technique": "T1071.004 - DNS",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=100 | reportes=6120 | VirusTotal motores maliciosos=41 | MISP coincidencias=5",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 194.26.29.156 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A025",
+    "mode": "deterministic",
+    "latency_s": 0.0014856010002404219,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Severidad ALTA (score=9: nivel_wazuh=9, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 9,
+      "score_breakdown": {
+        "nivel_wazuh": 9,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A026",
+    "mode": "deterministic",
+    "latency_s": 0.0016761759998189518,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=6: nivel_wazuh=6, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 6,
+      "score_breakdown": {
+        "nivel_wazuh": 6,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0007 - Discovery",
+      "mitre_technique": "T1087 - Account Discovery",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=30 | reportes=18 | VirusTotal motores maliciosos=0 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A027",
+    "mode": "deterministic",
+    "latency_s": 0.0015480769998248434,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=8: nivel_wazuh=8, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 8,
+      "score_breakdown": {
+        "nivel_wazuh": 8,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A028",
+    "mode": "deterministic",
+    "latency_s": 0.0015006390003691195,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Severidad MEDIA (score=7: nivel_wazuh=7, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A029",
+    "mode": "deterministic",
+    "latency_s": 0.001502647000052093,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Severidad CRITICA (score=12: nivel_wazuh=10, abuseipdb=2, virustotal=0, misp=0).",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=78 | reportes=512 | VirusTotal motores maliciosos=5 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 45.153.160.2 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A030",
+    "mode": "deterministic",
+    "latency_s": 0.0015112520004549879,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Severidad ALTA (score=10: nivel_wazuh=10, abuseipdb=0, virustotal=0, misp=0).",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "deterministic",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear unknown en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A001",
+    "mode": "hybrid",
+    "latency_s": 62.454063958000006,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Suspicious brute force attempt detected on sshd service from IP 45.134.26.11 on srv-web-01, with high confidence of malicious activity based on AbuseIPDB and VirusTotal reports.",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=96 | reportes=4210 | VirusTotal motores maliciosos=8 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Immediately block the IP address 45.134.26.11 at network level and investigate further.",
+      "llm_proposed_severity": "CRITICA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 45.134.26.11 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A002",
+    "mode": "hybrid",
+    "latency_s": 61.74394313599987,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Potencial intento de inicio de sesión con credenciales falsas detectado por Wazuh y confirmado por AbuseIPDB.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=72 | reportes=311 | VirusTotal motores maliciosos=2 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Bloquear la IP 185.220.101.34 y revisar registros de seguridad adicionales.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A003",
+    "mode": "hybrid",
+    "latency_s": 59.673955542999465,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Fallo de autenticación en sshd del agente srv-app-02 por IP 10.10.5.23, posible intento de acceso no autorizado.",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | reportes=0 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar el origen del intento de acceso y tomar medidas para proteger la cuenta.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A004",
+    "mode": "hybrid",
+    "latency_s": 52.88724216399987,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Integridad del sistema comprometida por modificación de chequeo de suma de comprobación.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Realizar una investigación detallada y restaurar la integridad del sistema.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A005",
+    "mode": "hybrid",
+    "latency_s": 61.60703261500021,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Un archivo ha sido agregado al sistema en '/etc/cron.d/apache-maint'. Esta acción puede ser una manipulación de datos almacenados (T1565.001) y requiere investigación inmediata.",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar el origen del archivo, verificar su integridad y tomar medidas correctivas si es necesario.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A006",
+    "mode": "hybrid",
+    "latency_s": 59.58890550800061,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Intento de inyección SQL detectado con nivel alto por Wazuh y confirmado por AbuseIPDB.",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 6,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 0
+      },
+      "mitre_tactic": "Initial Access",
+      "mitre_technique": "T1190 - Exploit Public-Facing Application",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=88 | reportes=1502 | VirusTotal motores maliciosos=14 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar y bloquear la IP origen: 91.242.162.5",
+      "llm_proposed_severity": "CRITICA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 91.242.162.5 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A007",
+    "mode": "hybrid",
+    "latency_s": 57.45982374599953,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Múltiples errores 400 del servidor web desde la misma IP sospechosa",
+      "score": 14,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 2
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=55 | reportes=208 | VirusTotal motores maliciosos=6 | MISP coincidencias=1",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Bloquear la IP 141.98.10.60 y analizar posibles ataques",
+      "llm_proposed_severity": "CRITICA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 141.98.10.60 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A008",
+    "mode": "hybrid",
+    "latency_s": 56.87494510400029,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Detectado ataque Shellshock con alta confianza, origen IP: 193.32.162.7",
+      "score": 21,
+      "score_breakdown": {
+        "nivel_wazuh": 15,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 2
+      },
+      "mitre_tactic": "Initial Access",
+      "mitre_technique": "T1190 - Exploit Public-Facing Application",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=100 | reportes=8890 | VirusTotal motores maliciosos=22 | MISP coincidencias=2",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Bloquear la IP de origen y realizar una investigación detallada",
+      "llm_proposed_severity": "CRITICA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 193.32.162.7 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A009",
+    "mode": "hybrid",
+    "latency_s": 57.42130178699972,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Fallo de inicio de sesión desconocido o contraseña incorrecta detectado por Wazuh, posible intento de ataque brute-force.",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar el origen IP y reforzar las medidas de seguridad en la cuenta afectada.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A010",
+    "mode": "hybrid",
+    "latency_s": 57.35423858099966,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Multiple failed authentication attempts followed by a success detected on srv-app-02 from IP 213.209.150.22, with one malicious report from VirusTotal.",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=41 | reportes=27 | VirusTotal motores maliciosos=1 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate potential brute force attack and tighten authentication policies.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 213.209.150.22 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A011",
+    "mode": "hybrid",
+    "latency_s": 53.73043344100006,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Usuario ejecutó sudo con privilegios de root en srv-app-02, nivel de amenaza no determinado",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar motivo del uso de sudo y verificar si se trata de una acción autorizada",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A012",
+    "mode": "hybrid",
+    "latency_s": 52.70245616699958,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Host-based anomaly detection event detected on srv-db-01 with high level (7). CTI enrichment omitted.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the rootcheck event on srv-db-01 and consider implementing additional security measures.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A013",
+    "mode": "hybrid",
+    "latency_s": 52.3076654890001,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "Docker container started on srv-docker-01 with unidentified ATT&CK according to Wazuh",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the Docker activity and verify its legitimacy",
+      "llm_proposed_severity": "MEDIA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A014",
+    "mode": "hybrid",
+    "latency_s": 57.16952046999995,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "SSH authentication success detected on srv-app-02 with IP 5.188.206.14, possibly brute force attack. MISP coincidences indicate potential threat.",
+      "score": 6,
+      "score_breakdown": {
+        "nivel_wazuh": 4,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 2
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=12 | reportes=4 | VirusTotal motores maliciosos=0 | MISP coincidencias=3",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate further and consider blocking the IP address.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A015",
+    "mode": "hybrid",
+    "latency_s": 56.50940283699947,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Proceso accede a memoria de LSASS, posible intento de credenciales obtención (T1003.001)",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Credential Access",
+      "mitre_technique": "T1003.001 - LSASS Memory",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar proceso y tomar medidas de seguridad adicionales si se confirma una amenaza",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A016",
+    "mode": "hybrid",
+    "latency_s": 53.09142075899945,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "PowerShell encoded command executed with high level on WKS-FIN-14, potential threat T1059.001",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Execution",
+      "mitre_technique": "T1059.001 - PowerShell",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the PowerShell command and take immediate action to secure affected system",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A017",
+    "mode": "hybrid",
+    "latency_s": 54.22875005400056,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Usuario agregado a grupo privilegiado en HOST-DC01, posible persistencia T1136.002",
+      "score": 8,
+      "score_breakdown": {
+        "nivel_wazuh": 8,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Persistence",
+      "mitre_technique": "T1136.002 - Domain Account",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Revisar acceso de usuario y revisar configuración del grupo privilegiado",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A018",
+    "mode": "hybrid",
+    "latency_s": 53.2207276729996,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Windows Event Log fue limpiado en HOST-DC01, posible evasión de detección",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Defense Evasion",
+      "mitre_technique": "T1070.001 - Clear Windows Event Logs",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar y capturar imágenes de disco para analizar actividad sospechosa",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A019",
+    "mode": "hybrid",
+    "latency_s": 56.29887731200051,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "El agente de seguridad srv-db-01 se ha desconectado, posible infiltración o fallo del sistema.",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Verificar el estado del agente y reestablecer la conexión si es posible. Si no se puede reestablecer, reiniciar el equipo.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A020",
+    "mode": "hybrid",
+    "latency_s": 55.31554754900026,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "OpenSSH server vulnerability (CVE-2024-6387) detected on srv-web-01, potential brute force attack.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Apply the latest patch for OpenSSH and review login attempts.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A021",
+    "mode": "hybrid",
+    "latency_s": 59.89482170700012,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Web server 400 error code detected from IP 89.248.165.32 on srv-web-01 with high suspicion of malicious activity based on AbuseIPDB and VirusTotal reports.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=65 | reportes=940 | VirusTotal motores maliciosos=3 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the source IP for potential threats, review web server logs, and consider implementing additional security measures.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A022",
+    "mode": "hybrid",
+    "latency_s": 56.68960565500038,
+    "error": "",
+    "decision": {
+      "severity_real": "BAJA",
+      "summary": "SSH authentication success detected on srv-app-02 with IP 203.0.113.45, possibly a brute force attack according to Wazuh.",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | reportes=0 | VirusTotal motores maliciosos=0 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the source IP and review login credentials.",
+      "llm_proposed_severity": "MEDIA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A023",
+    "mode": "hybrid",
+    "latency_s": 56.45541263400082,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Integridad de archivo '/etc/passwd' modificada en srv-app-02, posible ataque TA0040 y T1565.001",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Realizar una investigación detallada y restaurar el archivo si es necesario",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A024",
+    "mode": "hybrid",
+    "latency_s": 62.6524758380001,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Incidente de Command and Control con IP maliciosa confirmada por AbuseIPDB, VirusTotal y MISP.",
+      "score": 18,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 2
+      },
+      "mitre_tactic": "Command and Control",
+      "mitre_technique": "T1071.004 - DNS",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=100 | reportes=6120 | VirusTotal motores maliciosos=41 | MISP coincidencias=5",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Cambiar la configuración del firewall para bloquear la IP 194.26.29.156 y realizar una investigación detallada sobre el origen del ataque.",
+      "llm_proposed_severity": "CRITICA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 194.26.29.156 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A025",
+    "mode": "hybrid",
+    "latency_s": 53.24643268900036,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Detectado escaneo de puertos desde un host interno, necesita investigación inmediata.",
+      "score": 9,
+      "score_breakdown": {
+        "nivel_wazuh": 9,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar la fuente del escaneo y tomar medidas para proteger la red.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A026",
+    "mode": "hybrid",
+    "latency_s": 56.17879299199922,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Possible user enumeration attempt detected against LDAP service on HOST-DC01 from IP 77.83.36.2",
+      "score": 6,
+      "score_breakdown": {
+        "nivel_wazuh": 6,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0007 - Discovery",
+      "mitre_technique": "T1087 - Account Discovery",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=30 | reportes=18 | VirusTotal motores maliciosos=0 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the source IP and implement measures to prevent further user enumeration attempts",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A027",
+    "mode": "hybrid",
+    "latency_s": 52.673715802000515,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Anomalous outbound transfer volume detected by custom rule on srv-db-01, further investigation required.",
+      "score": 8,
+      "score_breakdown": {
+        "nivel_wazuh": 8,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the source IP and analyze network traffic for potential data exfiltration.",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A028",
+    "mode": "hybrid",
+    "latency_s": 50.31333819599968,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Kernel module loading detected by Wazuh on srv-db-01, further investigation required for potential threat",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the loaded kernel module and its source",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Monitorizar y correlacionar con contexto adicional."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A029",
+    "mode": "hybrid",
+    "latency_s": 57.74600730899965,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Multiple failed second-factor authentication attempts from a potentially malicious IP address with high confidence according to AbuseIPDB and VirusTotal.",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=78 | reportes=512 | VirusTotal motores maliciosos=5 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Immediately investigate the origin IP, review logs for further suspicious activity, and consider blocking the IP temporarily.",
+      "llm_proposed_severity": "CRITICA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear 45.153.160.2 en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A030",
+    "mode": "hybrid",
+    "latency_s": 55.863956093000525,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Suspicious brute force attempt detected on sshd service at srv-web-01 server",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "hybrid",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the source IP and implement temporary access restrictions if necessary",
+      "llm_proposed_severity": "ALTA",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear unknown en perimetro y abrir War Room del incidente."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A001",
+    "mode": "llm",
+    "latency_s": 58.81168779499967,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "SSH brute force attack detected on srv-web-01 with high confidence from AbuseIPDB and multiple malicious reports from VirusTotal.",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=96 | reportes=4210 | VirusTotal motores maliciosos=8 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Immediately block the IP address 45.134.26.11 and investigate further.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Immediately block the IP address 45.134.26.11 and investigate further."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A002",
+    "mode": "llm",
+    "latency_s": 59.80005872299989,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Usuario no existente intento de acceso SSH desde IP 185.220.101.34",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=72 | reportes=311 | VirusTotal motores maliciosos=2 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Bloquear la IP 185.220.101.34 y revisar registros de seguridad",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear la IP 185.220.101.34 y revisar registros de seguridad"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A003",
+    "mode": "llm",
+    "latency_s": 59.92201143300008,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Fallo de autenticación en sshd del agente srv-app-02 por IP 10.10.5.23, posible intento de intrusión mediante fuerza bruta.",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | reportes=0 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Recomiendo realizar una investigación detallada y tomar medidas para proteger la cuenta del servidor ssh.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Recomiendo realizar una investigación detallada y tomar medidas para proteger la cuenta del servidor ssh."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A004",
+    "mode": "llm",
+    "latency_s": 52.90878864300066,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Integridad del sistema comprometida: cambio de chequeo de integridad detectado.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Realizar una investigación detallada y aplicar medidas correctivas inmediatas.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Realizar una investigación detallada y aplicar medidas correctivas inmediatas."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A005",
+    "mode": "llm",
+    "latency_s": 62.275340535000396,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Un archivo ha sido agregado al sistema en '/etc/cron.d/apache-maint'. Esta acción puede ser una manipulación de datos almacenados (T1565.001)",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar el origen y propósito del archivo agregado, verificar si es una amenaza potencial y tomar medidas correctivas si es necesario",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigar el origen y propósito del archivo agregado, verificar si es una amenaza potencial y tomar medidas correctivas si es necesario"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A006",
+    "mode": "llm",
+    "latency_s": 56.043545074000576,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Intento de inyección SQL detectado con nivel alto por Wazuh y confirmado por AbuseIPDB.",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 6,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 0
+      },
+      "mitre_tactic": "Initial Access",
+      "mitre_technique": "T1190 - Exploit Public-Facing Application",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=88 | reportes=1502 | VirusTotal motores maliciosos=14 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Realizar una investigación detallada y tomar medidas de seguridad adecuadas.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Realizar una investigación detallada y tomar medidas de seguridad adecuadas."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A007",
+    "mode": "llm",
+    "latency_s": 58.02086844199948,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Múltiples errores 400 del servidor web desde la misma IP sospechosa",
+      "score": 14,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 2
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=55 | reportes=208 | VirusTotal motores maliciosos=6 | MISP coincidencias=1",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Bloquear la IP 141.98.10.60 y analizar posibles ataques",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Bloquear la IP 141.98.10.60 y analizar posibles ataques"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A008",
+    "mode": "llm",
+    "latency_s": 59.848488152000755,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Detectado ataque Shellshock con alta confianza y elevada actividad maliciosa según CTI.",
+      "score": 21,
+      "score_breakdown": {
+        "nivel_wazuh": 15,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 2
+      },
+      "mitre_tactic": "Initial Access",
+      "mitre_technique": "T1190 - Exploit Public-Facing Application",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=100 | reportes=8890 | VirusTotal motores maliciosos=22 | MISP coincidencias=2",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Inmediatamente bloquear la IP origen: 193.32.162.7 y realizar una investigación detallada.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Inmediatamente bloquear la IP origen: 193.32.162.7 y realizar una investigación detallada."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A009",
+    "mode": "llm",
+    "latency_s": 61.0433862939999,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Fallo de inicio de sesión desconocido o contraseña incorrecta detectado por Wazuh, posible intento de intrusión (TA0006 - Credential Access / T1110 - Brute Force)",
+      "score": 5,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar el origen IP y tomar medidas de seguridad adicionales si se confirma una amenaza",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigar el origen IP y tomar medidas de seguridad adicionales si se confirma una amenaza"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A010",
+    "mode": "llm",
+    "latency_s": 56.81522038000003,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Multiple failed authentication attempts followed by a success from suspicious IP (AbuseIPDB confidence=41, 1 malicious VirusTotal report). Potential brute-force attack.",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=41 | reportes=27 | VirusTotal motores maliciosos=1 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the account involved and review login policies. Consider blocking the IP temporarily.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Investigate the account involved and review login policies. Consider blocking the IP temporarily."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A011",
+    "mode": "llm",
+    "latency_s": 55.01024941200012,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Usuario ejecutó sudo con privilegios de root en el agente srv-app-02, nivel de amenaza no determinado.",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar motivo y verificar si la acción es legítima o un intento de infiltración.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigar motivo y verificar si la acción es legítima o un intento de infiltración."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A012",
+    "mode": "llm",
+    "latency_s": 54.196109616000285,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Host-based anomaly detection event detected on srv-db-01 with a high level (7) by Wazuh, but without CTI confirmation.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the rootcheck event on srv-db-01 and consider implementing additional security measures.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigate the rootcheck event on srv-db-01 and consider implementing additional security measures."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A013",
+    "mode": "llm",
+    "latency_s": 49.25652070900014,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Docker container started on srv-docker-01 with unverified origin",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the origin of the Docker container and monitor its activity",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Investigate the origin of the Docker container and monitor its activity"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A014",
+    "mode": "llm",
+    "latency_s": 57.26703239299968,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "SSH authentication success detected on srv-app-02 with IP 5.188.206.14, potential brute force attack confirmed by Wazuh and MISP.",
+      "score": 6,
+      "score_breakdown": {
+        "nivel_wazuh": 4,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 2
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=12 | reportes=4 | VirusTotal motores maliciosos=0 | MISP coincidencias=3",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Immediately investigate the source IP, review login attempts, and consider blocking it.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Immediately investigate the source IP, review login attempts, and consider blocking it."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A015",
+    "mode": "llm",
+    "latency_s": 54.42800864199944,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Proceso accede a memoria de LSASS, posible intento de credenciales obtención (T1003.001)",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Credential Access",
+      "mitre_technique": "T1003.001 - LSASS Memory",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar proceso y realizar captura de pantalla del evento",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigar proceso y realizar captura de pantalla del evento"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A016",
+    "mode": "llm",
+    "latency_s": 52.57531079,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "PowerShell encoded command executed with high level on WKS-FIN-14, potential malicious activity detected",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Execution",
+      "mitre_technique": "T1059.001 - PowerShell",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the PowerShell command and take immediate action to secure the affected system",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigate the PowerShell command and take immediate action to secure the affected system"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A017",
+    "mode": "llm",
+    "latency_s": 54.64577514699977,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Usuario agregado a grupo privilegiado en HOST-DC01, posible persistencia T1136.002",
+      "score": 8,
+      "score_breakdown": {
+        "nivel_wazuh": 8,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Persistence",
+      "mitre_technique": "T1136.002 - Domain Account",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Revisar acceso de usuario y revisar configuración de grupos privilegiados",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Revisar acceso de usuario y revisar configuración de grupos privilegiados"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A018",
+    "mode": "llm",
+    "latency_s": 52.690210543999456,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Windows Event Log fue borrado en HOST-DC01, posible intento de evasión de detección.",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Defense Evasion",
+      "mitre_technique": "T1070.001 - Clear Windows Event Logs",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Realizar una investigación detallada y tomar medidas correctivas.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Realizar una investigación detallada y tomar medidas correctivas."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A019",
+    "mode": "llm",
+    "latency_s": 53.461946778999845,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "El agente de seguridad srv-db-01 se ha desconectado, posible compromiso.",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Verificar la conexión del agente y reiniciarlo si es necesario.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Verificar la conexión del agente y reiniciarlo si es necesario."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A020",
+    "mode": "llm",
+    "latency_s": 55.257203855000625,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "OpenSSH server vulnerability (CVE-2024-6387) detected on srv-web-01, potential brute force attack.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Apply the latest patch for OpenSSH and review access logs for suspicious activity.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Apply the latest patch for OpenSSH and review access logs for suspicious activity."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A021",
+    "mode": "llm",
+    "latency_s": 59.895816225998715,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Web server on srv-web-01 experienced a 400 error with potential malicious activity from IP 89.248.165.32, as indicated by AbuseIPDB and VirusTotal.",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 5,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=65 | reportes=940 | VirusTotal motores maliciosos=3 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the incident further, block the suspicious IP temporarily, and review web server logs for more details.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Investigate the incident further, block the suspicious IP temporarily, and review web server logs for more details."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A022",
+    "mode": "llm",
+    "latency_s": 58.669822190999184,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "SSH authentication success detected on srv-app-02 from IP 203.0.113.45, possibly a brute force attack according to Wazuh.",
+      "score": 3,
+      "score_breakdown": {
+        "nivel_wazuh": 3,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | reportes=0 | VirusTotal motores maliciosos=0 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the IP address and review login credentials.",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Investigate the IP address and review login credentials."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A023",
+    "mode": "llm",
+    "latency_s": 61.47875143999954,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Integridad modificada del archivo '/etc/passwd' en srv-app-02, posible manipulación de datos almacenados (ATT&CK: TA0040, T1565.001)",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0040 - Impact",
+      "mitre_technique": "T1565.001 - Stored Data Manipulation",
+      "mitre_source": "heuristic",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Realizar una investigación detallada y restaurar el archivo afectado si es necesario",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Realizar una investigación detallada y restaurar el archivo afectado si es necesario"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A024",
+    "mode": "llm",
+    "latency_s": 62.07949058799932,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Incidente de Command and Control con IP maliciosa confirmada por AbuseIPDB, VirusTotal y MISP.",
+      "score": 18,
+      "score_breakdown": {
+        "nivel_wazuh": 12,
+        "abuseipdb": 2,
+        "virustotal": 2,
+        "misp": 2
+      },
+      "mitre_tactic": "Command and Control",
+      "mitre_technique": "T1071.004 - DNS",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=100 | reportes=6120 | VirusTotal motores maliciosos=41 | MISP coincidencias=5",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Cambiar la configuración de firewall para bloquear la IP 194.26.29.156 y realizar una investigación detallada del sistema afectado.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Cambiar la configuración de firewall para bloquear la IP 194.26.29.156 y realizar una investigación detallada del sistema afectado."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A025",
+    "mode": "llm",
+    "latency_s": 52.5252337689999,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Detectado escaneo de puertos desde un host interno, posible amenaza interna.",
+      "score": 9,
+      "score_breakdown": {
+        "nivel_wazuh": 9,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar la fuente del escaneo y tomar medidas para proteger la red.",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigar la fuente del escaneo y tomar medidas para proteger la red."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A026",
+    "mode": "llm",
+    "latency_s": 56.317044490000626,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Possible user enumeration attempt detected against LDAP service on HOST-DC01 from IP 77.83.36.2",
+      "score": 6,
+      "score_breakdown": {
+        "nivel_wazuh": 6,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0007 - Discovery",
+      "mitre_technique": "T1087 - Account Discovery",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=30 | reportes=18 | VirusTotal motores maliciosos=0 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the source IP and implement measures to prevent further user enumeration attempts",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Investigate the source IP and implement measures to prevent further user enumeration attempts"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A027",
+    "mode": "llm",
+    "latency_s": 53.80619346200001,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Anomalía de transferencia de datos inusual desde el agente srv-db-01",
+      "score": 8,
+      "score_breakdown": {
+        "nivel_wazuh": 8,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigar la actividad y tomar medidas preventivas si se confirma una amenaza",
+      "requires_block": false,
+      "create_war_room": true,
+      "recommendation": "Investigar la actividad y tomar medidas preventivas si se confirma una amenaza"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A028",
+    "mode": "llm",
+    "latency_s": 51.43530916999953,
+    "error": "",
+    "decision": {
+      "severity_real": "MEDIA",
+      "summary": "Kernel module loaded on srv-db-01, further investigation required for potential threat",
+      "score": 7,
+      "score_breakdown": {
+        "nivel_wazuh": 7,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "no determinado",
+      "mitre_technique": "no determinado",
+      "mitre_source": "unmapped",
+      "cti_summary": "Enriquecimiento CTI omitido: True",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the loaded kernel module and its origin",
+      "requires_block": false,
+      "create_war_room": false,
+      "recommendation": "Investigate the loaded kernel module and its origin"
+    },
+    "rep": 0
+  },
+  {
+    "id": "A029",
+    "mode": "llm",
+    "latency_s": 55.27161466000143,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Multiple failed second-factor authentication attempts detected from IP 45.153.160.2, potential brute force attack.",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=78 | reportes=512 | VirusTotal motores maliciosos=5 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Investigate the IP address and consider blocking it temporarily.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Investigate the IP address and consider blocking it temporarily."
+    },
+    "rep": 0
+  },
+  {
+    "id": "A030",
+    "mode": "llm",
+    "latency_s": 52.52393975200175,
+    "error": "",
+    "decision": {
+      "severity_real": "ALTA",
+      "summary": "Suspicious brute force attempt detected on sshd service at srv-web-01 with unknown IP.",
+      "score": 10,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 0,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "TA0006 - Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "heuristic",
+      "cti_summary": "AbuseIPDB confidence=0 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Immediately investigate and strengthen authentication measures.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Immediately investigate and strengthen authentication measures."
+    },
+    "rep": 0
+  }
+]

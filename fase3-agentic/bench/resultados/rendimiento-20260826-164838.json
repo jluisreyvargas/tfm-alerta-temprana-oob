@@ -1,0 +1,32 @@
+[
+  {
+    "id": "A001",
+    "mode": "llm",
+    "latency_s": 64.05711027599955,
+    "error": "",
+    "decision": {
+      "severity_real": "CRITICA",
+      "summary": "Suspicious brute force attempt detected on sshd service from IP 45.134.26.11 on srv-web-01, with high confidence of malicious activity based on AbuseIPDB and VirusTotal reports.",
+      "score": 12,
+      "score_breakdown": {
+        "nivel_wazuh": 10,
+        "abuseipdb": 2,
+        "virustotal": 0,
+        "misp": 0
+      },
+      "mitre_tactic": "Credential Access",
+      "mitre_technique": "T1110 - Brute Force",
+      "mitre_source": "wazuh_native",
+      "cti_summary": "AbuseIPDB confidence=96 | reportes=4210 | VirusTotal motores maliciosos=8 | MISP coincidencias=0",
+      "analysis_mode": "llm",
+      "guardrail_triggered": false,
+      "guardrail_reason": "",
+      "degraded_reason": "",
+      "llm_recommendation": "Immediately block the IP address 45.134.26.11 at network level and investigate further.",
+      "requires_block": true,
+      "create_war_room": true,
+      "recommendation": "Immediately block the IP address 45.134.26.11 at network level and investigate further."
+    },
+    "rep": 0
+  }
+]
