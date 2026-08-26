@@ -13,16 +13,16 @@
 
 ## Descripción
 
-En esta fase se integró un modelo de lenguaje local mediante **Ollama** con el workflow de orquestación de **n8n**, sustituyendo la necesidad de una API externa de IA para el triage inicial de alertas. El objetivo fue validar un flujo soberano y autocontenido: **Wazuh → n8n → AI Agent → Rocket.Chat**, con análisis automatizado de incidentes usando un LLM local.[cite:84][cite:130]
+En esta fase se integró un modelo de lenguaje local mediante **Ollama** con el workflow de orquestación de **n8n**, sustituyendo la necesidad de una API externa de IA para el triage inicial de alertas. El objetivo fue validar un flujo soberano y autocontenido: **Wazuh → n8n → AI Agent → Rocket.Chat**, con análisis automatizado de incidentes usando un LLM local.
 
-La validación confirmó que n8n puede consumir un modelo local a través del nodo **Ollama Model**, y que el agente puede generar una salida estructurada útil para operaciones SOC/SOAR, incluyendo severidad real, táctica MITRE ATT&CK, técnica asociada, resumen y recomendación de respuesta.[cite:84]
+La validación confirmó que n8n puede consumir un modelo local a través del nodo **Ollama Model**, y que el agente puede generar una salida estructurada útil para operaciones SOC/SOAR, incluyendo severidad real, táctica MITRE ATT&CK, técnica asociada, resumen y recomendación de respuesta.
 
 ## Objetivos alcanzados
 
 - Despliegue del contenedor `ollama` en la red Docker `oob-network`.
 - Descarga y carga operativa del modelo `mistral:7b`.
-- Verificación de conectividad desde el contenedor `n8n` hacia `http://ollama:11434/api/tags`.[cite:130]
-- Creación de credencial funcional de Ollama en n8n usando la URL interna del servicio.[cite:84]
+- Verificación de conectividad desde el contenedor `n8n` hacia `http://ollama:11434/api/tags`.
+- Creación de credencial funcional de Ollama en n8n usando la URL interna del servicio.
 - Integración del nodo **AI Agent** con **Ollama Model** en el workflow de alertas.
 - Generación de análisis IA visible en Rocket.Chat para eventos con severidad `>= 7`.
 
@@ -66,7 +66,7 @@ Rocket.Chat
 > [!NOTE]
 > **Estado actual.** El nodo `Edit Fields` fue sustituido por `Normalize Alert`. Ver `fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md` y la sección "Normalización y deduplicación" de `fase2-orquestador/README.md`.
 
-Este diseño permite que cada alerta relevante sea enriquecida semánticamente por un agente local antes de publicarse en el canal de operaciones. El uso del nodo **Ollama Model** de n8n para integrar LLMs locales está documentado oficialmente por n8n.[cite:84]
+Este diseño permite que cada alerta relevante sea enriquecida semánticamente por un agente local antes de publicarse en el canal de operaciones. El uso del nodo **Ollama Model** de n8n para integrar LLMs locales está documentado oficialmente por n8n.
 
 ## Configuración de conectividad
 
@@ -76,7 +76,7 @@ La validación mostró que la URL correcta **dentro de la red Docker** es:
 http://ollama:11434
 ```
 
-La API de Ollama expone el endpoint `/api/tags` para listar modelos disponibles, lo que permitió verificar desde el contenedor `n8n` que `mistral:7b` estaba correctamente cargado.[cite:130]
+La API de Ollama expone el endpoint `/api/tags` para listar modelos disponibles, lo que permitió verificar desde el contenedor `n8n` que `mistral:7b` estaba correctamente cargado.
 
 Comando de prueba correcto desde `n8n`:
 
@@ -100,7 +100,7 @@ En n8n se creó una credencial de tipo **Ollama** con estos parámetros:
 | Base URL | `http://ollama:11434` |
 | API Key | vacío |
 
-La documentación de n8n confirma que el nodo **Ollama Model** se usa como modelo de chat dentro de agentes y cadenas LLM.[cite:84]
+La documentación de n8n confirma que el nodo **Ollama Model** se usa como modelo de chat dentro de agentes y cadenas LLM.
 
 ### Nodo AI Agent
 
@@ -111,7 +111,7 @@ El agente quedó configurado con:
 - **Memory:** no utilizada en esta validación inicial
 - **Output Parser:** desactivado en la validación rápida final
 
-Se optó por no usar memoria en esta fase porque el nodo requería `sessionId`, parámetro normalmente suministrado por `Chat Trigger`; en este proyecto el disparador es un **Webhook** técnico, por lo que se dejó la memoria para fases posteriores.[cite:84]
+Se optó por no usar memoria en esta fase porque el nodo requería `sessionId`, parámetro normalmente suministrado por `Chat Trigger`; en este proyecto el disparador es un **Webhook** técnico, por lo que se dejó la memoria para fases posteriores.
 
 ## Prompt operativo del agente
 
@@ -191,7 +191,7 @@ curl -k -X POST https://n8n.oob.local/webhook-test/wazuh-alerts \
   }'
 ```
 
-El uso de URL de test para webhooks es coherente con la práctica habitual de n8n durante la fase de desarrollo, antes de activar el workflow en producción.[cite:131][cite:136]
+El uso de URL de test para webhooks es coherente con la práctica habitual de n8n durante la fase de desarrollo, antes de activar el workflow en producción.
 
 ## Resultado funcional observado
 
@@ -239,7 +239,7 @@ Se descartó temporalmente el uso de `Structured Output Parser` porque requería
 
 ## Valor técnico para el TFM
 
-Esta fase demuestra que un enfoque con **n8n + Ollama + modelo local** es viable para IA Agéntica aplicada a triage de incidentes. La decisión evita depender de una FastAPI adicional y mantiene toda la lógica de orquestación en una interfaz visual y extensible. El enfoque encaja especialmente bien con fases posteriores de **CTI Enrichment**, War Rooms y respuesta automatizada.[cite:84][cite:122]
+Esta fase demuestra que un enfoque con **n8n + Ollama + modelo local** es viable para IA Agéntica aplicada a triage de incidentes. La decisión evita depender de una FastAPI adicional y mantiene toda la lógica de orquestación en una interfaz visual y extensible. El enfoque encaja especialmente bien con fases posteriores de **CTI Enrichment**, War Rooms y respuesta automatizada.
 
 Además, la integración local refuerza la soberanía del dato y reduce dependencia de proveedores externos, aspecto especialmente relevante en entornos de ciberseguridad con restricciones de privacidad o compliance.
 
