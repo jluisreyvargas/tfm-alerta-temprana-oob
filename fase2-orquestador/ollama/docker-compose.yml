@@ -5,15 +5,13 @@ services:
     restart: unless-stopped
     environment:
       - OLLAMA_NUM_PARALLEL=1
-      - OLLAMA_KEEP_ALIVE=24h
-      - OLLAMA_NUM_THREAD=32  
+      - OLLAMA_KEEP_ALIVE=-1
       - OLLAMA_HOST=0.0.0.0
     volumes:
       - ollama_data:/root/.ollama
     networks:
       - oob-network
     # Sin exposición de puerto al host — solo acceso interno Docker
-    # n8n se conecta via http://ollama:11434
 
 volumes:
   ollama_data:

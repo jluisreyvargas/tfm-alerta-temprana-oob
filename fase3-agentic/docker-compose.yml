@@ -26,6 +26,8 @@ services:
       - OS_INDEX=tfm-metrics-events
     volumes:
       - ../fase7-observabilidad/shared:/app/shared:ro
+      - ../fase7-observabilidad/shared:/app/shared:ro
+      - ./bench:/app/bench:ro
     networks:
       - oob-network
       - single-node_default

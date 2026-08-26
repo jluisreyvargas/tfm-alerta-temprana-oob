@@ -19,6 +19,11 @@ import os
 MODE_DETERMINISTIC = "deterministic"
 MODE_LLM = "llm"
 MODE_HYBRID = "hybrid"
+# Numero de hilos de inferencia. Determinado experimentalmente sobre esta VM
+# (16 vCPU, 1 socket): la curva tiene su maximo en 8. Por encima, el coste de
+# sincronizacion entre hilos supera la ganancia de paralelismo — con 16 hilos
+# el rendimiento cae a un tercio.
+OLLAMA_NUM_THREAD: int = int(os.getenv("OLLAMA_NUM_THREAD", "8"))
 
 VALID_MODES = {MODE_DETERMINISTIC, MODE_LLM, MODE_HYBRID}
 

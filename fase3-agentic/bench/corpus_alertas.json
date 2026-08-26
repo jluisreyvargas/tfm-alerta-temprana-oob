@@ -1,0 +1,562 @@
+[
+  {
+    "id": "A001",
+    "nota": "SSH brute force con reputacion muy negativa. ATT&CK nativo de Wazuh.",
+    "wazuh": {
+      "alert_id": "1756200001.100001",
+      "rule_id": "5712",
+      "rule_desc": "sshd: brute force trying to get access to the system.",
+      "rule_level": 10,
+      "rule_groups": ["syslog", "sshd", "authentication_failures"],
+      "agent_name": "srv-web-01",
+      "src_ip": "45.134.26.11",
+      "mitre_id": ["T1110"],
+      "mitre_tactic": ["Credential Access"],
+      "mitre_technique": ["Brute Force"]
+    },
+    "cti": {
+      "abuse_confidence": 96,
+      "abuse_total_reports": 4210,
+      "vt_malicious": 8,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A002",
+    "nota": "Usuario inexistente. Sin ATT&CK nativo: debe caer en heuristica T1110.",
+    "wazuh": {
+      "alert_id": "1756200002.100002",
+      "rule_id": "5710",
+      "rule_desc": "sshd: Attempt to login using a non-existent user",
+      "rule_level": 5,
+      "rule_groups": ["syslog", "sshd", "invalid_login"],
+      "agent_name": "srv-web-01",
+      "src_ip": "185.220.101.34"
+    },
+    "cti": {
+      "abuse_confidence": 72,
+      "abuse_total_reports": 311,
+      "vt_malicious": 2,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A003",
+    "nota": "Fallo de autenticacion desde red interna. No debe proponerse bloqueo.",
+    "wazuh": {
+      "alert_id": "1756200003.100003",
+      "rule_id": "5716",
+      "rule_desc": "sshd: authentication failed.",
+      "rule_level": 5,
+      "rule_groups": ["syslog", "sshd", "authentication_failed"],
+      "agent_name": "srv-app-02",
+      "src_ip": "10.10.5.23"
+    },
+    "cti": {
+      "abuse_confidence": 0,
+      "abuse_total_reports": 0,
+      "misp_total": 0,
+      "src_ip_is_private": true
+    }
+  },
+  {
+    "id": "A004",
+    "nota": "FIM sin src_ip y sin enriquecimiento. Regresion del bug de Normalize Alert.",
+    "wazuh": {
+      "alert_id": "1756200004.100004",
+      "rule_id": "550",
+      "rule_desc": "Integrity checksum changed.",
+      "rule_level": 7,
+      "rule_groups": ["ossec", "syscheck", "syscheck_entry_modified"],
+      "agent_name": "srv-db-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A005",
+    "nota": "Fichero anadido en /etc/cron.d. Nivel bajo, contexto sospechoso.",
+    "wazuh": {
+      "alert_id": "1756200005.100005",
+      "rule_id": "554",
+      "rule_desc": "File added to the system: '/etc/cron.d/apache-maint'.",
+      "rule_level": 5,
+      "rule_groups": ["ossec", "syscheck", "syscheck_entry_added"],
+      "agent_name": "srv-web-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A006",
+    "nota": "SQLi con corroboracion CTI doble. Nivel bajo rescatado por CTI.",
+    "wazuh": {
+      "alert_id": "1756200006.100006",
+      "rule_id": "31103",
+      "rule_desc": "SQL injection attempt.",
+      "rule_level": 6,
+      "rule_groups": ["web", "attack", "sql_injection"],
+      "agent_name": "srv-web-01",
+      "src_ip": "91.242.162.5",
+      "mitre_id": ["T1190"],
+      "mitre_tactic": ["Initial Access"],
+      "mitre_technique": ["Exploit Public-Facing Application"]
+    },
+    "cti": {
+      "abuse_confidence": 88,
+      "abuse_total_reports": 1502,
+      "vt_malicious": 14,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A007",
+    "nota": "Escaneo web masivo con coincidencia MISP.",
+    "wazuh": {
+      "alert_id": "1756200007.100007",
+      "rule_id": "31151",
+      "rule_desc": "Multiple web server 400 error codes from same source ip.",
+      "rule_level": 10,
+      "rule_groups": ["web", "accesslog", "web_scan"],
+      "agent_name": "srv-web-01",
+      "src_ip": "141.98.10.60"
+    },
+    "cti": {
+      "abuse_confidence": 55,
+      "abuse_total_reports": 208,
+      "vt_malicious": 6,
+      "misp_total": 1,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A008",
+    "nota": "Maxima severidad por todos los ejes. Techo de la escala de score.",
+    "wazuh": {
+      "alert_id": "1756200008.100008",
+      "rule_id": "31164",
+      "rule_desc": "Shellshock attack detected.",
+      "rule_level": 15,
+      "rule_groups": ["web", "attack", "shellshock"],
+      "agent_name": "srv-web-01",
+      "src_ip": "193.32.162.7",
+      "mitre_id": ["T1190"],
+      "mitre_tactic": ["Initial Access"],
+      "mitre_technique": ["Exploit Public-Facing Application"]
+    },
+    "cti": {
+      "abuse_confidence": 100,
+      "abuse_total_reports": 8890,
+      "vt_malicious": 22,
+      "misp_total": 2,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A009",
+    "nota": "Logon fallido en Windows desde red interna.",
+    "wazuh": {
+      "alert_id": "1756200009.100009",
+      "rule_id": "60122",
+      "rule_desc": "Logon Failure - Unknown user or bad password.",
+      "rule_level": 5,
+      "rule_groups": ["windows", "authentication_failed"],
+      "agent_name": "WKS-FIN-14",
+      "src_ip": "172.16.4.9"
+    },
+    "cti": {
+      "abuse_confidence": 0,
+      "misp_total": 0,
+      "src_ip_is_private": true
+    }
+  },
+  {
+    "id": "A010",
+    "nota": "Nivel Wazuh alto SIN corroboracion CTI. Caso de desacuerdo esperado con el LLM.",
+    "wazuh": {
+      "alert_id": "1756200010.100010",
+      "rule_id": "40111",
+      "rule_desc": "Multiple authentication failures followed by a success.",
+      "rule_level": 10,
+      "rule_groups": ["authentication_success", "multiple_logins"],
+      "agent_name": "srv-app-02",
+      "src_ip": "213.209.150.22"
+    },
+    "cti": {
+      "abuse_confidence": 41,
+      "abuse_total_reports": 27,
+      "vt_malicious": 1,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A011",
+    "nota": "Ruido operativo legitimo. Debe quedarse en BAJA.",
+    "wazuh": {
+      "alert_id": "1756200011.100011",
+      "rule_id": "5402",
+      "rule_desc": "Successful sudo to ROOT executed.",
+      "rule_level": 3,
+      "rule_groups": ["syslog", "sudo"],
+      "agent_name": "srv-app-02"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A012",
+    "nota": "Rootcheck. Sin ATT&CK nativo ni palabra clave heuristica: debe quedar sin mapear.",
+    "wazuh": {
+      "alert_id": "1756200012.100012",
+      "rule_id": "510",
+      "rule_desc": "Host-based anomaly detection event (rootcheck).",
+      "rule_level": 7,
+      "rule_groups": ["ossec", "rootcheck"],
+      "agent_name": "srv-db-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A013",
+    "nota": "Evento de infraestructura. Ruido puro.",
+    "wazuh": {
+      "alert_id": "1756200013.100013",
+      "rule_id": "87901",
+      "rule_desc": "Docker: Container started.",
+      "rule_level": 3,
+      "rule_groups": ["docker"],
+      "agent_name": "srv-docker-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A014",
+    "nota": "Nivel Wazuh bajo elevado unicamente por coincidencia MISP.",
+    "wazuh": {
+      "alert_id": "1756200014.100014",
+      "rule_id": "5715",
+      "rule_desc": "sshd: authentication success.",
+      "rule_level": 4,
+      "rule_groups": ["syslog", "sshd", "authentication_success"],
+      "agent_name": "srv-app-02",
+      "src_ip": "5.188.206.14"
+    },
+    "cti": {
+      "abuse_confidence": 12,
+      "abuse_total_reports": 4,
+      "vt_malicious": 0,
+      "misp_total": 3,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A015",
+    "nota": "Acceso a LSASS. Sustituye al ejemplo erroneo del README (T1078 -> T1003.001).",
+    "wazuh": {
+      "alert_id": "1756200015.100015",
+      "rule_id": "92100",
+      "rule_desc": "Sysmon - Process accessed LSASS memory.",
+      "rule_level": 12,
+      "rule_groups": ["windows", "sysmon", "credential_access"],
+      "agent_name": "HOST-DC01",
+      "mitre_id": ["T1003.001"],
+      "mitre_tactic": ["Credential Access"],
+      "mitre_technique": ["LSASS Memory"]
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A016",
+    "nota": "PowerShell ofuscado. Severidad alta sin IP sobre la que actuar.",
+    "wazuh": {
+      "alert_id": "1756200016.100016",
+      "rule_id": "91802",
+      "rule_desc": "PowerShell encoded command executed.",
+      "rule_level": 12,
+      "rule_groups": ["windows", "powershell"],
+      "agent_name": "WKS-FIN-14",
+      "mitre_id": ["T1059.001"],
+      "mitre_tactic": ["Execution"],
+      "mitre_technique": ["PowerShell"]
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A017",
+    "nota": "Persistencia por creacion de cuenta privilegiada.",
+    "wazuh": {
+      "alert_id": "1756200017.100017",
+      "rule_id": "60110",
+      "rule_desc": "User account added to privileged group.",
+      "rule_level": 8,
+      "rule_groups": ["windows", "account_changed"],
+      "agent_name": "HOST-DC01",
+      "mitre_id": ["T1136.002"],
+      "mitre_tactic": ["Persistence"],
+      "mitre_technique": ["Domain Account"]
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A018",
+    "nota": "Borrado de log. Anti-forense.",
+    "wazuh": {
+      "alert_id": "1756200018.100018",
+      "rule_id": "63103",
+      "rule_desc": "Windows Event Log was cleared.",
+      "rule_level": 12,
+      "rule_groups": ["windows", "log_cleared"],
+      "agent_name": "HOST-DC01",
+      "mitre_id": ["T1070.001"],
+      "mitre_tactic": ["Defense Evasion"],
+      "mitre_technique": ["Clear Windows Event Logs"]
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A019",
+    "nota": "Perdida de visibilidad del agente. Ruido en la escala pero relevante en OOB.",
+    "wazuh": {
+      "alert_id": "1756200019.100019",
+      "rule_id": "503",
+      "rule_desc": "Wazuh agent disconnected.",
+      "rule_level": 3,
+      "rule_groups": ["ossec"],
+      "agent_name": "srv-db-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A020",
+    "nota": "Deteccion de vulnerabilidad. No es un incidente activo.",
+    "wazuh": {
+      "alert_id": "1756200020.100020",
+      "rule_id": "23504",
+      "rule_desc": "CVE-2024-6387 affects openssh-server.",
+      "rule_level": 7,
+      "rule_groups": ["vulnerability-detector"],
+      "agent_name": "srv-web-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A021",
+    "nota": "Escaneo 404. Reputacion negativa pero pocos motores VT.",
+    "wazuh": {
+      "alert_id": "1756200021.100021",
+      "rule_id": "31101",
+      "rule_desc": "Web server 400 error code.",
+      "rule_level": 5,
+      "rule_groups": ["web", "accesslog"],
+      "agent_name": "srv-web-01",
+      "src_ip": "89.248.165.32"
+    },
+    "cti": {
+      "abuse_confidence": 65,
+      "abuse_total_reports": 940,
+      "vt_malicious": 3,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A022",
+    "nota": "Acceso legitimo desde IP publica. Falso positivo si el motor sobrerreacciona.",
+    "wazuh": {
+      "alert_id": "1756200022.100022",
+      "rule_id": "5715",
+      "rule_desc": "sshd: authentication success.",
+      "rule_level": 3,
+      "rule_groups": ["syslog", "sshd", "authentication_success"],
+      "agent_name": "srv-app-02",
+      "src_ip": "203.0.113.45"
+    },
+    "cti": {
+      "abuse_confidence": 0,
+      "abuse_total_reports": 0,
+      "vt_malicious": 0,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A023",
+    "nota": "FIM sobre /etc/passwd. Heuristica syscheck.",
+    "wazuh": {
+      "alert_id": "1756200023.100023",
+      "rule_id": "550",
+      "rule_desc": "Integrity checksum changed for: '/etc/passwd'",
+      "rule_level": 7,
+      "rule_groups": ["ossec", "syscheck"],
+      "agent_name": "srv-app-02"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A024",
+    "nota": "C2 confirmado por tres fuentes CTI. Caso de acuerdo total esperado.",
+    "wazuh": {
+      "alert_id": "1756200024.100024",
+      "rule_id": "86601",
+      "rule_desc": "Suricata: Alert - ET MALWARE Known Malicious C2 Domain in DNS Lookup.",
+      "rule_level": 12,
+      "rule_groups": ["ids", "suricata"],
+      "agent_name": "srv-app-02",
+      "src_ip": "194.26.29.156",
+      "mitre_id": ["T1071.004"],
+      "mitre_tactic": ["Command and Control"],
+      "mitre_technique": ["DNS"]
+    },
+    "cti": {
+      "abuse_confidence": 100,
+      "abuse_total_reports": 6120,
+      "vt_malicious": 41,
+      "misp_total": 5,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A025",
+    "nota": "Severidad ALTA con IP privada. Debe abrir War Room pero NO proponer bloqueo.",
+    "wazuh": {
+      "alert_id": "1756200025.100025",
+      "rule_id": "40101",
+      "rule_desc": "Port scan detected from internal host.",
+      "rule_level": 9,
+      "rule_groups": ["ids", "recon"],
+      "agent_name": "srv-app-02",
+      "src_ip": "192.168.50.7"
+    },
+    "cti": {
+      "abuse_confidence": 0,
+      "misp_total": 0,
+      "src_ip_is_private": true
+    }
+  },
+  {
+    "id": "A026",
+    "nota": "Enumeracion de cuentas. Sin ATT&CK nativo: heuristica T1087.",
+    "wazuh": {
+      "alert_id": "1756200026.100026",
+      "rule_id": "100201",
+      "rule_desc": "Possible user enumeration against LDAP service.",
+      "rule_level": 6,
+      "rule_groups": ["ldap", "recon"],
+      "agent_name": "HOST-DC01",
+      "src_ip": "77.83.36.2"
+    },
+    "cti": {
+      "abuse_confidence": 30,
+      "abuse_total_reports": 18,
+      "vt_malicious": 0,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A027",
+    "nota": "Regla propia sin mapeo ni palabras clave. Debe devolver 'no determinado'.",
+    "wazuh": {
+      "alert_id": "1756200027.100027",
+      "rule_id": "100999",
+      "rule_desc": "Custom rule: anomalous outbound transfer volume.",
+      "rule_level": 8,
+      "rule_groups": ["custom"],
+      "agent_name": "srv-db-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A028",
+    "nota": "Carga de modulo de kernel.",
+    "wazuh": {
+      "alert_id": "1756200028.100028",
+      "rule_id": "80790",
+      "rule_desc": "Auditd: Kernel module loaded.",
+      "rule_level": 7,
+      "rule_groups": ["audit"],
+      "agent_name": "srv-db-01"
+    },
+    "cti": {
+      "enrichment_skipped": true,
+      "enrichment_skipped_reason": "alerta sin direccion IP de origen"
+    }
+  },
+  {
+    "id": "A029",
+    "nota": "Ataque contra la propia MFA del enclave (Authelia).",
+    "wazuh": {
+      "alert_id": "1756200029.100029",
+      "rule_id": "100301",
+      "rule_desc": "Authelia: multiple failed second-factor authentication attempts.",
+      "rule_level": 10,
+      "rule_groups": ["authelia", "authentication_failures"],
+      "agent_name": "oob-gateway",
+      "src_ip": "45.153.160.2"
+    },
+    "cti": {
+      "abuse_confidence": 78,
+      "abuse_total_reports": 512,
+      "vt_malicious": 5,
+      "misp_total": 0,
+      "src_ip_is_private": false
+    }
+  },
+  {
+    "id": "A030",
+    "nota": "src_ip malformada. Regresion: con el default fail-open se propondria bloquear 'unknown'.",
+    "wazuh": {
+      "alert_id": "1756200030.100030",
+      "rule_id": "5712",
+      "rule_desc": "sshd: brute force trying to get access to the system.",
+      "rule_level": 10,
+      "rule_groups": ["syslog", "sshd", "authentication_failures"],
+      "agent_name": "srv-web-01",
+      "src_ip": "unknown"
+    },
+    "cti": {
+      "abuse_confidence": 0,
+      "misp_total": 0
+    }
+  }
+]

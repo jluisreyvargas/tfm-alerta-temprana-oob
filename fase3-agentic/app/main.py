@@ -53,12 +53,22 @@ def triage(payload: TriageRequest) -> dict:
     if decision.get("degraded_reason"):
         logger.warning("Degradacion de motor: %s", decision["degraded_reason"])
 
-    log_event(
-        "triage_decision",
-        incident_id=wazuh.get("alert_id") or wazuh.get("rule_id") or "unknown",
-        host=wazuh.get("agent_name") or "unknown",
-        profile=decision.get("recommendation", "unknown"),
-        decision=decision.get("severity_real", "unknown"),
-        source=f"langgraph-agent[{decision.get('analysis_mode', 'unknown')}]",
-    )
+    # La telemetria de Fase 7 no puede tumbar la ruta de incidente. Si el
+    # indexador esta caido, si la credencial ha rotado o si el volumen no esta
+    # montado, se pierde la metrica y se entrega el veredicto igualmente: un
+    # incidente no notificado es un fallo mucho mas grave que una metrica
+    # ausente. Es el mismo principio de degradacion que aplica el grafo cuando
+    # el LLM no responde.
+    try:
+        log_event(
+            "triage_decision",
+            incident_id=wazuh.get("alert_id") or wazuh.get("rule_id") or "unknown",
+            host=wazuh.get("agent_name") or "unknown",
+            profile=decision.get("recommendation", "unknown"),
+            decision=decision.get("severity_real", "unknown"),
+            source=f"langgraph-agent[{decision.get('analysis_mode', 'unknown')}]",
+        )
+    except Exception as exc:  # noqa: BLE001 - deliberadamente amplio
+        logger.warning("No se pudo registrar la metrica de triage: %s", exc)
+
     return result
