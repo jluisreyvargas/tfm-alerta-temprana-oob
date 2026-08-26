@@ -91,33 +91,65 @@ Abrir RustDesk en el DC y configurar el servidor propio en **Settings → Networ
 - **Relay Server:** IP del host Ubuntu donde corre Docker.
 - **Key:** contenido de `rustdesk/data/id_ed25519.pub`.
 
-En la prueba realizada, el ID visible en la aplicación del DC fue:
+En la prueba realizada, el ID visible en la aplicación del DC fue anotado manualmente
+y usado solo como referencia local — no se hardcodea en ningún script ni fichero del
+repositorio (ver nota de endurecimiento en el Paso 3):
 
 ```text
-161 180 321
+<RUSTDESK_ID>
 ```
 
 ## Paso 3 — Scripts PowerShell de activación/desactivación
+
+> **Nota de endurecimiento posterior:** la primera versión de `rustdesk_enable.ps1`
+> tenía el ID de RustDesk hardcodeado en el propio script y nunca revertía el
+> `StartupType Disabled` que deja `rustdesk_disable.ps1` — tras el primer ciclo el
+> break-glass quedaba muerto. La versión actual (reflejada abajo) lee el ID real
+> desde `RustDesk.toml`, revierte el servicio a `Manual` y genera una contraseña de
+> un solo uso por sesión. Ver `fase4-breakglass-dc/scripts/` para la versión siempre
+> actualizada.
 
 ### `C:\tfm-scripts\rustdesk_enable.ps1`
 
 ```powershell
 param([int]$TTLMinutes = 30)
 
-Write-Host "RUSTDESK_ID=161 180 321"
-Write-Host "RUSTDESK_TTL=$TTLMinutes"
+$ErrorActionPreference = "Stop"
 
-$action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-File C:\tfm-scripts\rustdesk_disable.ps1"
+# 1. Revertir el Disabled que dejó rustdesk_disable.ps1
+Set-Service -Name RustDesk -StartupType Manual
+Start-Service -Name RustDesk
+Start-Sleep -Seconds 5
+
+# 2. Leer el ID real del host (nunca hardcodearlo en el repositorio)
+$toml = "$env:APPDATA\RustDesk\config\RustDesk.toml"
+$rustdeskId = ""
+if (Test-Path $toml) {
+    $m = Select-String -Path $toml -Pattern "^id\s*=\s*'(.+)'"
+    if ($m) { $rustdeskId = $m.Matches.Groups[1].Value }
+}
+
+# 3. Contraseña de un solo uso para esta sesión break-glass
+$pass = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+& "$env:ProgramFiles\RustDesk\rustdesk.exe" --password $pass
+
+# 4. TTL
+$action  = New-ScheduledTaskAction -Execute "PowerShell.exe" `
+             -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\tfm-scripts\rustdesk_disable.ps1"
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes($TTLMinutes)
+Register-ScheduledTask -TaskName "RustDesk-AutoOff" -Action $action `
+  -Trigger $trigger -RunLevel Highest -Force | Out-Null
 
-Register-ScheduledTask -TaskName "RustDesk-AutoOff" -Action $action -Trigger $trigger -Force
-
-Write-Host "TTL programado: $TTLMinutes minutos"
+# 5. Salida estructurada para el orquestador
+@{ rustdesk_id = $rustdeskId; password = $pass; ttl_minutes = $TTLMinutes } |
+  ConvertTo-Json -Compress
 ```
 
 ### `C:\tfm-scripts\rustdesk_disable.ps1`
 
 ```powershell
+param()
+
 Stop-Service -Name RustDesk -ErrorAction SilentlyContinue
 Set-Service -Name RustDesk -StartupType Disabled
 Unregister-ScheduledTask -TaskName "RustDesk-AutoOff" -Confirm:$false -ErrorAction SilentlyContinue
@@ -144,7 +176,7 @@ Después de cambiar el fichero, reiniciar el agente Python en el DC.
 
 ## Paso 4 — DC Agent como servicio de Windows
 
-El agente Python no debe depender de una consola abierta ni de una ejecución manual tras reinicios. Para ello se registra como servicio de Windows con NSSM, de forma que arranque automáticamente al inicio del sistema y quede disponible para el Orquestador en todo momento.[web:243][web:245]
+El agente Python no debe depender de una consola abierta ni de una ejecución manual tras reinicios. Para ello se registra como servicio de Windows con NSSM, de forma que arranque automáticamente al inicio del sistema y quede disponible para el Orquestador en todo momento.
 
 ### Estructura recomendada
 
@@ -177,7 +209,7 @@ cd C:\Tools\nssm\win64
 ./nssm.exe start TFM-DC-Agent
 ```
 
-Con esta configuración, el agente queda activo como servicio persistente y el endpoint `http://dc01-tfm:8000` permanece disponible sin intervención manual.[web:243][web:245]
+Con esta configuración, el agente queda activo como servicio persistente y el endpoint `http://dc01-tfm:8000` permanece disponible sin intervención manual.
 
 ## Paso 5 — Validación de activación
 
@@ -185,7 +217,7 @@ Comando ejecutado desde el orquestador Linux:
 
 ```bash
 curl -s -X POST http://dc01-tfm:8000/run \
-  -H "Authorization: Bearer tfm-token-secreto-2024" \
+  -H "Authorization: Bearer ${AGENT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"script":"rustdesk_enable.ps1","target":"DC01"}'
 ```
@@ -196,13 +228,16 @@ Respuesta obtenida:
 {
   "script": "rustdesk_enable.ps1",
   "target": "DC01",
-  "stdout": "RUSTDESK_ID=161 180 321\nRUSTDESK_TTL=30\n\nTaskPath                                       TaskName                          State     \n--------                                       --------                          -----     \n\\                                              RustDesk-AutoOff                  Ready     \nTTL programado: 30 minutos\n\n\n",
+  "stdout": "{\"rustdesk_id\":\"<RUSTDESK_ID>\",\"password\":\"<ONE_TIME_PASSWORD>\",\"ttl_minutes\":30}",
   "stderr": "",
-  "returncode": 0
+  "returncode": 0,
+  "truncated": false
 }
 ```
 
-Esta validación confirma que el agente aceptó el script, devolvió el ID de RustDesk y dejó programada la tarea `RustDesk-AutoOff`.
+Esta validación confirma que el agente aceptó el script, devolvió el ID de RustDesk real
+del host (leído dinámicamente, nunca hardcodeado) junto con una contraseña de un solo
+uso, y dejó programada la tarea `RustDesk-AutoOff`.
 
 ## Paso 6 — Validación de desactivación
 
@@ -210,7 +245,7 @@ Comando ejecutado desde el orquestador Linux:
 
 ```bash
 curl -s -X POST http://dc01-tfm:8000/run \
-  -H "Authorization: Bearer tfm-token-secreto-2024" \
+  -H "Authorization: Bearer ${AGENT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"script":"rustdesk_disable.ps1","target":"DC01"}'
 ```
@@ -233,7 +268,7 @@ Con esta prueba queda confirmado que el flujo de revocación también funciona y
 
 La Fase 4e queda completada con RustDesk desplegado en modelo self-hosted, configurado en el DC y gobernado remotamente por el DC Agent, con activación y desactivación validadas por `curl`.
 
-El agente Python queda además registrado como servicio de Windows mediante NSSM, por lo que arranca automáticamente con el sistema y no depende de intervención manual tras reinicios.[web:243][web:245]
+El agente Python queda además registrado como servicio de Windows mediante NSSM, por lo que arranca automáticamente con el sistema y no depende de intervención manual tras reinicios.
 
 El sistema está listo para el cierre de Fase 4 con la consolidación documental final y la validación end-to-end de todo el flujo break-glass.
 

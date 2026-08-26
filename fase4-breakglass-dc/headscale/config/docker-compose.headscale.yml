@@ -7,11 +7,11 @@ services:
     tmpfs:
       - /var/run/headscale
     volumes:
-      - /home/jose/tfm-alerta-temprana-oob/fase4-breakglass-dc/headscale/config:/etc/headscale
-      - /home/jose/tfm-alerta-temprana-oob/fase4-breakglass-dc/headscale/lib:/var/lib/headscale
+      - ./:/etc/headscale
+      - ../lib:/var/lib/headscale
     ports:
-      - "8090:8080"
-      - "9090:9090"
+      - "127.0.0.1:8090:8080"   # fallback de diagnóstico, no acceso normal
+      - "3478:3478/udp"         # STUN del DERP embebido
     networks:
       - oob-network
     labels:

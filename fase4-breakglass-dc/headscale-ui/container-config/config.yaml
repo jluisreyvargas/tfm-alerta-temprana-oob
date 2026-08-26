@@ -1,7 +1,11 @@
 # headscale-ui/container-config/config.yaml
-# URL interna del API de Headscale (nombre del servicio en la red Docker)
-api_url: "http://headscale:8080"
+# headscale-ui es una SPA: las llamadas al API las hace el navegador del
+# analista, no el contenedor. Con http://headscale:8080 el navegador no
+# puede resolver un nombre de red Docker y la UI nunca lista nodos.
+# Debe apuntar al mismo origen público que sirve Traefik.
+api_url: "https://hs.oob.local"
 
-# API key generada con: docker exec headscale headscale apikeys create
-# Este valor se puede dejar vacío y pegar la key directamente en la UI (Settings)
+# La api_key debe quedar SIEMPRE vacía en el repositorio.
+# Generar con: docker exec headscale headscale apikeys create
+# y pegarla desde la UI (Settings) tras el primer acceso, nunca aquí.
 api_key: ""

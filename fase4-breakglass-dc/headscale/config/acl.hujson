@@ -1,0 +1,32 @@
+// Microsegmentación del enclave OOB.
+// Sin política, Headscale aplica "allow all": un DC comprometido
+// alcanzaría n8n, Wazuh, MISP e IRIS.
+// Validar: docker exec headscale headscale policy check --file /etc/headscale/acl.hujson
+// NOTA v0.28: los usuarios se referencian con sufijo '@'.
+{
+  "tagOwners": {
+    "tag:orchestrator": ["tfm-oob@"],
+    "tag:dc":           ["tfm-oob@"],
+    "tag:analyst":      ["tfm-oob@"],
+  },
+
+  "acls": [
+    { "action": "accept", "src": ["tag:orchestrator"], "dst": ["tag:dc:8000"] },
+    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:dc:21115-21119"] },
+    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:orchestrator:22"] },
+    // Deliberadamente NO existe ninguna regla con src: tag:dc.
+    // El DC es destino, nunca origen. Esa ausencia es el núcleo de la política.
+  ],
+
+  "tests": [
+    {
+      "src": "tag:orchestrator",
+      "accept": ["tag:dc:8000"],
+      "deny":   ["tag:dc:3389", "tag:dc:445"],
+    },
+    {
+      "src": "tag:dc",
+      "deny": ["tag:orchestrator:22", "tag:orchestrator:8000"],
+    },
+  ],
+}

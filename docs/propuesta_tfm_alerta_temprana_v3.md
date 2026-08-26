@@ -10,6 +10,14 @@
 > **Principio fundamental:** todo el proyecto se basa en arquitectura **Out-of-Band** — el operador controla
 > todos los servicios y dónde se ejecutan (VPS, Cloud, on-prem). Cero dependencias de servicios externos críticos.
 
+> [!NOTE]
+> **Vigencia de este documento:** esta es la propuesta v3 **inicial** del TFM, conservada como consulta/referencia
+> histórica. Se eliminará cuando el proyecto esté completo. La arquitectura de Fase 4 aquí descrita
+> (**Cloudflare Tunnels** para acceso a los agentes DC) **fue sustituida** durante la implementación por
+> **Headscale + clientes Tailscale self-hosted** (ver `fase4-breakglass-dc/` y `docs/README-fase4a-headscale.md`
+> en adelante), precisamente para eliminar la dependencia de infraestructura de terceros (Cloudflare) en el
+> plano de control del enclave OOB, coherente con el principio fundamental de esta propuesta.
+
 ---
 
 ## ✅ 1) Stack de Componentes — Vista Completa (v3)

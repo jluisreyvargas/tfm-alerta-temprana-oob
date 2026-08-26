@@ -80,7 +80,7 @@ Solo si la decisión es `approved` se ejecutan los nodos siguientes (llamada al 
 - **Method:** `POST`
 - **URL:** `http://100.64.0.2:8000/run`
 - **Headers:**
-  - `Authorization`: `Bearer tfm-token-secreto-2024`
+  - `Authorization`: `Bearer ${AGENT_TOKEN}`
   - `Content-Type`: `application/json`
 - **Body:**
   - `Send Body As`: `JSON`
@@ -92,7 +92,7 @@ Ejemplo de petición efectiva que genera este nodo (equivalente al curl probado)
 
 ```bash
 curl -X POST http://100.64.0.2:8000/run \
-  -H "Authorization: Bearer tfm-token-secreto-2024" \
+  -H "Authorization: Bearer ${AGENT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"script":"disable_account.ps1","target":"usuario.prueba"}'
 ```
@@ -201,7 +201,7 @@ Petición directa al DC Agent con un script no permitido:
 
 ```bash
 curl -s -X POST http://dc01-tfm:8000/run \
-  -H "Authorization: Bearer tfm-token-secreto-2024" \
+  -H "Authorization: Bearer ${AGENT_TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"script":"malicioso.ps1","target":"x"}'
 ```

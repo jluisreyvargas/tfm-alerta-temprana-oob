@@ -13,6 +13,9 @@ networks:
 
 services:
   headscale-ui:
+    # TODO: verificar tag disponible — no se puede resolver un digest/tag
+    # concreto sin acceso a red desde este entorno; sustituir 'latest' por
+    # un tag inmutable (p.ej. un sha256 digest) antes de producción.
     image: ghcr.io/gurucomputing/headscale-ui:latest
     container_name: headscale-ui
     restart: unless-stopped
@@ -27,3 +30,4 @@ services:
         - "traefik.http.routers.headscale-ui.tls=true"
         - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
         - "traefik.docker.network=oob-network"
+        - "traefik.http.routers.headscale-ui.middlewares=authelia@docker"
