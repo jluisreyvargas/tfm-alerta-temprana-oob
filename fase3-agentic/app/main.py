@@ -58,7 +58,9 @@ def triage(payload: TriageRequest) -> dict:
     # montado, se pierde la metrica y se entrega el veredicto igualmente: un
     # incidente no notificado es un fallo mucho mas grave que una metrica
     # ausente. Es el mismo principio de degradacion que aplica el grafo cuando
-    # el LLM no responde.
+    # el LLM no responde. El except amplio es deliberado: metrics_client
+    # puede fallar por red, TLS, autenticacion o serializacion, y ninguna de
+    # esas causas debe propagarse hasta el 500 de /triage.
     try:
         log_event(
             "triage_decision",
