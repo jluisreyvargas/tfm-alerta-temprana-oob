@@ -21,6 +21,10 @@ fase5-velociraptor/velociraptor-config/users/*/Notifications.json*
 
 # KVM database
 fase8-kvm/glkvm-cloud/docker-compose/database/*.db*
+
+# Fichero auxiliar de la prueba de humo del banco de pruebas de Fase 3;
+# no aporta nada al repositorio como evidencia del TFM.
+fase3-agentic/bench/una_alerta.json
 # Secretos y material criptográfico: nunca se commitean
 **/.env
 **/*.key
