@@ -219,5 +219,6 @@ async def health():
         "agent": "dc01-tfm",
         "version": "2.0",
         "hmac_required": REQUIRE_HMAC,
+        "token_configured": bool(VALID_TOKEN),
         "scripts_dir": str(SCRIPTS_DIR),
     }

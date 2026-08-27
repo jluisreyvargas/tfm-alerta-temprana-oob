@@ -47,3 +47,4 @@ fase2-orquestador/n8n/*.json
 # las claves nunca se versionan.
 fase1-infraestructura/traefik/certs/*.key
 fase1-infraestructura/traefik/certs/*.srl
+fase4-breakglass-dc/.env
