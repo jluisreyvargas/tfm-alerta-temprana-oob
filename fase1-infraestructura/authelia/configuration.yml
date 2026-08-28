@@ -20,6 +20,9 @@ access_control:
     - domain: 'chat.oob.local'
       subject: 'group:ir_lead'
       policy: two_factor
+    - domain: 'hs.oob.local'
+      subject: 'group:ir_lead'
+      policy: two_factor
 
 session:
   cookies:

@@ -7,38 +7,36 @@ suposición sobre lo que "debería" faltar.
 
 ---
 
-## 8. Endurecimiento del plano de control (Headscale)
+## 8. Endurecimiento del plano de control (Headscale) — ✅ RESUELTO (28/08/2026)
 
-**Es el único bloque de trabajo pendiente que es destructivo**: recrear el
-contenedor `headscale` con la configuración endurecida hace que los nodos ya
-registrados (`orchestrator-tfm`, `dc01-tfm`) pierdan la sesión de control plane
-hasta que se reautentiquen, porque `server_url` y `base_domain` cambian.
+Aplicado y verificado empíricamente. Recrear el contenedor `headscale` con la
+configuración endurecida hizo que los nodos ya registrados (`orchestrator-tfm`,
+`dc01-tfm`) perdieran la sesión de control plane hasta reautenticarse, porque
+`server_url` y `base_domain` cambiaron — era el único bloque de este trabajo
+pendiente que resultaba destructivo, y se ejecutó como tal (backup previo,
+reautenticación uno a uno, plan de vuelta atrás preparado).
 
-### Estado real: la configuración ya está escrita, no aplicada
-
-A diferencia de lo que podría sugerir una lectura superficial de
-`fase4-breakglass-dc/headscale/config/`, **el endurecimiento no está pendiente
-de diseñarse ni de escribirse — ya está en los tres ficheros del repositorio**
-(`config.yaml`, `acl.hujson`, `docker-compose.headscale.yml`). Lo que está
-pendiente es aplicarlo: el contenedor `headscale` lleva en ejecución desde
-antes de que esos ficheros se modificasen por última vez, así que el servicio
-real que atienden los nodos hoy sigue operando con los parámetros previos al
-endurecimiento.
-
-| Elemento | Estado en los ficheros del repo | Qué falta realmente |
+| Elemento | Antes | Después |
 |---|---|---|
-| `server_url` | ya `https://hs.oob.local` (vía Traefik, con la CA del enclave) | recrear el contenedor (`docker compose down && up -d`) |
-| DERP | ya embebido (`derp.server.enabled: true`), `urls: []` — sin depender de `controlplane.tailscale.com` | recrear el contenedor; el primer arranque genera `derp_server_private.key` |
-| Comprobación de versión | ya `disable_check_updates: true` | recrear el contenedor |
-| DNS del tailnet | `nameservers.global: []` — ya no apunta a `1.1.1.1` (Cloudflare) | decidir si se necesita un resolver interno explícito para los clientes de la tailnet, o si el vacío es intencional |
-| `base_domain` | ya `tailnet.internal` (separado de `oob.local`, que sirve el resto del enclave) | recrear el contenedor |
-| gRPC | ya `127.0.0.1:50443` | recrear el contenedor |
-| Métricas | ya `127.0.0.1:9090`, sin publicar puerto en el host (el compose actual no mapea `9090` en absoluto) | recrear el contenedor |
-| Política ACL | ya `policy.path: /etc/headscale/acl.hujson`, fichero presente con reglas | recrear el contenedor; validar con `docker exec headscale headscale policy check --file /etc/headscale/acl.hujson` |
-| Etiquetas de nodo | `acl.hujson` ya define `tag:dc`, `tag:orchestrator`, `tag:analyst` en `tagOwners` | los nodos ya registrados deben **re-unirse** con `--advertise-tags=...` (Fase 4b); un nodo sin tag no matchea ninguna regla ACL, así que hasta que se re-registren, la microsegmentación no tiene efecto sobre ellos aunque la política ya esté activa |
+| `server_url` | `http://headscale:8090` (puerto inexistente en la red Docker) | `https://hs.oob.local` vía Traefik con la CA del enclave |
+| DERP | Mapa público de Tailscale, 28 regiones | Región embebida `oob` (id 999), `urls: []` |
+| Descubrimiento STUN | IP pública `77.226.198.189` vía servidores de Tailscale | `192.168.127.138:41641`, local |
+| `disable_check_updates` | `false` | `true` |
+| DNS del tailnet | `1.1.1.1` (Cloudflare) | `global: []` |
+| `base_domain` | `oob.local` (colisionaba con los servicios) | `tailnet.internal` |
+| gRPC / métricas | `0.0.0.0` | `127.0.0.1` |
+| Política ACL | `path: ""` (allow-all) | `acl.hujson` activa |
+| Etiquetas de nodo | Ninguna | `tag:orchestrator`, `tag:dc` |
 
-Requisitos previos en cada nodo, sin cambios: CA del enclave en el almacén de
-confianza y resolución de `hs.oob.local`.
+Evidencias registradas:
+
+- `magicsock: home is now derp-999 (oob)` y `derphttp.Client.Connect: connecting to derp-999 (oob)` en los logs de `tailscaled`.
+- Desde `dc01-tfm`: `Test-NetConnection 100.64.0.1 -Port 22` y `-Port 8000` devuelven `TcpTestSucceeded: False` con la ACL activa.
+- RustDesk sigue fluyendo: `tcpdump -ni tailscale0 port 21116` captura tráfico `100.64.0.2 → 100.64.0.1`.
+- `curl -H "Host: hs.oob.local" https://localhost/web` devuelve `302` hacia Authelia.
+
+Detalle completo de la ejecución, los hallazgos durante el proceso y las dos
+incidencias del endurecimiento: [`README-fase4-validacion.md`](README-fase4-validacion.md).
 
 ### Por qué el plano de control necesita su propia PKI
 
@@ -50,12 +48,29 @@ la del dominio.
 
 ### Por qué el DERP embebido importa
 
-Mientras el mapa de relay se obtuviera de `controlplane.tailscale.com`, el
+Mientras el mapa de relay se obtenía de `controlplane.tailscale.com`, el
 tráfico break-glass podía relayarse por infraestructura de un tercero cuando
-el NAT impedía conexión directa entre nodos, lo que contradice el principio
+el NAT impedía conexión directa entre nodos, lo que contradecía el principio
 rector del proyecto (cero dependencias de servicios externos críticos). El
-DERP embebido ya escrito en `config.yaml` resuelve esto — pendiente, de nuevo,
-solo de aplicarse.
+DERP embebido lo resuelve.
+
+### 8.1 Pendientes nuevos, detectados durante la ejecución
+
+- **`glkvm` sin etiquetar.** Offline desde el 13/07; queda aislado en el
+  tailnet al aplicar la ACL. Su acceso principal es la plataforma KVM por red
+  cableada, no el tailnet. Etiquetar como `tag:kvm` cuando vuelva a conectar.
+- **Sin monitorización de disponibilidad del tailnet.** `glkvm` estuvo 46 días
+  caído sin detección.
+- **El plano de control viaja por la red corporativa.** El control plane de
+  Tailscale se alcanza siempre por la red subyacente, nunca por el propio
+  tailnet — si no, no habría arranque en frío. En un despliegue real
+  requeriría un enlace subyacente dedicado. Limitación conocida del
+  laboratorio.
+- **Pre-auth keys sin inventariar.** Existe un usuario `kvm-devices` (id 2)
+  sin nodos asociados. Revisar claves huérfanas.
+- **La CA del enclave se distribuye manualmente.** Hubo que instalarla en el
+  DC, en el orquestador y en el W11. No escala y no es viable durante un
+  incidente: debe formar parte del alta de cada nodo.
 
 ---
 
@@ -127,15 +142,15 @@ no solo de la higiene del canal.
 
 ## 11. Otros pendientes
 
-- **Authelia sobre Headscale UI**: el compose de `headscale-ui` ya referencia
-  el middleware `authelia@docker`, pero `fase1-infraestructura/authelia/configuration.yml`
-  no tiene ninguna regla de `access_control` para el dominio `hs.oob.local`
-  (solo existe una para `chat.oob.local`, restringida a `group:ir_lead`, con
-  `default_policy: deny`). Sin una regla propia, el comportamiento real de esa
-  ruta no está verificado — puede estar bloqueada para todos en vez de exigir
-  sesión Authelia del grupo correcto. Pendiente: añadir la regla para
-  `hs.oob.local` replicando el patrón de Rocket.Chat, y verificar el resultado
-  con una petición no autenticada.
+> **Authelia sobre Headscale UI — ✅ RESUELTO (28/08/2026).** El router usa
+> `authelia@file` (la referencia `authelia@docker` no existía como middleware
+> y Traefik la descartaba en silencio, dejando la ruta en `200` sin
+> autenticación — ver el hallazgo detallado en
+> [`README-fase4-validacion.md`](README-fase4-validacion.md)). Ahora
+> `fase1-infraestructura/authelia/configuration.yml` tiene la regla para
+> `hs.oob.local` (`subject: 'group:ir_lead'`, `policy: two_factor`) y una
+> petición no autenticada a `/web` devuelve `302` hacia Authelia.
+
 - **Cuenta de servicio del agente DC**: `LocalSystem` es el máximo privilegio
   posible en un DC. Procedería una gMSA con derechos delegados únicamente sobre
   la OU objetivo. Requiere KDS root key y Active Directory real, no disponibles
@@ -156,7 +171,7 @@ no solo de la higiene del canal.
   disponibilidad independiente que conviene tener presente al interpretar
   silencio de logs durante un incidente.
 - **Dependencias salientes inventariadas** (para el análisis de superficie
-  de terceros del TFM): mapa DERP de Tailscale (mientras no se aplique el
-  endurecimiento del punto 8), comprobación de versión de Headscale, aviso de
-  nueva versión de RustDesk en cada arranque del cliente, y AbuseIPDB/VirusTotal
-  de fases anteriores (Fase 2).
+  de terceros del TFM): tras el Paso 8, ya no dependen de terceros el mapa DERP
+  (embebido) ni la comprobación de versión de Headscale (`disable_check_updates:
+  true`). Quedan: aviso de nueva versión de RustDesk en cada arranque del
+  cliente, y AbuseIPDB/VirusTotal de fases anteriores (Fase 2).

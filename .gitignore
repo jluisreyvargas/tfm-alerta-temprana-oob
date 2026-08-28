@@ -48,3 +48,7 @@ fase2-orquestador/n8n/*.json
 fase1-infraestructura/traefik/certs/*.key
 fase1-infraestructura/traefik/certs/*.srl
 fase4-breakglass-dc/.env
+
+# Fase 8 — material criptográfico del KVM
+fase8-kvm/glkvm-cloud/docker-compose/certificate/glkvm.cer
+fase8-kvm/glkvm-cloud/docker-compose/certificate/glkvm.key

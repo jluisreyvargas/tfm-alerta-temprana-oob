@@ -401,12 +401,14 @@ de triaje.
 
 ## 8. Trabajo pendiente
 
+> Plano de control TLS, DERP embebido, política ACL y Authelia en Headscale UI
+> —listados aquí como pendientes en la validación original de la Fase 4c—
+> quedaron **resueltos** en el Paso 8 (28/08/2026). Detalle y evidencias en la
+> sección 10 de este documento y en
+> [`README-fase4-pendientes.md`](README-fase4-pendientes.md).
+
 | Elemento | Descripción |
 |---|---|
-| Plano de control sobre TLS | `server_url` en HTTP plano; requiere CA del enclave distribuida a los nodos |
-| DERP embebido | El mapa DERP se obtiene de `controlplane.tailscale.com` |
-| Política ACL | Sin ACL, la tailnet permite comunicación total entre nodos |
-| Authelia en Headscale UI | La interfaz permite emitir pre-auth keys sin autenticación |
 | Firma HMAC | Implementada en el agente, desactivada por bandera hasta que el orquestador firme |
 | Cuenta de servicio | `LocalSystem`; procedería una gMSA con derechos delegados sobre la OU objetivo |
 | Verificación de integridad | Firma Authenticode de los scripts previa a su invocación |
@@ -443,3 +445,48 @@ procedimiento a partir de entonces.
 su aplicación sin validación previa puede producir indisponibilidad del
 componente que se pretende proteger. En un entorno de respuesta a incidentes,
 esa indisponibilidad se manifestaría precisamente durante el incidente.
+
+---
+
+## 10. Hallazgos del endurecimiento del plano de control (Paso 8)
+
+Ejecución del 28 de agosto de 2026. Es el material más citable de la fase: en
+los cuatro casos, la ausencia de un control se manifiesta como funcionamiento
+normal, no como error.
+
+**Traefik descarta silenciosamente un middleware inexistente.** El router de
+Headscale UI referenciaba `authelia@docker`, un middleware que no existe en
+este despliegue — la instancia de Authelia se integra mediante el proveedor de
+fichero de Traefik (`authelia@file`), no mediante labels de un contenedor
+Authelia. Con la referencia errónea, Traefik descartaba el middleware sin
+emitir ningún error y el router respondía `200` sin autenticación. Rocket.Chat
+nunca tuvo este problema porque siempre usó `authelia@file`. Un control mal
+referenciado no falla: simplemente no se aplica.
+
+**Headscale ignora silenciosamente una política inválida.** `acl.hujson`
+incluía un bloque `"tests"` que no existe en la versión 0.28. `headscale
+policy check` devolvía `unknown field "tests"`, pero el servidor arrancó sin
+la política y siguió operando en allow-all. Sin ejecutar la validación
+explícita, se habría dado por implementada una microsegmentación inexistente.
+
+**Una label de Traefik en el compose no es un control activo hasta recrear el
+contenedor.** Tres casos en la misma sesión: Headscale sin router, RustDesk
+sin `-k`, y la UI sin Authelia. El repositorio decía una cosa y el runtime
+hacía otra.
+
+**La microsegmentación reveló una dependencia no declarada en el diseño.** El
+principio "el DC es destino, nunca origen" era correcto para las acciones de
+respuesta, pero el cliente RustDesk necesita registro saliente contra el
+servidor de rendezvous. No se detectó al diseñar la política ni al revisarla:
+apareció al aplicarla y comprobar el comportamiento. Se resolvió con una
+excepción acotada a `tag:dc → tag:orchestrator:21115-21119`.
+
+### Observaciones técnicas menores
+
+- Al asignar etiquetas, los nodos pasan de su usuario a *tagged-devices* y sus
+  claves dejan de caducar: los dispositivos etiquetados no están sujetos a
+  expiración de sesión de usuario.
+- Las ACL de Tailscale filtran TCP y UDP por puerto; ICMP se rige por la
+  existencia de cualquier regla entre el par de nodos. Al añadir la excepción
+  de RustDesk, el ping DC→orquestador pasó de fallar a funcionar, mientras el
+  filtrado TCP seguía intacto.

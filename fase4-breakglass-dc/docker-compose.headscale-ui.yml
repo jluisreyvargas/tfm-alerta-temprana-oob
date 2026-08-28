@@ -30,4 +30,4 @@ services:
         - "traefik.http.routers.headscale-ui.tls=true"
         - "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
         - "traefik.docker.network=oob-network"
-        - "traefik.http.routers.headscale-ui.middlewares=authelia@docker"
+        - "traefik.http.routers.headscale-ui.middlewares=authelia@file,secure-headers@file"

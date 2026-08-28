@@ -8,25 +8,18 @@
     "tag:orchestrator": ["tfm-oob@"],
     "tag:dc":           ["tfm-oob@"],
     "tag:analyst":      ["tfm-oob@"],
+    "tag:kvm":          ["tfm-oob@"],
   },
 
   "acls": [
     { "action": "accept", "src": ["tag:orchestrator"], "dst": ["tag:dc:8000"] },
     { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:dc:21115-21119"] },
     { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:orchestrator:22"] },
-    // Deliberadamente NO existe ninguna regla con src: tag:dc.
-    // El DC es destino, nunca origen. Esa ausencia es el núcleo de la política.
-  ],
-
-  "tests": [
-    {
-      "src": "tag:orchestrator",
-      "accept": ["tag:dc:8000"],
-      "deny":   ["tag:dc:3389", "tag:dc:445"],
-    },
-    {
-      "src": "tag:dc",
-      "deny": ["tag:orchestrator:22", "tag:orchestrator:8000"],
-    },
+    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:kvm:443,80,22"] },
+    // Excepción acotada al principio "el DC nunca es origen":
+    // el cliente RustDesk debe registrarse contra el servidor de
+    // rendezvous del enclave. Limitado a los puertos de señalización
+    // y relay; no habilita ningún otro destino.
+    { "action": "accept", "src": ["tag:dc"], "dst": ["tag:orchestrator:21115-21119"] },
   ],
 }
