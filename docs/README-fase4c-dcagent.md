@@ -9,7 +9,7 @@ El agente permite al orquestador ejecutar scripts PowerShell predefinidos en el 
 ## Alcance
 
 - Instalación de Python 3.11 en el DC Windows 2025 vía winget.
-- Despliegue del agente FastAPI en `C:\tfm-agent\agent_dc.py`.
+- Despliegue del agente FastAPI en `C:\tfm-dc-agent\agent_dc.py`.
 - Scripts PowerShell de acción en `C:\tfm-scripts\`.
 - Regla de firewall Windows para limitar acceso al puerto 8000 únicamente desde la red Tailscale (100.64.0.0/10).
 - Validación end-to-end desde el orquestador Linux por la red Headscale.
@@ -46,10 +46,13 @@ pip --version
 
 ```text
 C:\
-├── tfm-agent\
+├── tfm-dc-agent\
+│   ├── .venv\                  # entorno virtual Python
 │   ├── agent_dc.py
 │   ├── requirements.txt
 │   └── logs\
+│       ├── agent.log           # auditoría de ejecuciones (consumido por Wazuh)
+│       └── service.log         # stdout/stderr del servicio NSSM
 └── tfm-scripts\
     ├── disable_account.ps1
     ├── enable_account.ps1
@@ -60,19 +63,26 @@ C:\
     └── rustdesk_disable.ps1
 ```
 
+> La separación entre `tfm-dc-agent` y `tfm-scripts` es deliberada, no incidental:
+> mantenerlos en el mismo árbol anularía el valor del anclaje de ruta del agente
+> (`SCRIPTS_DIR` en `agent_dc.py`), porque código, entorno virtual y scripts
+> compartirían el mismo conjunto de permisos de directorio. Con dos raíces
+> separadas, la ACL de cada una puede ser distinta (ver
+> [Control de acceso al sistema de ficheros](#control-de-acceso-al-sistema-de-ficheros)).
+
 Ver `fase4-breakglass-dc/dcagent/README-despliegue.md` para el detalle completo de
 ACLs de directorio y registro como servicio Windows con NSSM.
 
 Crear los directorios:
 
 ```powershell
-mkdir C:\tfm-agent
+mkdir C:\tfm-dc-agent
 mkdir C:\tfm-scripts
 ```
 
 ## Código del agente
 
-### `C:\tfm-agent\agent_dc.py`
+### `C:\tfm-dc-agent\agent_dc.py`
 
 > El código siguiente es un **reflejo literal** de `fase4-breakglass-dc/dcagent/agent_dc.py`
 > en su versión endurecida (v2.0): anclaje de ruta de scripts, comparación de token en
@@ -287,6 +297,7 @@ async def health():
         "agent": "dc01-tfm",
         "version": "2.0",
         "hmac_required": REQUIRE_HMAC,
+        "token_configured": bool(VALID_TOKEN),
         "scripts_dir": str(SCRIPTS_DIR),
     }
 ```
@@ -402,36 +413,57 @@ Write-Host "DRY-RUN OK - Set-ADAccountPassword -Identity $target"
 
 ### `C:\tfm-scripts\rustdesk_enable.ps1`
 
-Documentado en detalle en `README-fase4e-rustdesk-breakglass.md`; se incluye
-aquí porque forma parte de la `ALLOWED_SCRIPTS` del agente:
+Documentado en detalle en `README-fase4e-rustdesk-breakglass.md` y validado en
+`docs/README-fase4-validacion.md` (sección 5); se incluye aquí porque forma
+parte de la `ALLOWED_SCRIPTS` del agente. El identificador del par **no** se
+resuelve en el propio DC (autoinforme de un endpoint potencialmente
+comprometido): se delega al servidor `hbbs`, bajo control del equipo de
+respuesta.
 
 ```powershell
 param([int]$TTLMinutes = 30)
 
 $ErrorActionPreference = "Stop"
+$warnings = @()
 
 Set-Service -Name RustDesk -StartupType Manual
 Start-Service -Name RustDesk
 Start-Sleep -Seconds 5
+$svc = Get-Service -Name RustDesk
 
-$toml = "$env:APPDATA\RustDesk\config\RustDesk.toml"
-$rustdeskId = ""
-if (Test-Path $toml) {
-    $m = Select-String -Path $toml -Pattern "^id\s*=\s*'(.+)'"
-    if ($m) { $rustdeskId = $m.Matches.Groups[1].Value }
+# El ID se resuelve en hbbs (rustdesk/data/db_v2.sqlite3), no en el propio DC.
+$rustdeskId = "resolver_en_hbbs"
+
+# RandomNumberGenerator: criptográficamente seguro, a diferencia de Get-Random.
+$bytes = New-Object byte[] 16
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+$chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+$pass = -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
+
+try {
+    & "$env:ProgramFiles\RustDesk\rustdesk.exe" --password $pass
+} catch {
+    $warnings += "No se pudo fijar la contrasena en el cliente RustDesk: $_"
 }
 
-$pass = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 16 | ForEach-Object {[char]$_})
-& "$env:ProgramFiles\RustDesk\rustdesk.exe" --password $pass
-
-$action  = New-ScheduledTaskAction -Execute "PowerShell.exe" `
+# -Principal explicito: sin el, Register-ScheduledTask falla con 0x80070534
+# bajo el contexto SYSTEM del servicio del agente.
+$action    = New-ScheduledTaskAction -Execute "PowerShell.exe" `
              -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\tfm-scripts\rustdesk_disable.ps1"
-$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes($TTLMinutes)
+$trigger   = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes($TTLMinutes)
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 Register-ScheduledTask -TaskName "RustDesk-AutoOff" -Action $action `
-  -Trigger $trigger -RunLevel Highest -Force | Out-Null
+  -Trigger $trigger -Principal $principal -Force | Out-Null
+$task = Get-ScheduledTask -TaskName "RustDesk-AutoOff"
 
-@{ rustdesk_id = $rustdeskId; password = $pass; ttl_minutes = $TTLMinutes } |
-  ConvertTo-Json -Compress
+[ordered]@{
+    password    = $pass
+    rustdesk_id = $rustdeskId
+    service     = $svc.Status.ToString()
+    ttl_task    = $task.State.ToString()
+    warnings    = $warnings
+    ttl_minutes = $TTLMinutes
+} | ConvertTo-Json -Compress
 ```
 
 ### `C:\tfm-scripts\rustdesk_disable.ps1`
@@ -444,6 +476,41 @@ Set-Service -Name RustDesk -StartupType Disabled
 Unregister-ScheduledTask -TaskName "RustDesk-AutoOff" -Confirm:$false -ErrorAction SilentlyContinue
 Write-Host "RustDesk deshabilitado y TTL cancelado"
 ```
+
+## Comprobación de salud (`/health`) y allowlist
+
+Respuesta real del endpoint `GET /health` (reflejo literal de `agent_dc.py`, función `health()`):
+
+```json
+{
+  "status": "ok",
+  "agent": "dc01-tfm",
+  "version": "2.0",
+  "hmac_required": false,
+  "token_configured": true,
+  "scripts_dir": "C:\\tfm-scripts"
+}
+```
+
+`hmac_required`, `token_configured` y `scripts_dir` permiten detectar un agente
+arrancado pero inservible sin tener que probar `/run`. En una versión anterior
+del agente, `/health` no incluía `token_configured`: durante la validación se
+dio el caso de un servicio con `/health` respondiendo `ok` mientras rechazaba
+**todas** las peticiones a `/run` porque `AGENT_TOKEN` no estaba definido en el
+entorno del servicio (`verify_token()` devuelve `500 AGENT_TOKEN not set` en
+ese caso), y no había forma de detectarlo sin probar `/run`. `token_configured`
+cierra ese hueco: `false` con `"status": "ok"` es la señal inequívoca de un
+servicio arrancado pero inservible, sin necesidad de una petición autenticada.
+Comprobar siempre que `scripts_dir` apunta a `C:\tfm-scripts` (no a una ruta
+relativa resuelta contra el directorio de arranque del servicio) sigue
+formando parte de la validación mínima tras cada despliegue.
+
+La allowlist (`ALLOWED_SCRIPTS` en `agent_dc.py`) son **siete** scripts: los
+cinco de acción (`disable_account.ps1`, `enable_account.ps1`,
+`collect_logs.ps1`, `isolate_host.ps1`, `reset_password.ps1`) más
+`rustdesk_enable.ps1` y `rustdesk_disable.ps1`. Sin estos dos últimos no existe
+ningún camino desde el orquestador para activar o revocar el break-glass de
+RustDesk — el agente es, para ese flujo, el único ejecutor posible.
 
 ## Regla de firewall Windows
 
@@ -461,6 +528,17 @@ New-NetFirewallRule `
 
 ## Resolución de nombres en el orquestador
 
+> **Solución provisional.** Lo correcto sería resolver `dc01-tfm` vía MagicDNS
+> de Headscale, sin mantener una entrada manual por nodo. MagicDNS no está
+> operativo en el despliegue actual porque `base_domain` del `config.yaml` de
+> Headscale colisiona con el propio dominio de servicios del enclave
+> (`oob.local`, el mismo que sirve `hs.oob.local`, `chat.oob.local`, etc.). La
+> configuración endurecida ya corrige esto (`base_domain: tailnet.internal`,
+> un espacio de nombres separado — ver la nota de la Fase 4a), pero esa
+> configuración está escrita y todavía no aplicada al contenedor en ejecución;
+> hasta que se aplique, esta entrada manual sigue siendo necesaria. Seguimiento
+> en [`README-fase4-pendientes.md`](README-fase4-pendientes.md).
+
 Para poder usar el nombre `dc01-tfm` desde el orquestador Linux, se ha añadido la entrada correspondiente en `/etc/hosts`:
 
 ```bash
@@ -473,97 +551,106 @@ Línea añadida:
 100.64.0.2   dc01-tfm
 ```
 
-## Arranque del agente
+## Despliegue como servicio
 
-Instalar dependencias (una sola vez):
-
-```powershell
-pip install -r C:\tfm-agent\requirements.txt
-```
-
-Arrancar el agente en PowerShell como administrador:
+El agente no se arranca manualmente en una sesión PowerShell: corre como
+servicio de Windows registrado con [NSSM](https://nssm.cc/), en un entorno
+virtual propio dentro de `C:\tfm-dc-agent`:
 
 ```powershell
-$env:AGENT_TOKEN = "REEMPLAZAR"   # ver dcagent/README-despliegue.md, paso 4
-cd C:\tfm-agent
-uvicorn agent_dc:app --host 0.0.0.0 --port 8000
+# Entorno virtual y dependencias
+cd C:\tfm-dc-agent
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+# Instalación del servicio
+nssm install TFM-DC-Agent "C:\tfm-dc-agent\.venv\Scripts\python.exe"
+nssm set TFM-DC-Agent AppParameters "-m uvicorn agent_dc:app --host 100.64.0.2 --port 8000"
+nssm set TFM-DC-Agent AppDirectory "C:\tfm-dc-agent"
+nssm set TFM-DC-Agent DisplayName "TFM DC Agent"
+nssm set TFM-DC-Agent Start SERVICE_AUTO_START
+
+# Registro de la actividad del servicio
+nssm set TFM-DC-Agent AppStdout C:\tfm-dc-agent\logs\service.log
+nssm set TFM-DC-Agent AppStderr C:\tfm-dc-agent\logs\service.log
+nssm set TFM-DC-Agent AppRotateFiles 1
+nssm set TFM-DC-Agent AppRotateBytes 10485760
+
+# Configuración (los secretos se sustituyen por los valores reales)
+nssm set TFM-DC-Agent AppEnvironmentExtra `
+  "AGENT_TOKEN=<TOKEN>" `
+  "AGENT_HMAC_SECRET=<SECRETO>" `
+  "AGENT_REQUIRE_HMAC=false" `
+  "TFM_SCRIPTS_DIR=C:\tfm-scripts" `
+  "TFM_LOG_PATH=C:\tfm-dc-agent\logs\agent.log" `
+  "TFM_HEADSCALE_IP=<IP_TRAEFIK>"
+
+# Dependencia de Tailscale y política de reinicio
+nssm set TFM-DC-Agent DependOnService Tailscale
+nssm set TFM-DC-Agent AppExit Default Restart
+nssm set TFM-DC-Agent AppRestartDelay 15000
+
+Start-Service TFM-DC-Agent
 ```
 
-Salida esperada al arrancar correctamente:
+Tres decisiones de esta configuración y su motivo:
 
+- **`--host 100.64.0.2` y no `0.0.0.0`.** Con `0.0.0.0` el agente escucharía
+  también en la interfaz corporativa del DC, y la única defensa sería la regla
+  de firewall de la sección siguiente. Ligar el proceso a la IP de la tailnet
+  añade defensa en profundidad: aunque la regla de firewall fallase o se
+  desactivara por error, el proceso seguiría sin aceptar conexiones desde la
+  red corporativa.
+- **`AppEnvironmentExtra` y no variables de entorno de máquina.** `services.exe`
+  lee el bloque de entorno del sistema al arrancar Windows y no lo refresca
+  después, así que una variable de máquina creada con `setx ... /M` tras el
+  arranque no es visible para el servicio hasta un reinicio completo del
+  sistema — no basta con reiniciar el servicio. `AppEnvironmentExtra` inyecta
+  el entorno directamente en el proceso que NSSM lanza, sin depender de ese
+  refresco.
+- **`DependOnService Tailscale`.** El binding a `100.64.0.2` falla si el
+  servicio arranca antes de que la interfaz de la tailnet exista todavía; la
+  dependencia de servicio asegura el orden de arranque.
+
+## Control de acceso al sistema de ficheros
+
+La allowlist de `agent_dc.py` valida el **nombre** del fichero de script, no su
+contenido. El servicio corre como `LocalSystem`, que en un controlador de
+dominio equivale a la cuenta de máquina del propio DC. Si un principal sin
+privilegios pudiera escribir en `C:\tfm-scripts`, podría sustituir el contenido
+de cualquier script permitido y obtener ejecución arbitraria como `SYSTEM` en
+el controlador de dominio, invocada por el propio agente y superando todos sus
+controles de aplicación (allowlist, anclaje de ruta, HMAC). El mismo argumento
+aplica a `C:\tfm-dc-agent`: escribir ahí permite sustituir `agent_dc.py`
+directamente.
+
+```powershell
+icacls C:\tfm-scripts /inheritance:r
+icacls C:\tfm-scripts /grant:r "SYSTEM:(OI)(CI)(RX)"
+icacls C:\tfm-scripts /grant:r "Administradores:(OI)(CI)(F)"
+
+icacls C:\tfm-dc-agent /inheritance:r
+icacls C:\tfm-dc-agent /grant:r "SYSTEM:(OI)(CI)(RX)"
+icacls C:\tfm-dc-agent /grant:r "Administradores:(OI)(CI)(F)"
+
+icacls C:\tfm-dc-agent\logs /inheritance:r
+icacls C:\tfm-dc-agent\logs /grant:r "SYSTEM:(OI)(CI)(M)"
+icacls C:\tfm-dc-agent\logs /grant:r "Administradores:(OI)(CI)(F)"
 ```
-INFO:     Started server process
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000
-```
+
+`SYSTEM` recibe únicamente `RX` (lectura + ejecución) sobre el código y los
+scripts — nunca escritura — y `M` (modificar) sobre `logs\`, que es el único
+directorio en el que el propio agente necesita escribir. `Administradores`
+mantiene control total (`F`) sobre los tres, para poder desplegar
+actualizaciones y mantenimiento.
 
 ## Validación end-to-end
 
-Todas las pruebas se ejecutan desde el orquestador Linux (`orchestrator-tfm`, 100.64.0.1) hacia el DC (`dc01-tfm`, 100.64.0.2) por la red privada Headscale.
-
-### Prueba 1 — Health check
-
-```bash
-curl http://dc01-tfm:8000/health
-```
-
-Respuesta obtenida:
-
-```json
-{"status":"ok","agent":"dc01-tfm"}
-```
-
-### Prueba 2 — Ejecución de script válido (dry-run)
-
-```bash
-curl -s -X POST http://dc01-tfm:8000/run \
-  -H "Authorization: Bearer ${AGENT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{"script":"disable_account.ps1","target":"usuario.prueba"}'
-```
-
-Respuesta obtenida:
-
-```json
-{
-  "script": "disable_account.ps1",
-  "target": "usuario.prueba",
-  "stdout": "TFM-AGENT: Deshabilitando cuenta AD: usuario.prueba\nDRY-RUN OK - Disable-ADAccount -Identity usuario.prueba\n",
-  "stderr": "",
-  "returncode": 0
-}
-```
-
-### Prueba 3 — Script fuera del allowlist (debe rechazarse)
-
-```bash
-curl -s -X POST http://dc01-tfm:8000/run \
-  -H "Authorization: Bearer ${AGENT_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{"script":"malicioso.ps1","target":"x"}'
-```
-
-Respuesta obtenida:
-
-```json
-{"detail":"Script no permitido: malicioso.ps1"}
-```
-
-### Prueba 4 — Token incorrecto (debe rechazarse con 403)
-
-```bash
-curl -s -X POST http://dc01-tfm:8000/run \
-  -H "Authorization: Bearer token-incorrecto" \
-  -H "Content-Type: application/json" \
-  -d '{"script":"disable_account.ps1","target":"test"}'
-```
-
-Respuesta obtenida:
-
-```json
-{"detail":"Forbidden"}
-```
+La batería de validación de esta subfase ha crecido de las cuatro pruebas
+originales a nueve (allowlist ampliada, binding a la tailnet, servicio NSSM,
+ACLs de directorio). Para no duplicar contenido que diverge fácilmente de la
+ejecución real, la batería completa con las salidas reales vive en un
+documento propio: [`README-fase4-validacion.md`](README-fase4-validacion.md).
 
 ## Estado de la tailnet en el momento de la validación
 

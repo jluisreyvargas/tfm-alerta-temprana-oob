@@ -34,6 +34,20 @@ La ruta que se ha validado para lanzar correctamente el servicio es:
 
 ## Configuración validada
 
+> **Nota — configuración escrita, endurecimiento aún no aplicado al contenedor
+> en ejecución.** Los bloques de `docker-compose.headscale.yml`, `config.yaml`
+> y `acl.hujson` que siguen a continuación **ya reflejan la versión endurecida**
+> (`server_url` público vía Traefik, gRPC/métricas en loopback, DERP embebido,
+> política ACL). Lo que sigue pendiente no es escribir esa configuración —ya
+> está en el repositorio— sino **aplicarla**: el contenedor `headscale` sigue
+> en ejecución desde antes de que estos ficheros se modificaran por última vez,
+> así que el servicio real todavía atiende con los parámetros previos al
+> endurecimiento hasta que se recree (`docker compose down && docker compose up -d`
+> sobre `docker-compose.headscale.yml`). El detalle completo, incluidos los
+> pasos operativos pendientes tras el reinicio (reetiquetado de nodos, validación
+> de la política ACL), se documenta en
+> [`README-fase4-pendientes.md`](README-fase4-pendientes.md).
+
 Se ha usado la imagen oficial `docker.io/headscale/headscale:0.28.0`, que sigue siendo una versión estable soportada en la documentación de despliegue en contenedor de Headscale.
 
 El puerto `8080` interno del contenedor se ha publicado como `8090` en el host porque `8080` ya estaba ocupado por otro servicio del entorno del proyecto. Esta adaptación es válida siempre que `listen_addr` siga apuntando al puerto interno `8080` dentro del contenedor.

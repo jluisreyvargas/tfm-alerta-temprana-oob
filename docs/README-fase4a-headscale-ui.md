@@ -48,8 +48,9 @@ networks:
 
 services:
   headscale-ui:
-    # TODO: verificar tag disponible — fijar un tag inmutable/digest antes de
-    # producción; 'latest' no es reproducible.
+    # TODO: verificar tag disponible — no se puede resolver un digest/tag
+    # concreto sin acceso a red desde este entorno; sustituir 'latest' por
+    # un tag inmutable (p.ej. un sha256 digest) antes de producción.
     image: ghcr.io/gurucomputing/headscale-ui:latest
     container_name: headscale-ui
     restart: unless-stopped
@@ -141,7 +142,8 @@ Desde la UI deberías poder:
 ## Seguridad
 
 - El contenedor `headscale-ui` no publica ningún puerto propio; el acceso es siempre vía Traefik bajo `https://hs.oob.local/web`, con el certificado de la CA del enclave.
-- La ruta está protegida por el middleware `authelia@docker`: sin sesión Authelia válida no se puede llegar a la UI que emite pre-auth keys para unir nodos a la tailnet.
+- **`headscale-ui` es, de todos los servicios de la Fase 4, el activo de mayor valor**: desde ella se emiten pre-auth keys, es decir, se puede unir un nodo arbitrario al enclave. Comprometer esta interfaz equivale a poder registrar un dispositivo propio en la tailnet con las mismas garantías que el DC o el orquestador.
+- El compose ya referencia el middleware `traefik.http.routers.headscale-ui.middlewares=authelia@docker`, pero **falta la regla de control de acceso correspondiente**: `fase1-infraestructura/authelia/configuration.yml` define `access_control.default_policy: deny` y solo tiene una regla explícita, para `chat.oob.local` restringida a `subject: 'group:ir_lead'`. No existe ninguna regla para el dominio `hs.oob.local`. Con política por defecto `deny` y sin regla propia, el comportamiento real de esa ruta no está verificado en este documento — puede estar bloqueada para todos, en vez de exigir sesión Authelia del grupo correcto. **Pendiente:** añadir una regla en `access_control.rules` para `hs.oob.local` con `subject: 'group:ir_lead'` y `policy: two_factor`, replicando el patrón ya usado para Rocket.Chat en la Fase 1, y verificar el resultado con una petición no autenticada (debe devolver 401/302 a Authelia, no 200 ni un bloqueo silencioso). Detalle de seguimiento en [`README-fase4-pendientes.md`](README-fase4-pendientes.md).
 - La API key de Headscale debe tratarse como secreto: no debe commitearse en el repositorio con un valor real relleno en `config.yaml`.
 
 ## Resultado

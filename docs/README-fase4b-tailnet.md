@@ -130,6 +130,13 @@ ping <IP_TAILSCALE_ORQUESTADOR>
 
 La conectividad correcta confirma que la tailnet está operativa y que el canal OOB está listo para la siguiente subfase.
 
+> **Resolución de nombres.** MagicDNS no está operativo en el despliegue actual
+> (colisión de `base_domain` con el dominio de servicios del enclave, ver
+> `README-fase4-pendientes.md`), así que `dc01-tfm` se resuelve por una entrada
+> manual en `/etc/hosts` del orquestador — documentada en
+> [`README-fase4c-dcagent.md`](README-fase4c-dcagent.md#resolución-de-nombres-en-el-orquestador),
+> no en esta subfase.
+
 ## Resultado de la Fase 4b
 
 La Fase 4b queda completada cuando Headscale muestra ambos nodos online y el orquestador puede alcanzar al DC por la red Tailscale/Headscale.
