@@ -101,13 +101,22 @@ repositorio (ver nota de endurecimiento en el Paso 3):
 
 ## Paso 3 — Scripts PowerShell de activación/desactivación
 
-> **Nota de endurecimiento posterior:** la primera versión de `rustdesk_enable.ps1`
-> tenía el ID de RustDesk hardcodeado en el propio script y nunca revertía el
-> `StartupType Disabled` que deja `rustdesk_disable.ps1` — tras el primer ciclo el
-> break-glass quedaba muerto. La versión actual (reflejada abajo) lee el ID real
-> desde `RustDesk.toml`, revierte el servicio a `Manual` y genera una contraseña de
-> un solo uso por sesión. Ver `fase4-breakglass-dc/scripts/` para la versión siempre
-> actualizada.
+> **Nota de endurecimiento posterior (actualizada tras la validación empírica
+> de la sección correspondiente en `docs/README-fase4-validacion.md`):** la
+> primera versión de `rustdesk_enable.ps1` tenía el ID de RustDesk hardcodeado
+> en el propio script y nunca revertía el `StartupType Disabled` que deja
+> `rustdesk_disable.ps1` — tras el primer ciclo el break-glass quedaba muerto.
+> Una segunda versión corrigió eso pero leía el ID real desde `RustDesk.toml`
+> **en el propio DC** — un autoinforme de un endpoint que en un escenario
+> break-glass puede estar comprometido. La versión actual (reflejada abajo) ya
+> no lee ese fichero: devuelve el literal `rustdesk_id: "resolver_en_hbbs"` y
+> delega la resolución al servidor `hbbs` (bajo control del equipo de
+> respuesta, no del sistema investigado). Además genera la contraseña con
+> `RandomNumberGenerator` (criptográficamente seguro, en vez de `Get-Random`) y
+> registra la tarea programada con un `-Principal` explícito, sin el cual
+> `Register-ScheduledTask` falla con `0x80070534` bajo el contexto SYSTEM del
+> servicio del agente. Ver `fase4-breakglass-dc/scripts/` para la versión
+> siempre actualizada.
 
 ### `C:\tfm-scripts\rustdesk_enable.ps1`
 
@@ -115,34 +124,57 @@ repositorio (ver nota de endurecimiento en el Paso 3):
 param([int]$TTLMinutes = 30)
 
 $ErrorActionPreference = "Stop"
+$warnings = @()
 
 # 1. Revertir el Disabled que dejó rustdesk_disable.ps1
 Set-Service -Name RustDesk -StartupType Manual
 Start-Service -Name RustDesk
 Start-Sleep -Seconds 5
+$svc = Get-Service -Name RustDesk
 
-# 2. Leer el ID real del host (nunca hardcodearlo en el repositorio)
-$toml = "$env:APPDATA\RustDesk\config\RustDesk.toml"
-$rustdeskId = ""
-if (Test-Path $toml) {
-    $m = Select-String -Path $toml -Pattern "^id\s*=\s*'(.+)'"
-    if ($m) { $rustdeskId = $m.Matches.Groups[1].Value }
+# 2. Identificador del par: NO se resuelve en el propio DC. En un escenario
+# break-glass el endpoint puede estar comprometido, asi que la identidad del
+# par debe proceder del componente bajo control del equipo de respuesta (el
+# servidor hbbs), no del sistema bajo investigacion. El orquestador resuelve
+# el ID real consultando rustdesk/data/db_v2.sqlite3 en hbbs
+# (ver docs/README-fase4-validacion.md, seccion 5.2).
+$rustdeskId = "resolver_en_hbbs"
+
+# 3. Contraseña de un solo uso para esta sesión break-glass.
+# RandomNumberGenerator en vez de Get-Random: Get-Random usa un PRNG no apto
+# para material criptográfico.
+$bytes = New-Object byte[] 16
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+$chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+$pass = -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
+
+try {
+    & "$env:ProgramFiles\RustDesk\rustdesk.exe" --password $pass
+} catch {
+    $warnings += "No se pudo fijar la contrasena en el cliente RustDesk: $_"
 }
 
-# 3. Contraseña de un solo uso para esta sesión break-glass
-$pass = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 16 | ForEach-Object {[char]$_})
-& "$env:ProgramFiles\RustDesk\rustdesk.exe" --password $pass
-
-# 4. TTL
-$action  = New-ScheduledTaskAction -Execute "PowerShell.exe" `
-             -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\tfm-scripts\rustdesk_disable.ps1"
-$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes($TTLMinutes)
+# 4. TTL. Principal explicito requerido: sin -Principal con LogonType
+# ServiceAccount, Register-ScheduledTask falla con 0x80070534 cuando se
+# invoca bajo el contexto SYSTEM del servicio del agente (no se manifiesta
+# al ejecutar el script desde una sesion interactiva).
+$action    = New-ScheduledTaskAction -Execute "PowerShell.exe" `
+               -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\tfm-scripts\rustdesk_disable.ps1"
+$trigger   = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes($TTLMinutes)
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 Register-ScheduledTask -TaskName "RustDesk-AutoOff" -Action $action `
-  -Trigger $trigger -RunLevel Highest -Force | Out-Null
+  -Trigger $trigger -Principal $principal -Force | Out-Null
+$task = Get-ScheduledTask -TaskName "RustDesk-AutoOff"
 
 # 5. Salida estructurada para el orquestador
-@{ rustdesk_id = $rustdeskId; password = $pass; ttl_minutes = $TTLMinutes } |
-  ConvertTo-Json -Compress
+[ordered]@{
+    password    = $pass
+    rustdesk_id = $rustdeskId
+    service     = $svc.Status.ToString()
+    ttl_task    = $task.State.ToString()
+    warnings    = $warnings
+    ttl_minutes = $TTLMinutes
+} | ConvertTo-Json -Compress
 ```
 
 ### `C:\tfm-scripts\rustdesk_disable.ps1`
@@ -228,16 +260,20 @@ Respuesta obtenida:
 {
   "script": "rustdesk_enable.ps1",
   "target": "DC01",
-  "stdout": "{\"rustdesk_id\":\"<RUSTDESK_ID>\",\"password\":\"<ONE_TIME_PASSWORD>\",\"ttl_minutes\":30}",
+  "stdout": "{\"password\":\"<ONE_TIME_PASSWORD>\",\"rustdesk_id\":\"resolver_en_hbbs\",\"service\":\"Running\",\"ttl_task\":\"Ready\",\"warnings\":[],\"ttl_minutes\":30}",
   "stderr": "",
   "returncode": 0,
   "truncated": false
 }
 ```
 
-Esta validación confirma que el agente aceptó el script, devolvió el ID de RustDesk real
-del host (leído dinámicamente, nunca hardcodeado) junto con una contraseña de un solo
-uso, y dejó programada la tarea `RustDesk-AutoOff`.
+Esta validación confirma que el agente aceptó el script, arrancó el servicio RustDesk
+(`service: "Running"`), generó una contraseña de un solo uso y dejó programada la tarea
+`RustDesk-AutoOff` (`ttl_task: "Ready"`). El campo `rustdesk_id` devuelve deliberadamente
+el literal `resolver_en_hbbs` en vez de un identificador leído del propio DC: la
+resolución real se delega al servidor `hbbs` (ver `docs/README-fase4-validacion.md`,
+sección 5.2). `warnings` recoge fallos no bloqueantes, como no haber podido fijar la
+contraseña en el cliente RustDesk.
 
 ## Paso 6 — Validación de desactivación
 

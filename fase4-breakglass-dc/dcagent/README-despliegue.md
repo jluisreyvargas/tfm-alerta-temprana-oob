@@ -90,4 +90,7 @@ Invoke-RestMethod http://localhost:8000/health
 ```
 
 La respuesta de `/health` debe incluir `"hmac_required"` reflejando el valor real de
-`AGENT_REQUIRE_HMAC` y `"scripts_dir"` apuntando a `C:\tfm-scripts`.
+`AGENT_REQUIRE_HMAC`, `"token_configured": true` confirmando que `AGENT_TOKEN` está
+definido en el entorno del servicio, y `"scripts_dir"` apuntando a `C:\tfm-scripts`.
+Un `"token_configured": false` con `"status": "ok"` es la señal de un servicio
+arrancado pero inservible: acepta el proceso pero rechazará toda petición a `/run`.
