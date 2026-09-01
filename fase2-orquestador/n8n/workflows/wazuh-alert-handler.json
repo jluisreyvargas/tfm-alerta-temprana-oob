@@ -354,7 +354,7 @@
           "parameters": [
             {
               "name": "X-User-Id",
-              "value": "kScBxrDSCtRDxZmnm"
+              "value": "={{ $env.RC_BOT_USER_ID }}"
             }
           ]
         },
@@ -389,7 +389,7 @@
           "parameters": [
             {
               "name": "X-User-Id",
-              "value": "kScBxrDSCtRDxZmnm"
+              "value": "={{ $env.RC_BOT_USER_ID }}"
             }
           ]
         },
@@ -424,7 +424,7 @@
           "parameters": [
             {
               "name": "X-User-Id",
-              "value": "kScBxrDSCtRDxZmnm"
+              "value": "={{ $env.RC_BOT_USER_ID }}"
             }
           ]
         },
