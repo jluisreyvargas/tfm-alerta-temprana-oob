@@ -31,12 +31,6 @@ fase3-agentic/bench/una_alerta.json
 **/*.pem
 **/certificate/
 
-# Secretos y material criptográfico: nunca se commitean
-**/.env
-**/*.key
-**/*.pem
-**/certificate/
-
 # Exportaciones de trabajo de n8n. Contienen referencias a credenciales por ID
 # y estructura interna de la instancia; el workflow versionado y saneado vive en
 # fase2-orquestador/n8n/workflows/
@@ -52,3 +46,13 @@ fase4-breakglass-dc/.env
 # Fase 8 — material criptográfico del KVM
 fase8-kvm/glkvm-cloud/docker-compose/certificate/glkvm.cer
 fase8-kvm/glkvm-cloud/docker-compose/certificate/glkvm.key
+
+# Fase 4d — inventario de peers generado en runtime.
+# Lo regenera export-peers.sh por cron cada 30 min; es estado, no configuración.
+fase4-breakglass-dc/rustdesk/peers.json
+
+# Fase 4 — copias de trabajo del plano de control (no son la configuración viva).
+fase4-breakglass-dc/headscale/config/config.yaml.rollback-inseguro
+fase4-breakglass-dc/headscale/config/config.yaml.endurecido-completo
+fase4-breakglass-dc/headscale/config/*.bak
+fase4-breakglass-dc/headscale/config/*.bak-*

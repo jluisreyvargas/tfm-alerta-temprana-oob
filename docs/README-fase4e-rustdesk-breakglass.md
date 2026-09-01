@@ -1,5 +1,13 @@
 # Fase 4e — RustDesk Server + flujo break-glass
 
+> **Documento reemplazado por [`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md).**
+> La Fase 4d final incorpora el despliegue de RustDesk descrito aquí, mejorado
+> con el modelo de aprobación de dos personas, la resolución del identificador
+> desde el servidor de rendezvous y la entrega autenticada de la credencial. Se
+> conserva como histórico de diseño; el despliegue de `hbbs`/`hbbr` y los
+> scripts `rustdesk_enable.ps1` / `rustdesk_disable.ps1` siguen siendo válidos y
+> están también en `README-fase4c-dcagent.md` y `README-fase4-validacion.md`.
+
 ## Objetivo
 
 Desplegar un servidor RustDesk self-hosted dentro del enclave Docker y habilitar un flujo de acceso break-glass con TTL sobre el Domain Controller Windows 2025. La activación y desactivación remotas se realizan a través del DC Agent ya validado en la Fase 4c/4d.
@@ -307,17 +315,3 @@ La Fase 4e queda completada con RustDesk desplegado en modelo self-hosted, confi
 El agente Python queda además registrado como servicio de Windows mediante NSSM, por lo que arranca automáticamente con el sistema y no depende de intervención manual tras reinicios.
 
 El sistema está listo para el cierre de Fase 4 con la consolidación documental final y la validación end-to-end de todo el flujo break-glass.
-
-## Comandos de commit
-
-```bash
-cd /home/jose/tfm-alerta-temprana-oob
-
-git add fase4-breakglass-dc/
-git add docs/README-fase4e-rustdesk-breakglass.md   # si se copia este README a docs/
-
-git commit -m "fase4e: rustdesk break-glass self-hosted validado"
-git push origin main
-```
-
-Si trabajas en otra rama, sustituye `main` por el nombre real de la rama.

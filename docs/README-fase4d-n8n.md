@@ -1,5 +1,11 @@
 # Fase 4d — Orquestador ↔ DC Agent ↔ Rocket.Chat
 
+> **Documento reemplazado por [`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md).**
+> Describe el diseño inicial (webhook `/dc-action` con `decision=approved` en el
+> payload). La implementación real usa comandos `!ir` en el canal, allowlist de
+> aprobadores `IR_APPROVER_IDS`, regla de dos personas y firma HMAC. Se conserva
+> como histórico de diseño.
+
 ## Objetivo
 
 Integrar el agente Python del Domain Controller (DC Agent) en el flujo de orquestación existente con n8n y Rocket.Chat, de forma que las acciones sobre el DC (p. ej. deshabilitar cuentas) se ejecuten solo tras aprobación explícita y queden notificadas en el canal de incidentes.
@@ -224,20 +230,3 @@ La Fase 4d queda completada con:
 - Publicación de resultados en Rocket.Chat con el contexto de script, target y código de retorno.
 
 El sistema está preparado para que, en fases posteriores, este flujo se conecte tanto con la IA agéntica (que recomienda acciones) como con DFIR-IRIS (que registrará las acciones en el caso de incidente).
-
-## Comandos de commit
-
-Una vez revisados el workflow y este README, los comandos sugeridos para guardar el avance en el repositorio son:
-
-```bash
-cd /home/jose/tfm-alerta-temprana-oob
-
-git add fase4-breakglass-dc/
-git add docs/README-fase4d-orquestador-dc.md   # si se copia este README a docs/
-
-git commit -m "fase4d: integracion n8n ↔ dc agent ↔ rocketchat"
-
-git push origin main
-```
-
-En caso de trabajar en una rama específica para la Fase 4, sustituir `main` por el nombre real de la rama.

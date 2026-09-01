@@ -71,72 +71,68 @@ DERP embebido lo resuelve.
 - **La CA del enclave se distribuye manualmente.** Hubo que instalarla en el
   DC, en el orquestador y en el W11. No escala y no es viable durante un
   incidente: debe formar parte del alta de cada nodo.
+- **No hay resolución de nombres propia del enclave.** Cada máquina necesita
+  entradas manuales en `hosts` para `hs.oob.local`, `kvm.oob.local`,
+  `auth.oob.local`, `chat.oob.local`, `n8n.oob.local`. MagicDNS no cubre estos
+  nombres porque vive en `tailnet.internal`. Un resolver interno (`dnsmasq`)
+  resolvería esto; la distribución de la CA sigue siendo un problema aparte.
+- **Caducidad del certificado del enclave.** Sin renovación automática, el plano
+  de control tiene una fecha de expiración operativa.
 
 ---
 
-## 9. Firma HMAC del canal orquestador → agente
+## 9. Firma HMAC del canal orquestador → agente — ✅ RESUELTO (Paso 9)
 
-El agente (`fase4-breakglass-dc/dcagent/agent_dc.py`) ya implementa
-verificación HMAC-SHA256 con ventana temporal de 300 s y control anti-replay
-por nonce (`verify_signature()`), pero queda **desactivada** mediante
-`AGENT_REQUIRE_HMAC=false` hasta que el lado que llama —el orquestador n8n—
-firme las peticiones.
+El agente (`fase4-breakglass-dc/dcagent/agent_dc.py`) verifica HMAC-SHA256 sobre
+`{timestamp}.{nonce}.{body}` con ventana temporal de 300 s y anti-replay por
+nonce (`verify_signature()`). Desde el Paso 9 corre con
+`AGENT_REQUIRE_HMAC=true`: el nodo Code de n8n genera `X-Timestamp`, `X-Nonce` y
+`X-Signature`, reutilizando el patrón de firma de la Fase 2. `/health` devuelve
+`"hmac_required": true`.
 
-Pendiente:
-
-- Nodo Code en n8n que genere las cabeceras `X-Timestamp`, `X-Nonce` y
-  `X-Signature`, reutilizando el patrón de firma ya empleado en la Fase 2 para
-  el canal de ingesta de Wazuh.
-- Activar `AGENT_REQUIRE_HMAC=true` en el entorno del servicio NSSM
-  (`fase4-breakglass-dc/dcagent/README-despliegue.md`) una vez el orquestador
-  firme correctamente.
+Validación (5/5) en `README-fase4-validacion.md`, sección 3.3: petición firmada
+`200`; replay `409`/`100606`; firma inválida `403`/`100605`; timestamp fuera de
+ventana `400`; sin cabeceras `400`.
 
 ---
 
-## 10. Fase 4d — Flujo de aprobación y ejecución
+## 10. Fase 4d — Flujo de aprobación y ejecución — ✅ RESUELTO
 
-**Prioridad alta.** Es el bloque que convierte el canal de coordinación en un
-puesto de mando operativo, en vez de un simple tablón informativo.
+El War Room dejó de ser un tablón informativo: hay camino de vuelta desde
+Rocket.Chat hacia el orquestador mediante comandos `!ir` (outgoing webhook). Lo
+implementado, con detalle en
+[`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md):
 
-**Estado actual:** el War Room de Rocket.Chat se abre automáticamente ante una
-alerta, pero es únicamente informativo. No existe camino de vuelta desde
-Rocket.Chat hacia el orquestador: nadie puede activar break-glass, ejecutar un
-script de respuesta ni aprobar una acción desde el propio canal.
+- **Autorización por allowlist en el orquestador.** Rocket.Chat Community no
+  permite roles propios y el bot no tiene `view-full-other-user-info`
+  (`users.info` devuelve `canViewAllInfo: false` sin `roles`). Se usa
+  `IR_APPROVER_IDS` (variable de entorno de n8n). Cadena de confianza: token del
+  webhook → `chat.getMessage` confirma autoría → autor confirmado ∈ allowlist.
+  El `user_id` del payload nunca se usa para autorizar.
+- **Regla de dos personas** con solicitudes `REQ-xxxxxxxx` caducables (15 min);
+  auto-aprobación rechazada.
+- **Resolución del identificador RustDesk** desde `hbbs`: `export-peers.sh`
+  (cron 30 min) → `peers.json` → nodo Code en n8n, filtrando por el campo
+  `note`.
+- **Entrega de la credencial** por `/webhook/bg-credential`, router Traefik con
+  `authelia@file` y `priority=100` + regla `access_control` a `group:ir_lead`
+  con `two_factor`: un solo uso, se registra quién la recuperó, se destruye. En
+  el canal solo viaja el enlace.
+- **Firma HMAC** (punto 9) activa en la llamada n8n → agente DC.
 
-Elementos a implementar:
+Validación 11/11 en `README-fase4-validacion.md` y en el documento de la subfase.
 
-- **Canal de retorno Rocket.Chat → n8n**: outgoing webhook o slash command.
-- **Modelo de autorización**: verificación de pertenencia al grupo `ir_lead`
-  realizada por n8n **contra Rocket.Chat** (o contra la fuente de verdad de
-  grupos que corresponda), nunca confiando en el `username` recibido en el
-  payload del webhook, que es falsificable por cualquiera que sepa la forma
-  del mensaje.
-- **Resolución del identificador RustDesk**: ya resuelta a nivel de diseño y de
-  script — `scripts/rustdesk_enable.ps1` ya **no** lee el ID desde
-  `RustDesk.toml` en el propio DC (autoinforme de un endpoint que en un
-  escenario break-glass puede estar comprometido); devuelve el literal
-  `"rustdesk_id": "resolver_en_hbbs"`, delegando la resolución al servidor de
-  rendezvous del enclave (`SELECT id, note FROM peer;` sobre
-  `rustdesk/data/db_v2.sqlite3` en `hbbs`, bajo control del equipo de
-  respuesta — ver `docs/README-fase4-validacion.md`, sección 5.2). **Lo que
-  falta implementar** es el lado del orquestador: el nodo n8n que reciba esta
-  respuesta debe reconocer el literal `resolver_en_hbbs` y ejecutar esa
-  consulta automáticamente en vez de requerir intervención manual.
-- **Entrega de la credencial temporal**: decisión de diseño pendiente. Publicar
-  la contraseña de un solo uso que genera `rustdesk_enable.ps1` en un canal de
-  Rocket.Chat supondría dejar una credencial de acceso remoto a un Domain
-  Controller en el historial permanente de la sala, visible para todos sus
-  miembros y sincronizada a los clientes. El TTL de 30 minutos limita la
-  ventana de *uso*, pero no la persistencia del *secreto* en el historial.
-  Opciones a evaluar: mensaje efímero, entrega por mensaje directo al
-  aprobador, o recuperación desde un endpoint autenticado del orquestador
-  mediante el identificador del incidente.
-- **Callback y registro del caso** en DFIR-IRIS.
+Pendientes que quedan de este bloque:
 
-**Dependencia:** el punto 9 (firma HMAC) deja de ser opcional en cuanto
-Rocket.Chat pueda disparar acciones sobre el DC a través del orquestador. La
-protección anti-replay pasa a formar parte del propio modelo de autorización,
-no solo de la higiene del canal.
+- **Callback y registro del caso en DFIR-IRIS** (Fase 6).
+- **Workflow exportado con `export-workflow.sh`.** Hoy vive solo en el volumen
+  de n8n; `$getWorkflowStaticData` (donde se guardan solicitudes y credenciales)
+  se pierde si el workflow se reimporta.
+- **El enlace de credencial no es clicable en Rocket.Chat.** Pendiente ajustar
+  el formato Markdown del mensaje.
+- **El mensaje de alerta muestra "desde ."**: el template de n8n espera un
+  `data.srcip` que estos eventos no traen; debe caer a `location` o al nombre
+  del agente.
 
 ---
 
@@ -175,3 +171,5 @@ no solo de la higiene del canal.
   (embebido) ni la comprobación de versión de Headscale (`disable_check_updates:
   true`). Quedan: aviso de nueva versión de RustDesk en cada arranque del
   cliente, y AbuseIPDB/VirusTotal de fases anteriores (Fase 2).
+- **Rotación de los secretos de la Fase 8** (`RTTYS_TOKEN`, `RTTYS_PASS`,
+  `TURN_PASS`): estuvieron commiteados en `.env.example` y deben rotarse.

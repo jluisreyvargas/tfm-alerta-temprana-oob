@@ -11,11 +11,18 @@
     "tag:kvm":          ["tfm-oob@"],
   },
 
-  "acls": [
+   "acls": [
     { "action": "accept", "src": ["tag:orchestrator"], "dst": ["tag:dc:8000"] },
-    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:dc:21115-21119"] },
-    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:orchestrator:22"] },
-    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:kvm:443,80,22"] },
+
+    // El analista se conecta al servidor de rendezvous del enclave, no al
+    // endpoint: RustDesk es un protocolo mediado y ambos extremos acuden a
+    // hbbs/hbbr. La regla inicial (tag:analyst -> tag:dc:21115-21119) partía
+    // de una topología equivocada, ya que el cliente del DC no escucha en
+    // esos puertos.
+    { "action": "accept", "src": ["tag:analyst"], "dst": ["tag:orchestrator:21115-21119,22"] },
+
+    { "action": "accept", "src": ["tag:analyst"], "dst": ["tag:kvm:443,80,22"] },
+
     // Excepción acotada al principio "el DC nunca es origen":
     // el cliente RustDesk debe registrarse contra el servidor de
     // rendezvous del enclave. Limitado a los puertos de señalización

@@ -125,6 +125,11 @@ derp:
     region_code: "oob"
     region_name: "OOB Enclave DERP"
     stun_listen_addr: "0.0.0.0:3478"
+    # ipv4 explícito: sin él, el DERP se anuncia solo por nombre (hs.oob.local)
+    # y tailscaled —que corre como servicio del sistema— no lo resuelve por el
+    # mismo /etc/hosts que el shell del usuario. Síntoma: UDP: false y "no
+    # response to latency probes". Ver "Hallazgos" más abajo.
+    ipv4: "<IP_HOST>"
     private_key_path: /var/lib/headscale/derp_server_private.key
     automatically_add_embedded_derp_region: true
   urls: []
@@ -174,38 +179,86 @@ randomize_client_port: false
 
 Sin política ACL, Headscale aplica "allow all": un DC comprometido alcanzaría n8n,
 Wazuh, MISP e IRIS. La política vigente restringe explícitamente qué origen puede
-llegar a qué destino, y deliberadamente **no** existe ninguna regla con `src: tag:dc`
-— el DC es destino, nunca origen:
+llegar a qué destino. El principio rector es **"el DC es destino, nunca origen"**,
+con una única excepción acotada: el cliente RustDesk del DC necesita registro
+saliente contra el servidor de rendezvous del enclave (`hbbs`/`hbbr`), y esa
+dependencia no se detectó al diseñar la política sino al aplicarla y comprobar el
+comportamiento con tráfico real (ver `README-fase4-validacion.md`).
+
+Reflejo del fichero real (`fase4-breakglass-dc/headscale/config/acl.hujson`):
 
 ```hujson
+// NOTA v0.28: los usuarios se referencian con sufijo '@'.
+// El bloque "tests" de la primera versión NO existe en Headscale v0.28 (es
+// sintaxis de Tailscale SaaS); headscale devolvía `unknown field "tests"` pero
+// arrancaba sin política, en allow-all silencioso. Eliminado.
 {
   "tagOwners": {
     "tag:orchestrator": ["tfm-oob@"],
     "tag:dc":           ["tfm-oob@"],
     "tag:analyst":      ["tfm-oob@"],
+    "tag:kvm":          ["tfm-oob@"],
   },
 
   "acls": [
     { "action": "accept", "src": ["tag:orchestrator"], "dst": ["tag:dc:8000"] },
-    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:dc:21115-21119"] },
-    { "action": "accept", "src": ["tag:analyst"],      "dst": ["tag:orchestrator:22"] },
-  ],
 
-  "tests": [
-    {
-      "src": "tag:orchestrator",
-      "accept": ["tag:dc:8000"],
-      "deny":   ["tag:dc:3389", "tag:dc:445"],
-    },
-    {
-      "src": "tag:dc",
-      "deny": ["tag:orchestrator:22", "tag:orchestrator:8000"],
-    },
+    // El analista se conecta al servidor de rendezvous del enclave, no al
+    // endpoint: RustDesk es un protocolo mediado y ambos extremos acuden a
+    // hbbs/hbbr. La regla inicial (tag:analyst -> tag:dc:21115-21119) partía de
+    // una topología equivocada: el cliente del DC no escucha en esos puertos.
+    { "action": "accept", "src": ["tag:analyst"], "dst": ["tag:orchestrator:21115-21119,22"] },
+    { "action": "accept", "src": ["tag:analyst"], "dst": ["tag:kvm:443,80,22"] },
+
+    // Excepción acotada al principio "el DC nunca es origen": el cliente
+    // RustDesk debe registrarse contra el rendezvous del enclave. Limitado a
+    // señalización y relay; no habilita ningún otro destino.
+    { "action": "accept", "src": ["tag:dc"], "dst": ["tag:orchestrator:21115-21119"] },
   ],
 }
 ```
 
 Validar con: `docker exec headscale headscale policy check --file /etc/headscale/acl.hujson`
+(este paso no es opcional: Headscale ignora en silencio una política inválida y
+sigue operando en allow-all — ver `README-fase4-validacion.md`, sección de hallazgos).
+
+## Estado final verificado del plano de control
+
+Tras el Paso 8 (endurecimiento, 28/08/2026) el plano de control queda así, verificado
+por logs de `tailscaled` y `tailscale status` (no por `netcheck` — ver hallazgos):
+
+| Parámetro | Valor final |
+|---|---|
+| `server_url` | `https://hs.oob.local` (vía Traefik, CA del enclave) |
+| DERP | Embebido, `region_id: 999`, `region_code: oob`, `ipv4: <IP_HOST>` |
+| `derp.urls` | `[]` — sin mapa DERP externo |
+| `disable_check_updates` | `true` |
+| `base_domain` | `tailnet.internal` |
+| `dns.nameservers.global` | `[]` |
+| `metrics_listen_addr` | `127.0.0.1:9090` |
+| `grpc_listen_addr` | `127.0.0.1:50443` |
+| `policy.path` | `/etc/headscale/acl.hujson` |
+| STUN | UDP `3478` publicado |
+
+## Hallazgos
+
+**`derp.server.ipv4` es necesario.** Sin ese campo, el DERP embebido se anuncia
+únicamente por nombre (`hs.oob.local`). `tailscaled` corre como servicio del
+sistema y no resuelve ese nombre por el `/etc/hosts` del usuario del mismo modo
+que lo hace el shell interactivo, así que el nodo no alcanzaba el relay: el
+síntoma era `UDP: false` y `no response to latency probes`. Fijar
+`ipv4: <IP_HOST>` (la dirección de la red subyacente del host) lo resuelve.
+
+**`hs.oob.local` debe resolver a la red subyacente, no a una IP del tailnet.** El
+plano de control de Tailscale se alcanza siempre por la red subyacente. Si
+`hs.oob.local` resolviera a una dirección del propio tailnet, un nodo que
+perdiera su sesión de control plane no podría reautenticarse —necesitaría el
+tailnet que precisamente ha perdido—. Esto **no** contradice el principio OOB:
+la propiedad out-of-band la aporta el plano de datos (WireGuard directo y el DERP
+autohospedado), no el plano de control; pero exige que el plano de control tenga
+una ruta subyacente que sobreviva al incidente. En el laboratorio esa ruta es la
+red corporativa, y queda documentado como **limitación conocida** (ver
+`README-fase4-pendientes.md`).
 
 ## Incidencias resueltas
 
@@ -270,20 +323,3 @@ La respuesta `pass` confirma que el control plane está operativo y que la subfa
 La Fase 4a queda completada con un servidor Headscale estable, persistente y accesible desde el host en el puerto `8090`, integrado en la red Docker `oob-network` y preparado para registrar nodos del enclave y del DC en la siguiente subfase.
 
 Este resultado permite continuar con la **Fase 4b**, centrada en la creación del usuario lógico de la tailnet, la generación de pre-auth keys y el enrolado del orquestador y del Domain Controller Windows 2025.
-
-## Comandos de commit
-
-Una vez revisado el contenido de esta subfase, los comandos recomendados para guardar el avance en el repositorio son:
-
-```bash
-cd /home/jose/tfm-alerta-temprana-oob
-
-git add fase4-breakglass-dc/headscale/config/docker-compose.headscale.yml
-git add fase4-breakglass-dc/headscale/config/config.yaml
-git add fase4-breakglass-dc/README-fase4a-headscale.md
-
-git commit -m "fase4a: despliegue de headscale en docker"
-git push origin main
-```
-
-Si se está trabajando en una rama específica para la Fase 4, el `push` debe adaptarse al nombre real de esa rama.

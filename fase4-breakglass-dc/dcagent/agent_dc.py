@@ -35,7 +35,7 @@ HMAC_SECRET = os.environ.get("AGENT_HMAC_SECRET", "").encode()
 REQUIRE_HMAC = os.environ.get("AGENT_REQUIRE_HMAC", "false").lower() == "true"
 
 SCRIPTS_DIR = Path(os.environ.get("TFM_SCRIPTS_DIR", r"C:\tfm-scripts")).resolve()
-LOG_PATH = Path(os.environ.get("TFM_LOG_PATH", r"C:\tfm-agent\logs\agent.log"))
+LOG_PATH = Path(os.environ.get("TFM_LOG_PATH", r"C:\tfm-dc-agent\logs\agent.log"))
 
 MAX_SKEW = 300          # segundos de tolerancia para el timestamp
 MAX_STDOUT = 8000       # caracteres devueltos al orquestador

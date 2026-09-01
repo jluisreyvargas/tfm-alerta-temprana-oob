@@ -12,12 +12,23 @@ services:
       - WEBHOOK_URL=https://n8n.oob.local/
       - GENERIC_TIMEZONE=Europe/Madrid
       - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/misp.crt
-      - NODE_FUNCTION_ALLOW_BUILTIN=crypto
+      - NODE_FUNCTION_ALLOW_BUILTIN=crypto,fs
       - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       - N8N_PROXY_HOPS=1
+      #Added for Fase4d
+      - RC_URL=http://rocketchat:3000
+      - RC_BOT_USER_ID=kScBxrDSCtRDxZmnm
+      - RC_BOT_TOKEN=${RC_BOT_TOKEN}
+      - RC_OUTGOING_TOKEN=${RC_OUTGOING_TOKEN}
+      - IR_APPROVER_IDS=QN5wbMxDfzLAf9bjb,KSaeE4jFabWrTSQKy
+      - DC_AGENT_URL=http://100.64.0.2:8000
+      - AGENT_TOKEN=${AGENT_TOKEN}
+      - AGENT_HMAC_SECRET=${AGENT_HMAC_SECRET}
+      - CREDENTIAL_BASE_URL=https://n8n.oob.local/webhook/bg-credential
     volumes:
       - n8n_data:/home/node/.n8n
       - ./n8n/certs/misp.crt:/usr/local/share/ca-certificates/misp.crt:ro
+      - ../../fase4-breakglass-dc/rustdesk/peers.json:/data/peers.json:ro
     networks:
       - oob-network
     labels:
@@ -27,6 +38,12 @@ services:
       - "traefik.http.routers.n8n.tls=true"
       - "traefik.http.services.n8n.loadbalancer.server.port=5678"
       - "traefik.docker.network=oob-network"
+      - "traefik.http.routers.n8n-cred.rule=Host(`n8n.oob.local`) && PathPrefix(`/webhook/bg-credential`)"
+      - "traefik.http.routers.n8n-cred.entrypoints=websecure"
+      - "traefik.http.routers.n8n-cred.tls=true"
+      - "traefik.http.routers.n8n-cred.middlewares=authelia@file"
+      - "traefik.http.routers.n8n-cred.priority=100"
+      - "traefik.http.routers.n8n-cred.service=n8n"
 
 volumes:
   n8n_data:

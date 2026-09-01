@@ -148,19 +148,16 @@ Desde la UI deberías poder:
   **Hallazgo:** con la referencia errónea `authelia@docker`, Traefik descartaba el middleware sin emitir ningún error y el router respondía `200` sin autenticación. Un control referenciado por un nombre inexistente no falla: simplemente no se aplica. La verificación debe hacerse comprobando el código de respuesta, no leyendo el fichero de configuración.
 - La API key de Headscale debe tratarse como secreto: no debe commitearse en el repositorio con un valor real relleno en `config.yaml`.
 
+## Estado final verificado
+
+| Elemento | Valor final |
+|---|---|
+| Middleware Traefik | `authelia@file` (`authelia@docker` **no existe** como middleware en este despliegue) |
+| Regla en `fase1-infraestructura/authelia/configuration.yml` | `- domain: 'hs.oob.local'` → `subject: 'group:ir_lead'`, `policy: two_factor` |
+| Petición no autenticada a `/web` | `302` hacia Authelia |
+| `api_url` (`headscale-ui/container-config/config.yaml`) | `"https://hs.oob.local"` — la UI es una SPA y llama desde el navegador del analista, no desde el contenedor |
+| `api_key` en el repositorio | siempre `""`; se introduce desde **Settings** tras el primer acceso |
+
 ## Resultado
 
 Con estos pasos, la Fase 4a queda ampliada con una interfaz web de administración para Headscale, sin modificar el despliegue existente del servidor Headscale ni de los nodos ya enrolados en la tailnet.
-
-## Comandos de commit
-
-```bash
-cd ~/tfm-alerta-temprana-oob
-
-git add fase4-breakglass-dc/docker-compose.headscale-ui.yml
-git add fase4-breakglass-dc/headscale-ui/container-config/config.yaml
-git add docs/README-fase4a-headscale-ui.md   # si se copia este README a docs/
-
-git commit -m "fase4a: añadir headscale-ui como interfaz web de administración"
-git push origin main
-```

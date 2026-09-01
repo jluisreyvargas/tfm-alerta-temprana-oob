@@ -137,22 +137,46 @@ La conectividad correcta confirma que la tailnet está operativa y que el canal 
 > [`README-fase4c-dcagent.md`](README-fase4c-dcagent.md#resolución-de-nombres-en-el-orquestador),
 > no en esta subfase.
 
+## Estado final de la tailnet
+
+| ID | Nodo | Etiqueta | IP |
+|---:|---|---|---|
+| 1 | `orchestrator-tfm` | `tag:orchestrator` | `100.64.0.1` |
+| 2 | `dc01-tfm` | `tag:dc` | `100.64.0.2` |
+| 3 | `glkvm` | (sin etiquetar, offline) | `100.64.0.3` |
+| 4 | `analyst-w11` | `tag:analyst` | `100.64.0.4` |
+
+`glkvm` está offline desde el 13/07 y queda aislado en el tailnet al aplicar la
+ACL; pendiente de etiquetar como `tag:kvm` cuando reconecte (ver
+`README-fase4-pendientes.md`).
+
+## Hallazgos del etiquetado
+
+**Las etiquetas se asignan desde el servidor, no desde el nodo.** El método es
+`headscale nodes tag --identifier <id> -t tag:x`, ejecutado en el control plane.
+`--advertise-tags` en `tailscale up` requiere que el propietario pueda autorizar
+las etiquetas en el registro y falló con `requested tags are invalid or not
+permitted`. La vía del servidor es además preferible en un enclave: la etiqueta
+—y por tanto los permisos— la decide el administrador del control plane, no el
+nodo que se une. Un nodo no debería poder declarar su propio nivel de acceso.
+
+**Etiquetar cambia la caducidad de la clave.** Al asignar una etiqueta, el nodo
+pasa de su usuario a `tagged-devices` y su clave **deja de caducar**: los
+dispositivos etiquetados no están sujetos a la expiración de sesión de usuario.
+
+**El puesto de analista es una máquina distinta del orquestador.** Los roles de
+la ACL corresponden a funciones, no a comodidad de despliegue: etiquetar el
+orquestador como `tag:analyst` habría hecho que cualquier compromiso de ese
+servidor heredase permisos de analista. Por eso `analyst-w11` es un nodo propio.
+
+**Prerrequisito por nodo: CA del enclave + resolución de `hs.oob.local`.** En
+Linux, `tailscaled` es un servicio de larga duración y **no recarga el almacén
+de CA**: tras instalar la CA del enclave hace falta `systemctl restart
+tailscaled`, o el registro falla con `x509: certificate signed by unknown
+authority`.
+
 ## Resultado de la Fase 4b
 
 La Fase 4b queda completada cuando Headscale muestra ambos nodos online y el orquestador puede alcanzar al DC por la red Tailscale/Headscale.
 
 Con esta base ya es posible pasar a la Fase 4c, donde se integrará el Python Agent del DC y posteriormente el flujo break-glass con RustDesk.
-
-## Comandos de commit
-
-Una vez verificada la subfase, guarda el avance con:
-
-```bash
-cd /home/jose/tfm-alerta-temprana-oob
-
-git add fase4-breakglass-dc/
-git commit -m "fase4b: registro de nodos en tailnet headscale"
-git push origin main
-```
-
-Si trabajas en otra rama, sustituye `main` por el nombre real de tu rama.

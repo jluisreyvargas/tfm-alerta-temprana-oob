@@ -125,7 +125,7 @@ HMAC_SECRET = os.environ.get("AGENT_HMAC_SECRET", "").encode()
 REQUIRE_HMAC = os.environ.get("AGENT_REQUIRE_HMAC", "false").lower() == "true"
 
 SCRIPTS_DIR = Path(os.environ.get("TFM_SCRIPTS_DIR", r"C:\tfm-scripts")).resolve()
-LOG_PATH = Path(os.environ.get("TFM_LOG_PATH", r"C:\tfm-agent\logs\agent.log"))
+LOG_PATH = Path(os.environ.get("TFM_LOG_PATH", r"C:\tfm-dc-agent\logs\agent.log"))
 
 MAX_SKEW = 300          # segundos de tolerancia para el timestamp
 MAX_STDOUT = 8000       # caracteres devueltos al orquestador
@@ -479,14 +479,16 @@ Write-Host "RustDesk deshabilitado y TTL cancelado"
 
 ## Comprobación de salud (`/health`) y allowlist
 
-Respuesta real del endpoint `GET /health` (reflejo literal de `agent_dc.py`, función `health()`):
+Respuesta real del endpoint `GET /health` (reflejo literal de `agent_dc.py`, función `health()`).
+Desde el Paso 9 el servicio corre con `AGENT_REQUIRE_HMAC=true`, por lo que
+`hmac_required` es ahora `true`:
 
 ```json
 {
   "status": "ok",
   "agent": "dc01-tfm",
   "version": "2.0",
-  "hmac_required": false,
+  "hmac_required": true,
   "token_configured": true,
   "scripts_dir": "C:\\tfm-scripts"
 }
@@ -511,6 +513,34 @@ cinco de acción (`disable_account.ps1`, `enable_account.ps1`,
 `rustdesk_enable.ps1` y `rustdesk_disable.ps1`. Sin estos dos últimos no existe
 ningún camino desde el orquestador para activar o revocar el break-glass de
 RustDesk — el agente es, para ese flujo, el único ejecutor posible.
+
+## Firma HMAC (Paso 9) — activa
+
+Desde el Paso 9 el agente corre con `AGENT_REQUIRE_HMAC=true`: el orquestador n8n
+firma cada petición a `/run` y el agente la rechaza si la firma no valida.
+
+- **Cabeceras exigidas:** `X-Timestamp`, `X-Nonce`, `X-Signature`.
+- **Firma:** HMAC-SHA256 sobre la cadena `{timestamp}.{nonce}.{body}` con el
+  secreto compartido `AGENT_HMAC_SECRET`.
+- **Ventana temporal:** 300 s de tolerancia sobre `X-Timestamp` (`MAX_SKEW`).
+- **Anti-replay:** los nonces vistos se retienen en memoria durante la ventana;
+  un nonce repetido dentro de esos 300 s se rechaza.
+
+Tabla de validación (misma petición, variando `AGENT_REQUIRE_HMAC`):
+
+| # | Control | `REQUIRE_HMAC=false` | `REQUIRE_HMAC=true` |
+|---:|---|:-:|:-:|
+| 1 | Petición firmada válida | `200` | `200` |
+| 2 | Replay (nonce repetido) | `200` | `409` |
+| 3 | Firma inválida | `200` | `403` |
+| 4 | Timestamp fuera de ventana | `200` | `400` |
+| 5 | Sin cabeceras de firma | `200` | `400` |
+
+La columna izquierda no es ruido: demuestra que **sin el control**, una petición
+legítima capturada en tránsito puede reproducirse indefinidamente contra el
+Domain Controller. El SIEM discrimina los rechazos: `100605` (firma inválida),
+`100606` (replay), frente a `100604` (token inválido) — tres controles que
+devuelven códigos HTTP solapados pero alertas distintas.
 
 ## Regla de firewall Windows
 
@@ -580,7 +610,7 @@ nssm set TFM-DC-Agent AppRotateBytes 10485760
 nssm set TFM-DC-Agent AppEnvironmentExtra `
   "AGENT_TOKEN=<TOKEN>" `
   "AGENT_HMAC_SECRET=<SECRETO>" `
-  "AGENT_REQUIRE_HMAC=false" `
+  "AGENT_REQUIRE_HMAC=true" `
   "TFM_SCRIPTS_DIR=C:\tfm-scripts" `
   "TFM_LOG_PATH=C:\tfm-dc-agent\logs\agent.log" `
   "TFM_HEADSCALE_IP=<IP_TRAEFIK>"
@@ -607,7 +637,11 @@ Tres decisiones de esta configuración y su motivo:
   arranque no es visible para el servicio hasta un reinicio completo del
   sistema — no basta con reiniciar el servicio. `AppEnvironmentExtra` inyecta
   el entorno directamente en el proceso que NSSM lanza, sin depender de ese
-  refresco.
+  refresco. **Advertencia operativa:** `AppEnvironmentExtra` **reemplaza el
+  conjunto completo** de variables, no lo fusiona — en cada modificación hay que
+  reescribir todas las líneas, o las que se omitan desaparecen (un
+  `AGENT_TOKEN` que se pierde así produce un `500 AGENT_TOKEN not set`, no un
+  fallo evidente al arrancar).
 - **`DependOnService Tailscale`.** El binding a `100.64.0.2` falla si el
   servicio arranca antes de que la interfaz de la tailnet exista todavía; la
   dependencia de servicio asegura el orden de arranque.
@@ -663,16 +697,7 @@ La conexión es `direct` (sin pasar por servidor DERP de relay), lo que confirma
 
 ## Resultado de la Fase 4c
 
-La Fase 4c queda completada con el agente Python operativo en el DC Windows 2025, accesible desde el orquestador exclusivamente por la red privada Headscale, con autenticación Bearer Token validada, allowlist de scripts funcional y logging de cada ejecución.
+La Fase 4c queda completada con el agente Python operativo en el DC Windows 2025, accesible desde el orquestador exclusivamente por la red privada Headscale, con autenticación Bearer Token validada, firma HMAC-SHA256 anti-replay activa (Paso 9), allowlist de scripts funcional y logging de cada ejecución.
 
-El sistema está preparado para continuar con la Fase 4d — integración del flujo de aprobaciones Rocket.Chat → Orquestador → DC Agent → callback.
-
-## Comandos de commit
-
-```bash
-cd /home/jose/tfm-alerta-temprana-oob
-
-git add fase4-breakglass-dc/
-git commit -m "fase4c: python agent en DC validado via headscale tailnet"
-git push origin main
-```
+El flujo de aprobación y ejecución desde Rocket.Chat que consume este agente se
+documenta en [`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md).

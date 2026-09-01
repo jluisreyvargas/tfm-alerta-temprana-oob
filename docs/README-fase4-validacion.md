@@ -14,17 +14,19 @@ aparecen redactados.
 
 | Subfase | Componente | Estado |
 |---|---|---|
-| 4a | Headscale control plane | ✅ Operativo |
-| 4a | Headscale UI | ⚠️ Operativa, pendiente Authelia |
-| 4b | Tailnet (2 nodos) | ✅ Conectividad directa |
+| 4a | Headscale control plane | ✅ Operativo (endurecido, Paso 8) |
+| 4a | Headscale UI | ✅ Operativa tras Authelia (`two_factor`) |
+| 4b | Tailnet (4 nodos) | ✅ Conectividad directa, etiquetada y con ACL |
 | 4c | Agente DC (FastAPI/NSSM) | ✅ Validado, 9/9 pruebas |
+| 4c | Firma HMAC (Paso 9) | ✅ Activa (`AGENT_REQUIRE_HMAC=true`), 5/5 pruebas |
 | — | Break-glass RustDesk | ✅ Ciclo completo validado |
 | — | Auditoría SIEM | ✅ Extremo a extremo |
-| 4d | Flujo de aprobación | ❌ No implementado |
+| 4d | Flujo de aprobación | ✅ Implementado y validado (11/11 pruebas) |
 
-Quedan fuera de esta validación el endurecimiento del plano de control (paso a
-HTTPS, DERP embebido, política ACL) y la firma HMAC de las peticiones,
-documentados como trabajo pendiente en la sección 8.
+Este documento incorpora ahora el endurecimiento del plano de control (Paso 8,
+sección 10), la firma HMAC (Paso 9, sección 3.3) y el flujo de aprobación de la
+Fase 4d, detallado en
+[`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md).
 
 ---
 
@@ -39,11 +41,14 @@ curl -s http://100.64.0.2:8000/health
   "status": "ok",
   "agent": "dc01-tfm",
   "version": "2.0",
-  "hmac_required": false,
+  "hmac_required": true,
   "token_configured": true,
   "scripts_dir": "C:\\tfm-scripts"
 }
 ```
+
+`hmac_required: true` refleja el estado tras el Paso 9: el servicio corre con
+`AGENT_REQUIRE_HMAC=true` y el orquestador n8n firma cada petición (ver 3.3).
 
 El agente se ejecuta como servicio Windows gestionado por NSSM, con arranque
 automático y dependencia declarada del servicio Tailscale:
@@ -120,6 +125,26 @@ porque `collect_logs.ps1` extrae el campo `Message` del registro de seguridad
 de Windows, contenido parcialmente controlable por un atacante, que viaja
 desde el DC hacia el orquestador y, en las fases posteriores, hacia el motor
 de triaje. Ver sección 7.
+
+### 3.3 Firma HMAC (Paso 9)
+
+El agente corre con `AGENT_REQUIRE_HMAC=true`. Cada petición a `/run` lleva
+`X-Timestamp`, `X-Nonce` y `X-Signature`; la firma es HMAC-SHA256 sobre
+`{timestamp}.{nonce}.{body}`, con ventana de 300 s y nonces retenidos en memoria
+durante la ventana.
+
+| # | Control | `REQUIRE_HMAC=false` | `REQUIRE_HMAC=true` |
+|---:|---|:-:|:-:|
+| 1 | Petición firmada válida | `200` | `200` |
+| 2 | Replay (nonce repetido) | `200` | `409` |
+| 3 | Firma inválida | `200` | `403` |
+| 4 | Timestamp fuera de ventana | `200` | `400` |
+| 5 | Sin cabeceras de firma | `200` | `400` |
+
+La columna izquierda no es ruido: demuestra que sin el control, una petición
+capturada puede reproducirse indefinidamente contra un Domain Controller. En el
+SIEM, el replay dispara `100606` y la firma inválida `100605`, distinguibles de
+`100604` (token inválido) — ver hallazgo 7 en la sección 10.2.
 
 ---
 
@@ -409,10 +434,10 @@ de triaje.
 
 | Elemento | Descripción |
 |---|---|
-| Firma HMAC | Implementada en el agente, desactivada por bandera hasta que el orquestador firme |
+| ~~Firma HMAC~~ | ✅ **Resuelto (Paso 9).** `AGENT_REQUIRE_HMAC=true`; el orquestador n8n firma. Validación en 3.3 |
+| ~~Fase 4d~~ | ✅ **Resuelto.** Flujo de aprobación de dos personas — ver [`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md) |
 | Cuenta de servicio | `LocalSystem`; procedería una gMSA con derechos delegados sobre la OU objetivo |
 | Verificación de integridad | Firma Authenticode de los scripts previa a su invocación |
-| Fase 4d | Flujo de aprobación y ejecución desde el canal de coordinación |
 
 ---
 
@@ -448,13 +473,42 @@ esa indisponibilidad se manifestaría precisamente durante el incidente.
 
 ---
 
-## 10. Hallazgos del endurecimiento del plano de control (Paso 8)
+## 10. Hallazgos del Paso 8 (endurecimiento del plano de control) y de la Fase 4d
 
-Ejecución del 28 de agosto de 2026. Es el material más citable de la fase: en
-los cuatro casos, la ausencia de un control se manifiesta como funcionamiento
-normal, no como error.
+Ejecución del 28 de agosto de 2026 (Paso 8) y días siguientes (Paso 9 y Fase 4d).
+Es el material más citable de la fase: en casi todos los casos, la ausencia de un
+control se manifiesta como funcionamiento normal, no como error.
 
-**Traefik descarta silenciosamente un middleware inexistente.** El router de
+### 10.1 Paso 8 — antes/después y evidencia
+
+| Elemento | Antes | Después |
+|---|---|---|
+| `server_url` | `http://headscale:8090` (puerto inexistente en la red Docker, nombre no resoluble por clientes externos, sin TLS) | `https://hs.oob.local` con la CA del enclave |
+| DERP | Mapa público de Tailscale, 28 regiones | Región embebida `oob` (999) |
+| Descubrimiento STUN | IP pública `77.226.198.189` vía servidores de Tailscale | Dirección local de la red del enclave |
+| Política | Allow-all | ACL con etiquetas, verificada por tráfico |
+
+Evidencia en los logs de `tailscaled`:
+
+```text
+magicsock: home DERP changing from derp-0 to derp-999 (forced=false)
+magicsock: home is now derp-999 (oob)
+derphttp.Client.Connect: connecting to derp-999 (oob)
+magicsock: derp-999 connected; connGen=1
+```
+
+Desde `dc01-tfm` con la ACL activa: `Test-NetConnection 100.64.0.1 -Port 22` y
+`-Port 8000` devuelven `TcpTestSucceeded: False`.
+
+**Observación sobre `netcheck`.** Sigue mostrando `Nearest DERP: unknown` con el
+DERP embebido, porque su sonda de latencia usa un mecanismo que la implementación
+de Headscale no cubre por completo. El estado real lo dan los logs de
+`tailscaled` y `tailscale status`, no `netcheck`. Es otro caso de herramienta de
+diagnóstico que no refleja el estado efectivo.
+
+### 10.2 Hallazgos
+
+**1. Traefik descarta silenciosamente un middleware inexistente.** El router de
 Headscale UI referenciaba `authelia@docker`, un middleware que no existe en
 este despliegue — la instancia de Authelia se integra mediante el proveedor de
 fichero de Traefik (`authelia@file`), no mediante labels de un contenedor
@@ -463,30 +517,52 @@ emitir ningún error y el router respondía `200` sin autenticación. Rocket.Cha
 nunca tuvo este problema porque siempre usó `authelia@file`. Un control mal
 referenciado no falla: simplemente no se aplica.
 
-**Headscale ignora silenciosamente una política inválida.** `acl.hujson`
-incluía un bloque `"tests"` que no existe en la versión 0.28. `headscale
-policy check` devolvía `unknown field "tests"`, pero el servidor arrancó sin
-la política y siguió operando en allow-all. Sin ejecutar la validación
-explícita, se habría dado por implementada una microsegmentación inexistente.
-
-**Una label de Traefik en el compose no es un control activo hasta recrear el
+**2. Una label de Traefik en el compose no es un control activo hasta recrear el
 contenedor.** Tres casos en la misma sesión: Headscale sin router, RustDesk
 sin `-k`, y la UI sin Authelia. El repositorio decía una cosa y el runtime
 hacía otra.
 
-**La microsegmentación reveló una dependencia no declarada en el diseño.** El
-principio "el DC es destino, nunca origen" era correcto para las acciones de
-respuesta, pero el cliente RustDesk necesita registro saliente contra el
-servidor de rendezvous. No se detectó al diseñar la política ni al revisarla:
-apareció al aplicarla y comprobar el comportamiento. Se resolvió con una
-excepción acotada a `tag:dc → tag:orchestrator:21115-21119`.
+**3. Las ACL filtran TCP y UDP por puerto; ICMP se rige por la existencia de
+cualquier regla entre el par.** Al añadir la excepción de RustDesk, el ping
+DC→orquestador pasó de fallar a funcionar mientras el filtrado TCP seguía
+intacto.
 
-### Observaciones técnicas menores
+**4. La política inicial reflejaba una suposición errónea sobre la topología del
+protocolo.** La regla `tag:analyst → tag:dc:21115-21119` asumía que el analista
+conecta al endpoint, cuando RustDesk es un protocolo **mediado**: ambos extremos
+acuden al servidor de rendezvous y el cliente del DC no escucha en esos puertos.
+Se resolvió con una excepción acotada a `tag:dc → tag:orchestrator:21115-21119`.
+Una ACL solo es correcta si el modelo de comunicación que codifica es el real, y
+eso se comprueba con tráfico, no leyendo el diseño.
+
+**5. Headscale ignora silenciosamente una política inválida.** `acl.hujson`
+incluía un bloque `"tests"` que no existe en la versión 0.28 (es sintaxis de
+Tailscale SaaS). `headscale policy check` devolvía `unknown field "tests"`, pero
+el servidor arrancó sin la política y siguió operando en allow-all. Sin la
+validación explícita, se habría dado por implementada una microsegmentación
+inexistente.
+
+**6. Las ACL de Tailscale recortan la visibilidad del mapa de red, no solo
+filtran tráfico.** Al eliminar la regla `tag:analyst → tag:dc`, el nodo del
+analista dejó de ver al DC en su `tailscale status`: `no matching peer`. No hay
+superficie que sondear, lo que es más fuerte que bloquear puertos.
+
+**7. Un secreto truncado produce un error indistinguible de otro control.** Un
+`AGENT_TOKEN` al que faltaba un carácter generó un `403` que parecía un fallo de
+firma HMAC. Lo resolvió la regla del SIEM: la alerta era `100604` (token
+inválido), no `100605` (firma inválida). El sistema de detección permitió
+discriminar entre dos controles que devuelven el mismo código HTTP.
+
+### 10.3 Observaciones operativas
 
 - Al asignar etiquetas, los nodos pasan de su usuario a *tagged-devices* y sus
   claves dejan de caducar: los dispositivos etiquetados no están sujetos a
   expiración de sesión de usuario.
-- Las ACL de Tailscale filtran TCP y UDP por puerto; ICMP se rige por la
-  existencia de cualquier regla entre el par de nodos. Al añadir la excepción
-  de RustDesk, el ping DC→orquestador pasó de fallar a funcionar, mientras el
-  filtrado TCP seguía intacto.
+- Los valores de entorno deben entrecomillarse en `.env`. Un token con
+  caracteres especiales sin comillas se trunca silenciosamente.
+- Docker no puede bindear a la IP del tailnet si `tailscale0` no está levantada
+  en el momento de arrancar el contenedor. Dependencia de arranque a documentar
+  (`DependOnService Tailscale` en el servicio NSSM del agente).
+- RustDesk sobrescribe su fichero de configuración al cerrarse. Editarlo con la
+  aplicación abierta pierde los cambios; la configuración por la interfaz es más
+  fiable.
