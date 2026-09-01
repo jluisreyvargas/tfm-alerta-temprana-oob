@@ -17,10 +17,10 @@ services:
       - N8N_PROXY_HOPS=1
       #Added for Fase4d
       - RC_URL=http://rocketchat:3000
-      - RC_BOT_USER_ID=kScBxrDSCtRDxZmnm
+      - RC_BOT_USER_ID=${RC_BOT_USER_ID}
       - RC_BOT_TOKEN=${RC_BOT_TOKEN}
       - RC_OUTGOING_TOKEN=${RC_OUTGOING_TOKEN}
-      - IR_APPROVER_IDS=QN5wbMxDfzLAf9bjb,KSaeE4jFabWrTSQKy
+      - IR_APPROVER_IDS=${IR_APPROVER_IDS}
       - DC_AGENT_URL=http://100.64.0.2:8000
       - AGENT_TOKEN=${AGENT_TOKEN}
       - AGENT_HMAC_SECRET=${AGENT_HMAC_SECRET}
