@@ -56,3 +56,26 @@ fase4-breakglass-dc/headscale/config/config.yaml.rollback-inseguro
 fase4-breakglass-dc/headscale/config/config.yaml.endurecido-completo
 fase4-breakglass-dc/headscale/config/*.bak
 fase4-breakglass-dc/headscale/config/*.bak-*
+
+# ─── Fase 5 · Velociraptor ────────────────────────────────────────────────
+# Añadido en la remediación P0-1. El estado de runtime del servidor contiene
+# la clave privada de la CA, las claves del frontend y del gateway de la GUI,
+# el obfuscation_nonce y los hashes de los usuarios de la GUI. Nada de esto
+# puede volver al repositorio. Ver SECURITY-NOTICE.md.
+
+# Estado de runtime completo del servidor
+fase5-velociraptor/velociraptor-config/*
+!fase5-velociraptor/velociraptor-config/.gitkeep
+
+# Configuraciones reales: en el repositorio viven solo las plantillas
+fase5-velociraptor/**/server.config.yaml
+fase5-velociraptor/**/client.config.yaml
+fase5-velociraptor/**/client.root.config.yaml
+fase5-velociraptor/**/api_client.yaml
+
+# Instaladores empaquetados: llevan la configuración de cliente embebida
+fase5-velociraptor/installer-windows/
+*.msi
+
+# Directorio huérfano (no está montado en el compose)
+fase5-velociraptor/velociraptor/
