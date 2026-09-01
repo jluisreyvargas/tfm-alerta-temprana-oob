@@ -185,7 +185,10 @@ agente, entorno virtual y scripts compartirían permisos.
 **Conclusión aplicable al diseño:** una allowlist por nombre de fichero solo
 aporta seguridad si va acompañada de control de integridad sobre el directorio
 que la contiene. El cierre completo requeriría verificación de firma
-Authenticode antes de cada invocación, identificado como trabajo futuro.
+Authenticode antes de cada invocación. Ese cierre se analizó y se descartó con
+justificación —no es trabajo pendiente por falta de tiempo—; ver
+[`README-fase4-pendientes.md`](README-fase4-pendientes.md), sección 12
+("Mejoras de seguridad evaluadas y descartadas").
 
 ---
 

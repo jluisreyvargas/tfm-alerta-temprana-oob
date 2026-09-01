@@ -151,9 +151,6 @@ Pendientes que quedan de este bloque:
   posible en un DC. Procedería una gMSA con derechos delegados únicamente sobre
   la OU objetivo. Requiere KDS root key y Active Directory real, no disponibles
   en el laboratorio actual.
-- **Verificación de integridad de scripts**: firma Authenticode validada antes
-  de cada invocación, en lugar de confiar solo en el anclaje de ruta y la
-  allowlist por nombre.
 - **Almacenamiento del token del agente**: `AGENT_TOKEN` reside en el bloque de
   entorno del servicio NSSM (`AppEnvironmentExtra`), legible desde el registro
   de Windows por cualquier proceso con privilegios suficientes para leer la
@@ -173,3 +170,67 @@ Pendientes que quedan de este bloque:
   cliente, y AbuseIPDB/VirusTotal de fases anteriores (Fase 2).
 - **Rotación de los secretos de la Fase 8** (`RTTYS_TOKEN`, `RTTYS_PASS`,
   `TURN_PASS`): estuvieron commiteados en `.env.example` y deben rotarse.
+
+---
+
+## 12. Mejoras de seguridad evaluadas y descartadas
+
+Elementos que **no** son trabajo pendiente por falta de tiempo, sino controles
+evaluados y descartados con fundamento. Se documentan aquí, separados de los
+pendientes reales, porque la ausencia del control es una decisión de diseño
+razonada, no una omisión.
+
+### Firma Authenticode de los scripts de respuesta
+
+**Control evaluado.** Firmar digitalmente los scripts PowerShell de
+`C:\tfm-scripts\` con un certificado de firma de código emitido por la CA del
+enclave, y validar la firma en `agent_dc.py` antes de cada invocación mediante
+`Get-AuthenticodeSignature`.
+
+**Amenaza que cubriría.** La allowlist del agente valida el nombre del
+fichero, no su contenido. Un atacante con capacidad de escritura sobre el
+directorio podría sustituir el contenido de cualquier script permitido y
+obtener ejecución como `LocalSystem` en el Domain Controller, invocada por el
+propio agente y superando todos sus controles.
+
+**Amenaza que no cubriría.** Un atacante que ya posea privilegios de
+administrador en el DC puede instalar su propio certificado en el almacén de
+editores de confianza, o modificar directamente `agent_dc.py`, que no está
+firmado. La firma no detiene a un administrador comprometido: detiene a un
+atacante con escritura pero sin privilegios completos, y sobre todo detecta la
+manipulación.
+
+**Control equivalente ya implementado.** Las ACL de directorio aplicadas en la
+Fase 4 conceden a `SYSTEM` permiso de lectura y ejecución (`RX`) pero no de
+escritura sobre `C:\tfm-scripts` y `C:\tfm-dc-agent`, con herencia eliminada y
+sin entradas para usuarios no administradores. Eso cubre la misma amenaza para
+el mismo conjunto de atacantes: quien no es administrador no puede sustituir
+un script. La firma añadiría capacidad de **detección** sobre un cambio
+realizado con privilegios, no capacidad de **prevención** adicional.
+
+**Coste operativo.** Cada modificación de un script exigiría refirmarlo en una
+máquina de construcción separada y redistribuirlo al DC, ya que el directorio
+es de solo lectura para el servicio. Introduce además un elemento con
+caducidad: si el certificado de firma expira, todos los scripts dejan de
+validar simultáneamente y el canal break-glass queda inoperativo, con el
+agravante de que el fallo se manifestaría durante un incidente. Ese modo de
+fallo requeriría su propia monitorización.
+
+**Decisión.** No implementado en el laboratorio. La relación entre la
+protección adicional —detección de manipulación con privilegios— y el coste
+operativo, junto con el riesgo de indisponibilidad inducida por caducidad del
+certificado, no lo justifica en el alcance del proyecto. Se documenta como
+mejora aplicable en un despliegue de producción, donde existiría gestión del
+ciclo de vida de certificados y proceso de construcción y distribución de
+artefactos firmados.
+
+**Implementación de referencia, si se abordara.** Certificado de firma emitido
+por la CA del enclave —no por una CA comercial ni corporativa, en coherencia
+con el principio de independencia—, firma en máquina de construcción con
+`Set-AuthenticodeSignature`, publicación del certificado en Trusted Publishers
+del endpoint, y validación explícita en el agente comprobando que
+`(Get-AuthenticodeSignature $ruta).Status` devuelve `Valid`, con regla de nivel
+12 en Wazuh para el rechazo. Se prefiere la validación explícita en el agente
+sobre `Set-ExecutionPolicy AllSigned`, que afectaría a todo el sistema. Una
+implementación parcial razonable sería firmar y validar únicamente
+`isolate_host.ps1`, por ser el script de mayor impacto operativo.

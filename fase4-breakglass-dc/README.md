@@ -113,7 +113,7 @@ export-peers.sh (cron 30 min)  →  rustdesk/data/db_v2.sqlite3
 | Entrega de credencial | ✅ | Endpoint autenticado (Authelia + `two_factor`), un solo uso, con registro |
 | Break-glass por red subyacente corporativa | ⚠️ | El control plane se alcanza por la red corporativa (limitación conocida del laboratorio) |
 | Cuenta de servicio `LocalSystem` en el DC | ⚠️ | Procedería una gMSA con derechos delegados sobre la OU objetivo |
-| Integridad de scripts (Authenticode) | ❌ | Pendiente: firma validada antes de cada invocación |
+| Integridad de scripts (Authenticode) | ⚖️ | Evaluado y descartado: cubierto parcialmente por ACL de directorio. Ver justificación en `docs/README-fase4-pendientes.md` |
 
 ## ✅ Validación
 
