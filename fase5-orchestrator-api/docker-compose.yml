@@ -14,10 +14,9 @@ services:
 
     environment:
       MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
       MINIO_BUCKET: evidence
       MINIO_SECURE: "false"
+      PYTHONUNBUFFERED: "1"
 
       # --- Fase 7: Observabilidad / Métricas ---
       OS_URL: https://single-node-wazuh.indexer-1:9200
@@ -26,7 +25,7 @@ services:
       OS_INDEX: tfm-metrics-events
 
     volumes:
-      - ../fase7-observabilidad/shared:/app/shared
+      - ../fase7-observabilidad/shared:/app/shared:ro
 
 networks:
   oob-network:

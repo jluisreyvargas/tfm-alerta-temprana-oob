@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 OS_URL = os.getenv("OS_URL", "https://single-node-wazuh.indexer-1:9200")
 OS_USER = os.getenv("OS_USER", "admin")
-OS_PASS = os.getenv("OS_PASS", "SecretPassword")
+OS_PASS = os.environ["OS_PASS"]
 INDEX = os.getenv("OS_INDEX", "tfm-metrics-events")
 
 _ctx = ssl.create_default_context()

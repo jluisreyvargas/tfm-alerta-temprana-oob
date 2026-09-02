@@ -15,8 +15,8 @@ from metrics_client import log_event
 app = FastAPI(title="TFM OOB Orchestrator", version="0.2.0")
 
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin123")
+MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
+MINIO_SECRET_KEY = os.environ["MINIO_SECRET_KEY"]
 MINIO_BUCKET = os.getenv("MINIO_BUCKET", "evidence")
 MINIO_SECURE = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
