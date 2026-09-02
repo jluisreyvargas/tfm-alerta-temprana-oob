@@ -129,3 +129,153 @@ septiembre de 2027.
   `.gitkeep`), las configuraciones reales (`server.config.yaml`,
   `client.config.yaml`, `client.root.config.yaml`, `api_client.yaml`), el
   directorio de instaladores y `*.msi`.
+
+---
+
+# Aviso de seguridad — credenciales por defecto de MinIO en repositorio público (P0-3)
+
+## Naturaleza
+
+Las credenciales por defecto de MinIO (el par usuario / contraseña que trae la
+imagen y que la documentación del proyecto reproducía) estaban escritas en
+cinco ubicaciones del repositorio público (`fase5-velociraptor/env.example`,
+`fase5-velociraptor/docker-compose.yml`, `fase5-orchestrator-api/README.md` en
+dos puntos, y el bloque de compose incrustado en ese mismo README).
+
+No era solo documentación. La Fase 5 no incluía un `.env` en
+`fase5-velociraptor/`, de modo que docker-compose aplicaba el valor por defecto
+definido en el propio compose (la forma `${VAR:-valor}`). La credencial
+documentada era la credencial en uso. Un valor por defecto convirtió la
+ausencia de configuración en un almacén de evidencia con credencial pública,
+sin que el sistema produjera ningún error.
+
+MinIO guarda la evidencia forense del enclave. Publica su API en
+`0.0.0.0:9000` y su consola en `0.0.0.0:9001`, sin TLS.
+
+## Detección
+
+Doble, independiente:
+
+- La auditoría interna de la Fase 5.
+- GitGuardian, el 2026-09-02 a las 17:25 UTC, minutos después de un push.
+
+## Cadena de impacto
+
+El endpoint `POST /velociraptor/collect` del orchestrator no exige
+autenticación. El perfil `credential_dump_collection` incluye
+`Windows.Memory.Acquisition`, que se ejecuta contra el controlador de dominio.
+La evidencia resultante se deposita en el bucket `evidence` de MinIO. Con la
+contraseña por defecto publicada, el eslabón final de esa cadena —el almacén de
+la evidencia recogida sobre el DC— quedaba abierto con una credencial trivial
+que figuraba en el propio repositorio.
+
+## Corrección aplicada
+
+1. **Rotación de las credenciales root de MinIO.** Los defaults `:-` de
+   `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` en los servicios `minio` y
+   `minio-init` de `docker-compose.yml` se sustituyen por la forma `:?`, que
+   aborta el arranque con un mensaje explícito si la variable falta, en lugar
+   de caer a un valor conocido.
+2. **Usuario dedicado `tfm-orchestrator`** con la política `evidence-writer`,
+   limitada a `evidence/*` y **sin `s3:DeleteObject`**. El orchestrator deja de
+   usar credenciales root. La política tuvo que ampliarse con
+   `s3:GetBucketLocation` y los permisos de subida multiparte tras la primera
+   colección real (ver hallazgo 3).
+3. **Eliminación de los defaults inseguros en el código Python.** En
+   `fase5-orchestrator-api/main.py` y en
+   `fase7-observabilidad/shared/metrics_client.py`, las llamadas de la forma
+   `os.getenv("MINIO_SECRET_KEY", <contraseña por defecto>)` y
+   `os.getenv("OS_PASS", <contraseña por defecto del indexador>)` pasan a
+   `os.environ[...]`: sin variable no hay arranque, y no hay valor de reserva.
+4. **Volumen de la Fase 7 montado en `:ro`** en el compose del orchestrator.
+5. **`PYTHONUNBUFFERED=1`** en el compose del orchestrator (ver hallazgo 2).
+6. **Eliminación de `fase7-observabilidad/shared/__pycache__/metrics_client.cpython-311.pyc`**,
+   que estaba trackeado y contenía el usuario y la contraseña por defecto del
+   indexador en su tabla de constantes.
+7. **Normalización de finales de línea** de `main.py` de CRLF a LF.
+
+## Verificaciones
+
+| Prueba | Resultado |
+|---|---|
+| Autenticación con la credencial anterior | `The Access Key Id you provided does not exist` |
+| Usuario dedicado: escritura y lectura en `evidence/*` | Correctas |
+| Usuario dedicado: intento de borrado | `Access Denied` |
+| Colección extremo a extremo (`POST /velociraptor/collect`) | HTTP 200 |
+| Evidencia previa a la rotación | 4 objetos intactos |
+| `verify-no-secrets.sh` con las reglas vigentes en la remediación | 0 hallazgos |
+
+La regla de credenciales conocidas se añadió a `verify-no-secrets.sh` *después*
+de estas verificaciones y llevó el detector de 0 a 54 hallazgos. La resolución
+—reformular la documentación propia para describir en lugar de citar la
+credencial, y excluir de esa regla (solo de esa) el árbol vendorizado de Wazuh
+y los marcadores de posición de los ficheros de ejemplo— está en
+`docs/INFORME-hallazgos-detector.md`. El detector vuelve a `exit 0` sin haber
+dejado de mirar la documentación propia.
+
+## Tres hallazgos aparecidos durante el diagnóstico
+
+Los tres son variantes del mismo patrón: un control ausente o inefectivo no se
+manifiesta como un error, sino como operación normal.
+
+1. **La telemetría del orchestrator llevaba 21 días caída.** El contenedor
+   arrastraba en `OS_PASS` la contraseña por defecto del indexador desde antes
+   de que esa contraseña se rotara. El último evento indexado con `source: orchestrator`
+   era del 2026-08-12 a las 19:58 UTC; la remediación lo restauró el
+   2026-09-02. No hubo pérdida de datos: solo se ejecutaron dos colecciones en
+   todo el periodo, ambas anteriores al corte. Lo relevante es otra cosa: cero
+   eventos del orchestrator es indistinguible de cero colecciones. La ausencia
+   de señal no distingue entre «no ocurrió nada» y «no puedo informar de lo que
+   ocurrió». El fallo se habría manifestado en el peor momento posible, cuando
+   por fin hiciera falta una colección real.
+
+2. **El aviso existía y no llegaba.** `metrics_client.py` captura la excepción
+   y emite `print(f"[metrics_client] WARN: ...")`. Alguien escribió ese aviso
+   pensando exactamente en este caso. No aparecía en los logs porque Python
+   bufferiza stdout cuando no es un terminal y el contenedor no tenía
+   `PYTHONUNBUFFERED`. Dos capas de silencio: una intencionada (el `except`,
+   correcto para que un fallo de telemetría no rompa la colección forense) y
+   otra accidental. Con `PYTHONUNBUFFERED=1` el aviso apareció de inmediato y
+   señaló el 401 exacto. En la remediación, ese `print` se sustituyó por
+   `logging.warning()`, que respeta la configuración de la aplicación y no
+   depende del buffer de stdout.
+
+3. **La verificación con `mc` no predijo el comportamiento del cliente real.**
+   La prueba de la política pasó con `mc`, y la primera colección real falló
+   con `AccessDenied` sobre el recurso `/evidence`. El SDK de Python de MinIO
+   invoca `GetBucketLocation` antes de escribir; `mc` no lo necesita del mismo
+   modo. Hubo que ampliar la política con `s3:GetBucketLocation` y los permisos
+   de subida multiparte. Verificar con una herramienta distinta de la que usa
+   el sistema puede dar verde sobre un control que no funciona.
+
+## Decisión de no purgar el historial
+
+Las credenciales por defecto de MinIO permanecen en commits antiguos. No se
+reescribe el historial, y es una decisión razonada, no una omisión:
+
+- Son una credencial trivial y pública que un atacante probaría de todos
+  modos. Una vez rotada, su presencia en commits antiguos no aporta riesgo.
+- Una tercera reescritura del historial cambiaría todos los SHA sin beneficio
+  proporcionado.
+- El contraste con el P0-1 es explícito: allí había claves privadas RSA y
+  ~60 MB de binarios con configuración de cliente embebida, material cuya
+  exposición no se neutraliza rotando una contraseña. Aquí no.
+
+Riesgo aceptado y razonado.
+
+## Riesgos residuales
+
+- **Sobrescritura.** El usuario `tfm-orchestrator` no puede borrar objetos,
+  pero sí sobrescribirlos. Comprobado experimentalmente: un `mc cp` sobre una
+  clave existente reemplazó el contenido sin error. Para una cadena de custodia
+  la distinción entre borrado y sobrescritura no existe —un manifiesto
+  sobrescrito está tan destruido como uno borrado, con el agravante de que el
+  borrado deja un hueco visible y la sobrescritura no deja rastro—. Quitar
+  `s3:DeleteObject` es necesario pero no suficiente: hace falta versionado o
+  bloqueo de objetos en el bucket.
+- **`incidentid` y `host` sin validar.** Llegan sin sanear en el payload y se
+  usan para construir la clave del objeto, de modo que es posible escribir en
+  rutas arbitrarias del bucket y pisar el manifiesto de otro incidente.
+- **MinIO sin TLS y publicado en `0.0.0.0`** (`:9000` API, `:9001` consola).
+- **`minio/minio:latest` sin fijar versión** en un almacén de evidencia
+  forense: el dígito de la imagen puede cambiar bajo los pies del despliegue.

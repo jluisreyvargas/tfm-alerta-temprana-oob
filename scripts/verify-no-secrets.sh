@@ -21,6 +21,37 @@
 #   positivos en assets vendorizados (JS minificado, yarn.lock, .db del
 #   datastore). Las reglas ancladas cubren el material real de Velociraptor.
 #
+# Regla de credenciales conocidas (P0-3) — se aplica a TODO el árbol trackeado,
+#   binarios incluidos (git grep -a):
+#   - minioadmin, minioadmin123, SecretPassword, changeme, change_me,
+#     admin:admin, password123
+#   Las reglas ancladas por nombre de campo no cubren una contraseña literal
+#   suelta como "minioadmin123": no va precedida de un campo reconocido ni tiene
+#   forma de bloque PEM. El .pyc de metrics_client, trackeado, llevaba
+#   "SecretPassword" en su tabla de constantes y el detector daba 0 hallazgos —
+#   no por ser binario (grep -a lo encontraría), sino por no existir la regla.
+#
+#   Esta regla —y SOLO esta— lleva dos exclusiones acotadas. Las reglas de PEM,
+#   private_key, password_hash, nonce y base64 largo NO se ven afectadas y
+#   siguen recorriendo estos ficheros: si algún día aparece ahí una clave
+#   privada real, el detector la ve.
+#
+#     1. fase1-infraestructura/wazuh/  — árbol vendorizado del proyecto oficial
+#        wazuh-docker (no es código de este proyecto). Las cadenas que contiene
+#        (admin / admin:admin / SecretPassword en workflows, docs y composes de
+#        ejemplo del upstream) son las credenciales de demo que trae wazuh-docker
+#        en claro. No se pueden reescribir sin divergir del upstream. El
+#        despliegue real de la Fase 1 toma los secretos de
+#        fase1-infraestructura/wazuh/single-node/.env (INDEXER_PASSWORD /
+#        API_PASSWORD / DASHBOARD_PASSWORD), que está fuera del control de
+#        versiones (**/.env en .gitignore).
+#
+#     2. *.env.example / env.example  — un marcador de posición como
+#        "change_me" / "changeme" comunica al lector "sustituye esto" y es
+#        legítimo en un fichero de ejemplo. Se descarta SOLO si en esa misma
+#        línea no hay además una credencial real de la lista: un
+#        MINIO_SECRET_KEY=minioadmin123 en un .env.example SÍ sigue saltando.
+#
 # En fase5-velociraptor/config-templates/ solo se admite el marcador literal
 # <<GENERADO_EN_DESPLIEGUE>>; cualquier otro valor en una plantilla es un fallo.
 #
@@ -36,6 +67,14 @@ MARKER='<<GENERADO_EN_DESPLIEGUE>>'
 TEMPLATE_DIR='fase5-velociraptor/config-templates/'
 SELF='scripts/verify-no-secrets.sh'
 B64_PATH_RE='^fase5-velociraptor/.*\.(yaml|yml|env|conf|json)$'
+
+# Exclusiones acotadas de la regla 'credencial-conocida' (ver cabecera).
+VENDOR_WAZUH='fase1-infraestructura/wazuh/'          # árbol vendorizado upstream
+EXAMPLE_PATH_RE='(^|/)(\.env\.example|env\.example)$' # ficheros de ejemplo
+# Credenciales "duras": la lista sin los marcadores change_me / changeme. Sirve
+# para re-examinar una línea de un fichero de ejemplo y decidir si el hallazgo
+# era solo un placeholder legítimo o además una credencial real.
+HARD_CRED_RE='(minioadmin|SecretPassword|admin:admin|password123)'
 
 tracked_count=$(git ls-files | wc -l | tr -d ' ')
 findings=0
@@ -67,6 +106,35 @@ scan() {   # $1 = etiqueta   $2 = ERE   $3 = (opcional) filtro de ruta ERE
   done < <(git grep -I -n -E "$ere" -- . ":(exclude)${SELF}" 2>/dev/null | cut -d: -f1-2 || true)
 }
 
+# Como scan(), pero incluye binarios (git grep -a). Nunca imprime el valor
+# detectado. Lleva las dos exclusiones acotadas descritas en la cabecera; el
+# árbol vendorizado de Wazuh se excluye ya en el pathspec de git grep para que
+# ni aparezca en el bucle.
+scan_all() {   # $1 = etiqueta   $2 = ERE
+  local label="$1" ere="$2" hit path line
+  while IFS= read -r hit; do
+    [ -n "$hit" ] || continue
+    path=${hit%%:*}
+    line=${hit#*:}; line=${line%%:*}
+
+    [ "$path" = "$SELF" ] && continue
+
+    # Ficheros de ejemplo: un placeholder (change_me / changeme) es legítimo.
+    # Se descarta el hallazgo solo si en esa línea no hay además una credencial
+    # real de la lista.
+    if printf '%s\n' "$path" | grep -qE "$EXAMPLE_PATH_RE"; then
+      if ! sed -n "${line}p" "$path" | grep -qE "$HARD_CRED_RE"; then
+        continue
+      fi
+    fi
+
+    echo "  HALLAZGO  ${path}:${line}  [${label}]"
+    findings=$((findings + 1))
+  done < <(git grep -a -n -E "$ere" \
+             -- . ":(exclude)${SELF}" ":(exclude)${VENDOR_WAZUH}" \
+             2>/dev/null | cut -d: -f1-2 || true)
+}
+
 scan "PEM PRIVATE KEY"   'BEGIN( [A-Z0-9]+)* PRIVATE KEY'
 scan "private_key"       '(^|[^A-Za-z_])private_key:[[:space:]]*[^[:space:]#]'
 scan "password_hash"     '(^|[^A-Za-z_])password_hash:[[:space:]]*[^[:space:]#]'
@@ -74,6 +142,10 @@ scan "password_salt"     '(^|[^A-Za-z_])password_salt:[[:space:]]*[^[:space:]#]'
 scan "obfuscation_nonce" '(^|[^A-Za-z_])obfuscation_nonce:[[:space:]]*[^[:space:]#]'
 scan "nonce"             "(^|[^A-Za-z_])nonce:[[:space:]]*[\"']?[A-Za-z0-9+/=_-]{16,}"
 scan "base64>60"         '[A-Za-z0-9+/]{60,}={0,2}'   "$B64_PATH_RE"
+# Anclada por límites no alfabéticos: evita el falso positivo de "changeme"
+# como subcadena de "changement" (prosa francesa en fase8-kvm) sin excluir
+# ficheros. Un dígito o signo tras la credencial (minioadmin123) sí cuenta.
+scan_all "credencial-conocida" '(^|[^A-Za-z])(minioadmin123|minioadmin|SecretPassword|changeme|change_me|admin:admin|password123)([^A-Za-z]|$)'
 
 echo
 if [ "$findings" -eq 0 ]; then

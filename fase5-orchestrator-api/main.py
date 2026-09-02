@@ -6,11 +6,15 @@ from minio.error import S3Error
 import hashlib
 import json
 import io
+import logging
 import os
 import sys
+import time
 
 sys.path.append("/app/shared")
 from metrics_client import log_event
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="TFM OOB Orchestrator", version="0.2.0")
 
@@ -82,6 +86,7 @@ async def collect(req: CollectRequest):
     manifest_object = f"{req.incidentid}/{req.host}/{ts}/manifest.json"
     sha_object = f"{req.incidentid}/{req.host}/{ts}/sha256.txt"
 
+    write_start = time.monotonic()
     try:
         client.put_object(
             MINIO_BUCKET,
@@ -102,16 +107,24 @@ async def collect(req: CollectRequest):
     except S3Error as e:
         raise HTTPException(status_code=500, detail=f"MinIO error: {str(e)}")
 
-    log_event(
-        "collection_completed",
-        incident_id=req.incidentid,
-        host=req.host,
-        profile=req.profile,
-        collection_id=f"vr-{ts}",
-        minio_path=f"s3://{MINIO_BUCKET}/{manifest_object}",
-        duration_ms=0,
-        source="orchestrator",
-    )
+    duration_ms = int((time.monotonic() - write_start) * 1000)
+
+    # La evidencia ya esta persistida en MinIO. Un fallo de telemetria no debe
+    # convertir una coleccion correcta en un 500: eso provocaria reintentos de
+    # n8n y evidencia duplicada. Ocurrio durante la remediacion del P0-3.
+    try:
+        log_event(
+            "collection_completed",
+            incident_id=req.incidentid,
+            host=req.host,
+            profile=req.profile,
+            collection_id=f"vr-{ts}",
+            minio_path=f"s3://{MINIO_BUCKET}/{manifest_object}",
+            duration_ms=duration_ms,
+            source="orchestrator",
+        )
+    except Exception as e:
+        logger.warning("no se pudo registrar la metrica collection_completed: %s", e)
 
     return {
         "status": "queued",

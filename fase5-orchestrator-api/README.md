@@ -1,5 +1,12 @@
 # 🧠 Fase 5 · Orchestrator API
 
+> [!CAUTION]
+> Este componente estuvo afectado por el incidente **P0-3** (credenciales por
+> defecto de MinIO en repositorio público, en uso real por ausencia de `.env`).
+> Antes de desplegar, leer **[`fase5-velociraptor/SECURITY-NOTICE.md`](../fase5-velociraptor/SECURITY-NOTICE.md)**.
+> Las credenciales de MinIO se toman ahora de `.env` (ver `.env.example`); el
+> orchestrator usa el usuario dedicado `tfm-orchestrator`, no las credenciales root.
+
 > Microservicio **FastAPI** que valida solicitudes de colección forense, selecciona perfiles permitidos y registra la evidencia en **MinIO**.
 
 > [!NOTE]
@@ -149,22 +156,45 @@ services:
     restart: unless-stopped
     ports:
       - "8020:8000"
-    environment:
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
-      MINIO_BUCKET: evidence
-      MINIO_SECURE: "false"
     networks:
       - oob-network
+      - single-node_default
+
+    env_file:
+      - .env
+
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_BUCKET: evidence
+      MINIO_SECURE: "false"
+      PYTHONUNBUFFERED: "1"
+
+      # --- Fase 7: Observabilidad / Métricas ---
+      OS_URL: https://single-node-wazuh.indexer-1:9200
+      OS_USER: admin
+      OS_PASS: ${OS_PASS}
+      OS_INDEX: tfm-metrics-events
+
+    volumes:
+      - ../fase7-observabilidad/shared:/app/shared:ro
 
 networks:
   oob-network:
     external: true
+  single-node_default:
+    external: true
 ```
 
 > [!IMPORTANT]
-> Este servicio debe compartir la red Docker `oob-network` con n8n y MinIO para resolver correctamente los nombres internos de contenedor.
+> Este servicio debe compartir la red Docker `oob-network` con n8n y MinIO para resolver correctamente los nombres internos de contenedor. La red `single-node_default` le da acceso al indexador de Wazuh para las métricas de la Fase 7.
+
+> [!NOTE]
+> `MINIO_ACCESS_KEY` y `MINIO_SECRET_KEY` **no** aparecen en el compose: se
+> cargan desde `.env` (`env_file`). Ver `.env.example`. Corresponden al usuario
+> `tfm-orchestrator`, no a las credenciales root de MinIO.
+> `PYTHONUNBUFFERED: "1"` es necesario para que los avisos de `metrics_client`
+> lleguen a los logs sin quedar retenidos en el buffer de stdout.
+> El volumen de la Fase 7 se monta en `:ro`.
 
 ---
 
@@ -178,7 +208,6 @@ networks:
 | **Puerto publicado** | `8020:8000/tcp` |
 | **Red principal** | `oob-network` |
 | **Red adicional** | `single-node_default` |
-| **Estado observado** | `Up 23 hours` |
 | **Endpoint principal** | `POST /velociraptor/collect` |
 | **Servicio relacionado** | `minio:9000` |
 | **Bucket** | `evidence` |
@@ -187,16 +216,26 @@ networks:
 
 ## 🔐 Variables de entorno
 
-| Variable | Ejemplo | Descripcion |
+| Variable | Origen | Descripcion |
 |---|---|---|
-| `MINIO_ENDPOINT` | `minio:9000` | Endpoint interno del servicio MinIO |
-| `MINIO_ACCESS_KEY` | `minioadmin` | Usuario de acceso (⚠️ cambiar en produccion) |
-| `MINIO_SECRET_KEY` | `minioadmin123` | Contrasena de acceso (⚠️ cambiar en produccion) |
-| `MINIO_BUCKET` | `evidence` | Bucket de evidencia |
-| `MINIO_SECURE` | `false` | Uso de HTTP/HTTPS hacia MinIO |
+| `MINIO_ENDPOINT` | compose | Endpoint interno del servicio MinIO (`minio:9000`) |
+| `MINIO_ACCESS_KEY` | `.env` (sin valor por defecto) | Access key del usuario `tfm-orchestrator`. Ver `.env.example`. |
+| `MINIO_SECRET_KEY` | `.env` (sin valor por defecto) | Secret key del usuario `tfm-orchestrator`. Ver `.env.example`. |
+| `MINIO_BUCKET` | compose | Bucket de evidencia (`evidence`) |
+| `MINIO_SECURE` | compose | Uso de HTTP/HTTPS hacia MinIO (`false`) |
+| `OS_PASS` | `.env` (sin valor por defecto) | Contraseña del indexador de Wazuh (métricas Fase 7). Ver `.env.example`. |
 
-> [!WARNING]
-> Las credenciales `minioadmin` / `minioadmin123` son valores de laboratorio. En un entorno de produccion deben sustituirse por credenciales seguras y gestionarse mediante secretos.
+> [!IMPORTANT]
+> `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` y `OS_PASS` se documentan **sin valor**:
+> se definen en `.env` (excluido por `.gitignore`), nunca en el repositorio. La
+> versión anterior no traía `.env`, de modo que docker-compose aplicaba el
+> valor por defecto definido en el propio compose y la credencial documentada
+> era la credencial en uso (P0-3).
+>
+> El orchestrator se autentica ahora con el usuario dedicado `tfm-orchestrator`
+> y la política `evidence-writer`, limitada a `evidence/*` y **sin
+> `s3:DeleteObject`**: puede escribir y leer evidencia, no borrarla. No usa las
+> credenciales root de MinIO.
 
 ---
 
@@ -259,11 +298,17 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 
 ## ⚠️ Consideraciones de seguridad
 
-- 🔐 **MinIO:** acceso con credenciales en variables de entorno (⚠️ cambiar en produccion)
+- 🔐 **MinIO:** credenciales del usuario dedicado `tfm-orchestrator` cargadas desde `.env` (nunca en el repositorio). Política `evidence-writer`: acceso limitado a `evidence/*`, **sin `s3:DeleteObject`**.
 - 🔒 **SHA-256:** hash de cada ZIP para integridad de la evidencia
 - 📝 **Manifest:** metadatos completos de cada coleccion para trazabilidad
 - 🗂️ **Evidence Store:** estructura clara por incidente/host/timestamp
 - 🛡️ **Allowlist:** validacion estricta de perfiles para evitar ejecuciones arbitrarias
+
+> [!WARNING]
+> **Riesgos residuales conocidos tras el P0-3** (ver `fase5-velociraptor/SECURITY-NOTICE.md`):
+> - Quitar `s3:DeleteObject` impide el borrado pero **no la sobrescritura**: una clave existente puede reemplazarse sin dejar rastro. Hace falta versionado o bloqueo de objetos en el bucket.
+> - `incidentid` y `host` llegan sin validar en el payload y se usan para construir la clave del objeto: es posible escribir en rutas arbitrarias del bucket.
+> - MinIO publica su API (`0.0.0.0:9000`) y su consola (`0.0.0.0:9001`) sin TLS.
 
 ---
 
@@ -274,7 +319,8 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 | ZIP real de coleccion | El servicio no genera el ZIP real desde Velociraptor | 🟡 Pendiente |
 | Hash real del ZIP | El campo `zip_sha256` contiene valor simulado | 🟡 Pendiente |
 | Integracion con DFIR-IRIS | No se registra la evidencia automaticamente en IRIS | 🟡 Pendiente |
-| Credenciales de ejemplo | Las credenciales de MinIO son de laboratorio | ⚠️ Cambiar en produccion |
+| Bucket sin versionado | Quitar `s3:DeleteObject` no impide la sobrescritura de un manifiesto | 🔴 Pendiente (P0-3) |
+| `incidentid` / `host` sin validar | Se usan sin sanear para construir la clave del objeto en MinIO | 🔴 Pendiente (P0-3) |
 
 ---
 
@@ -283,8 +329,9 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 1. 🟡 Añadir generacion real del ZIP de coleccion desde Velociraptor Server
 2. 🟡 Calcular hash SHA-256 real del ZIP generado
 3. 🟡 Integrar con DFIR-IRIS para registro automatico de evidencias (Fase 6)
-4. 🟡 Sustituir credenciales de ejemplo por secretos de produccion
-5. 🟡 Añadir validacion de integridad de evidencias (verificar hash)
+4. 🔴 Activar versionado / bloqueo de objetos en el bucket `evidence` (P0-3)
+5. 🔴 Validar `incidentid` y `host` antes de construir la clave del objeto (P0-3)
+6. 🟡 Añadir validacion de integridad de evidencias (verificar hash)
 
 ---
 

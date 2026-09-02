@@ -1,9 +1,12 @@
 import json
+import logging
 import os
 import ssl
 import base64
 import urllib.request
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 OS_URL = os.getenv("OS_URL", "https://single-node-wazuh.indexer-1:9200")
 OS_USER = os.getenv("OS_USER", "admin")
@@ -45,5 +48,11 @@ def log_event(event_type: str, **fields):
         with urllib.request.urlopen(req, context=_ctx, timeout=3) as resp:
             return json.loads(resp.read().decode())
     except Exception as e:
-        print(f"[metrics_client] WARN: no se pudo indexar evento {event_type}: {e}")
+        # Se captura la excepcion a proposito: un fallo de telemetria no debe
+        # romper el flujo principal (p. ej. una coleccion forense). Se emite por
+        # 'logging' y no por 'print' porque print depende del buffer de stdout;
+        # esa dependencia mantuvo este aviso invisible 21 dias (P0-3).
+        logger.warning(
+            "no se pudo indexar evento %s: %s", event_type, e
+        )
         return None

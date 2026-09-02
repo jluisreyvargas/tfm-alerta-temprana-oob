@@ -76,7 +76,7 @@ ports:
 
 ### Problema 2 — Usuario `admin` reservado por OpenSearch Security
 **Causa:** El usuario `admin` es un usuario interno reservado de OpenSearch Security. No se puede cambiar su contraseña desde la UI de Wazuh Dashboard — devuelve `{"status":"FORBIDDEN","message":"Resource 'admin' is reserved."}`.  
-**Solución para laboratorio:** Crear un usuario dedicado `wazuh-admin` con rol `all_access` desde la UI. El usuario `admin` se mantiene con contraseña por defecto restringida a red local.
+**Estado actual:** El acceso operativo se hace con el usuario `admin` y la contraseña definida en `INDEXER_PASSWORD` dentro de `fase1-infraestructura/wazuh/single-node/.env` (fuera del control de versiones; ya no el valor por defecto público de la imagen), con el acceso restringido a red local. La creación de un usuario operativo dedicado se evaluó y no llegó a implementarse — ver «Decisiones de diseño».
 
 > **Nota para TFM:** En producción se usaría `wazuh-passwords-tool.sh` ejecutado como root dentro del contenedor del indexer. La imagen de Wazuh Indexer está basada en Amazon Linux (no Debian) — el gestor de paquetes es `yum`, no `apt-get`.
 
@@ -212,8 +212,11 @@ docker compose ps
 # Estado de los tres componentes
 docker compose ps
 
-# API del manager
-curl -k -u admin:SecretPassword "https://localhost:55000/" | python3 -m json.tool
+# API del manager — usa la credencial de la API definida en
+# fase1-infraestructura/wazuh/single-node/.env (API_PASSWORD), rotada respecto
+# al valor por defecto público de la imagen. No la escribas en el comando.
+curl -k -u "admin:${API_PASSWORD:?exporta API_PASSWORD antes de ejecutar}" \
+  "https://localhost:55000/" | python3 -m json.tool
 
 # Dashboard accesible
 curl -k -o /dev/null -w "%{http_code}" https://localhost:4443
@@ -244,12 +247,17 @@ curl -k -o /dev/null -w "%{http_code}" https://wazuh.oob.local
 
 | Usuario | Contraseña | Uso |
 |---------|------------|-----|
-| `admin` | `SecretPassword` | Usuario reservado OpenSearch — solo emergencia |
-| `wazuh-admin` | `WazuhAdmin2026!OOB` | Usuario admin operativo creado en UI |
-| `kibanaserver` | `kibanaserver` | Comunicación interna dashboard↔indexer |
-| `wazuh-wui` | `MyS3cr37P450r.*-` | Comunicación interna manager↔dashboard API |
+| `admin` | ver `INDEXER_PASSWORD` en `wazuh/single-node/.env` | Usuario reservado OpenSearch — acceso operativo y de emergencia |
+| `kibanaserver` | ver `DASHBOARD_PASSWORD` en `wazuh/single-node/.env` | Comunicación interna dashboard↔indexer |
+| `wazuh-wui` | ver `API_PASSWORD` en `wazuh/single-node/.env` | Comunicación interna manager↔dashboard API |
 
-> ⚠️ Credenciales por defecto válidas solo para laboratorio local. Cambiar en producción con `wazuh-passwords-tool.sh`.
+> Los tres secretos que la imagen de Wazuh trae en claro como credenciales de
+> demo (indexador, dashboard, API del manager) se rotaron y se toman de
+> `fase1-infraestructura/wazuh/single-node/.env` (`INDEXER_PASSWORD`,
+> `DASHBOARD_PASSWORD`, `API_PASSWORD`), fuera del control de versiones. Ver
+> `fase5-velociraptor/SECURITY-NOTICE.md` (P0-3).
+
+> ⚠️ Los valores concretos viven solo en el `.env` de la fase (fuera del control de versiones). En producción, rotarlos con `wazuh-passwords-tool.sh`.
 
 ---
 
@@ -258,7 +266,30 @@ curl -k -o /dev/null -w "%{http_code}" https://wazuh.oob.local
 - **Single-node vs multi-node:** Para el laboratorio TFM un nodo es suficiente. La arquitectura es idéntica a producción — solo cambia el número de nodos del indexer.
 - **Puerto 4443 para el dashboard:** Evita conflicto con Traefik que ocupa el 443. El acceso via `wazuh.oob.local` a través de Traefik mantiene el principio out-of-band.
 - **`insecureSkipVerify: true` en Traefik:** Necesario porque Wazuh Dashboard usa sus propios certificados TLS internos (self-signed generados en el paso de certs). Traefik actúa como terminador TLS externo.
-- **Usuario `wazuh-admin` separado:** El usuario `admin` de OpenSearch Security es reservado y no modificable desde la UI. Crear un usuario operativo dedicado es la práctica correcta.
+
+### Usuario operativo dedicado para el acceso a Wazuh — evaluado, no implementado
+
+**Control evaluado.** Crear un usuario dedicado con rol `all_access` en
+OpenSearch Security, separado del usuario `admin`, para el acceso operativo al
+Wazuh Dashboard y a la API del indexador.
+
+**Amenaza que cubriría.** El usuario `admin` de OpenSearch Security es interno y
+reservado: su nombre no cambia y su ámbito es total. Un usuario operativo
+distinto permitiría revocar o rotar el acceso del día a día sin tocar la cuenta
+`admin`, acotar privilegios por rol, y atribuir acciones en los logs a una
+identidad que no sea la cuenta de superusuario.
+
+**Control equivalente actual.** El acceso se hace con `admin` y la contraseña
+definida en `INDEXER_PASSWORD` (`fase1-infraestructura/wazuh/single-node/.env`,
+fuera del control de versiones), rotada respecto al valor por defecto público de
+la imagen y restringida a red local. Cubre la confidencialidad y la rotación de
+la credencial; no cubre la separación de privilegios ni la atribución.
+
+**Decisión.** No implementado. El usuario `admin` reservado no es modificable
+desde la UI de Wazuh Dashboard (`Resource 'admin' is reserved`), y el usuario
+dedicado no llegó a crearse por la vía alternativa. Sigue siendo la práctica
+correcta y queda como mejora pendiente; en el estado actual no existe tal
+usuario y el acceso operativo es la propia cuenta `admin`.
 
 ---
 

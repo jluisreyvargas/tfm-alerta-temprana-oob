@@ -170,7 +170,7 @@ serversTransport:
 | Rocket.Chat | rc_admin | Primer usuario = admin |
 | Rocket.Chat Bot | orchestrator-bot | Token guardado en gestor de secretos |
 | MongoDB | rcuser | Auth admin + clusterAdmin |
-| Wazuh Dashboard | wazuh-admin | Usuario operativo (admin es reservado) |
+| Wazuh Dashboard | admin | Contraseña en `INDEXER_PASSWORD` (`.env`); usuario operativo dedicado evaluado, no implementado |
 | Wazuh API | wazuh-wui | Comunicación interna manager↔dashboard |
 
 ---
@@ -180,7 +180,7 @@ serversTransport:
 - **`insecureSkipVerify: true` global en Traefik:** Wazuh Dashboard usa certificados TLS self-signed generados internamente. En un entorno de laboratorio cerrado esto es aceptable. En producción se usarían certificados firmados por la CA interna del enclave.
 - **Puerto 4443 para Wazuh Dashboard:** Mantiene el acceso directo sin pasar por Traefik como fallback de administración, mientras que `wazuh.oob.local` es el acceso principal via Traefik.
 - **MongoDB fuera de `oob-network`:** Principio de mínima exposición — MongoDB solo es accesible por Rocket.Chat a través de la red interna `fase1-internal`.
-- **`wazuh-admin` en lugar de `admin`:** El usuario `admin` de OpenSearch Security es reservado y no modificable via UI. Se crea un usuario operativo dedicado con rol `all_access`.
+- **Acceso a Wazuh con `admin`:** El usuario `admin` de OpenSearch Security es reservado y no modificable via UI. Un usuario operativo dedicado con rol `all_access` se evaluó pero no se implementó; el acceso operativo usa `admin` con la contraseña de `INDEXER_PASSWORD` (`.env`). Ver `README-fase1d-wazuh.md`, «Decisiones de diseño».
 
 ---
 

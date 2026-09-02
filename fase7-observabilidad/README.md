@@ -78,6 +78,12 @@ Ambos `docker-compose.yml` se actualizaron para:
 
 ### 🤖 `langgraph-agent`
 
+> Extracto ilustrativo. El fichero autoritativo es
+> `fase3-agentic/docker-compose.yml`. `OS_USER` y `OS_PASS` se cargan desde
+> `.env` (`env_file`), nunca en el compose: `OS_PASS` debe coincidir con
+> `INDEXER_PASSWORD` de `fase1-infraestructura/wazuh/single-node/.env`, que se
+> rotó (ver `fase5-velociraptor/SECURITY-NOTICE.md`, P0-3).
+
 ```yaml
 services:
   langgraph-agent:
@@ -86,13 +92,13 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+    env_file:
+      - .env                       # OS_USER, OS_PASS
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=mistral:7b
       - TZ=Europe/Madrid
       - OS_URL=https://single-node-wazuh.indexer-1:9200
-      - OS_USER=admin
-      - OS_PASS=SecretPassword
       - OS_INDEX=tfm-metrics-events
     volumes:
       - ../fase7-observabilidad/shared:/app/shared
@@ -109,6 +115,12 @@ networks:
 
 ### 🧭 `orchestrator`
 
+> Extracto ilustrativo. El fichero autoritativo es
+> `fase5-orchestrator-api/docker-compose.yml`. Las credenciales de MinIO
+> (`MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY`, del usuario `tfm-orchestrator`) y
+> `OS_PASS` se cargan desde `.env` (`env_file`), nunca en el compose (P0-3, ver
+> `fase5-velociraptor/SECURITY-NOTICE.md`).
+
 ```yaml
 services:
   orchestrator:
@@ -120,18 +132,17 @@ services:
     networks:
       - oob-network
       - single-node_default
+    env_file:
+      - .env                       # MINIO_ACCESS_KEY, MINIO_SECRET_KEY, OS_PASS
     environment:
       MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
       MINIO_BUCKET: evidence
       MINIO_SECURE: "false"
       OS_URL: https://single-node-wazuh.indexer-1:9200
       OS_USER: admin
-      OS_PASS: SecretPassword
       OS_INDEX: tfm-metrics-events
     volumes:
-      - ../fase7-observabilidad/shared:/app/shared
+      - ../fase7-observabilidad/shared:/app/shared:ro
 
 networks:
   oob-network:
@@ -186,8 +197,14 @@ print(asyncio.run(collect(CollectRequest(incidentid='TEST-COLLECT-01', host='HOS
 
 ### 🔎 Verificación en OpenSearch
 
+`$OS_PASS` es la contraseña del indexador (`INDEXER_PASSWORD` en
+`fase1-infraestructura/wazuh/single-node/.env`, rotada — ver
+`fase5-velociraptor/SECURITY-NOTICE.md`, P0-3). Cárgala del `.env` de la fase,
+no la escribas en el comando:
+
 ```bash
-curl -sk -u admin:SecretPassword "https://localhost:9200/tfm-metrics-events/_count?pretty"
+curl -sk -u "admin:${OS_PASS:?exporta OS_PASS antes de ejecutar}" \
+  "https://localhost:9200/tfm-metrics-events/_count?pretty"
 ```
 
 Resultado validado en laboratorio:

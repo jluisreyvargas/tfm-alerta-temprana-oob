@@ -45,8 +45,8 @@ services:
       minio:
         condition: service_healthy
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER no definido, crear .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD no definido, crear .env}
       MINIO_BUCKET: ${MINIO_BUCKET:-evidence}
     volumes:
       - ./init-minio-bucket.sh:/init-minio-bucket.sh:ro
