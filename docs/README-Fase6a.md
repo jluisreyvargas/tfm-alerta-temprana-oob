@@ -2,6 +2,8 @@
 
 > **Objetivo:** desplegar DFIR-IRIS en Docker como plataforma de *case management* DFIR, preparada para recibir casos automáticos desde el orquestador y enlazar evidencias, decisiones y timeline del incidente.
 
+> **Nota de seguridad:** el TLS de la interfaz de IRIS se corrigió en la remediación P0-2 (CA y certificado de desarrollo sustituidos por un certificado del enclave). Ver [`fase6-iris/SECURITY-NOTICE.md`](../fase6-iris/SECURITY-NOTICE.md).
+
 ---
 
 ## 📑 Índice
@@ -63,11 +65,11 @@ La configuración base se apoya en variables de entorno definidas en `.env`, sig
 
 | Variable | Valor utilizado |
 |---|---|
-| `SERVER_NAME` | `iris.local` |
+| `SERVER_NAME` | `iris.oob.local` |
 | `INTERFACE_HTTPS_PORT` | `4833` |
 | `IRIS_AUTHENTICATION_TYPE` | `local` |
 | `IRIS_ADM_USERNAME` | `administrator` |
-| `IRIS_ADM_EMAIL` | `admin@iris.local` |
+| `IRIS_ADM_EMAIL` | `admin@iris.oob.local` |
 
 La API de IRIS usa un token tipo Bearer en la cabecera `Authorization`, y cada usuario tiene su propia API key.
 
@@ -77,9 +79,9 @@ La API de IRIS usa un token tipo Bearer en la cabecera `Authorization`, y cada u
 
 El acceso web quedó operativo por navegador en:
 
-- `https://iris.local:4833`
+- `https://iris.oob.local:4833`
 
-Para ello se añadió `iris.local` al fichero `/etc/hosts`, apuntando al host local. La documentación oficial indica que IRIS se accede por HTTPS y que el puerto puede variar según el despliegue.
+Tanto `iris.oob.local` como `iris.local` resuelven a `127.0.0.1` en el `/etc/hosts` del host Ubuntu (`iris.local` se conserva por compatibilidad). Además, `iris.oob.local` se añadió al `/etc/hosts` de W11 y DC01-TFM apuntando a `192.168.127.138`, para poder acceder a la interfaz desde esos equipos. La documentación oficial indica que IRIS se accede por HTTPS y que el puerto puede variar según el despliegue.
 
 ---
 
@@ -103,7 +105,7 @@ La documentación oficial de casos de IRIS confirma que se pueden crear casos, m
 La Fase 6a queda validada con los siguientes puntos:
 
 - IRIS despliega correctamente en Docker.
-- La interfaz web responde desde `iris.local`.
+- La interfaz web responde desde `iris.oob.local`.
 - El frontal HTTPS está expuesto en `4833`.
 - La autenticación local está operativa.
 - La API key del administrador está disponible para automatización.

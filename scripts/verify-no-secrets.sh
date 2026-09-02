@@ -6,8 +6,13 @@
 #
 # Reglas ancladas por nombre de campo — se aplican a TODO el repositorio:
 #   - bloques PEM de clave privada  (BEGIN ... PRIVATE KEY)
-#   - private_key: / password_hash: / password_salt: / obfuscation_nonce: /
-#     nonce:  con valor no vacío
+#   - private_key: / password_hash: / password_salt: / obfuscation_nonce:
+#     con valor no vacío
+#   - nonce:  seguido de una cadena con aspecto de secreto (>= 16 caracteres
+#     base64 o hexadecimales). Exigir esa forma, y no solo la palabra suelta,
+#     evita falsos positivos sobre prosa ("... al nonce: ...") sin recurrir a
+#     una lista de exclusión de ficheros, que enmascararía un secreto real que
+#     apareciera en ellos más adelante.
 #
 # Regla de entropía — solo bajo fase5-velociraptor/ y en ficheros de config
 #   (.yaml .yml .env .conf .json):
@@ -67,7 +72,7 @@ scan "private_key"       '(^|[^A-Za-z_])private_key:[[:space:]]*[^[:space:]#]'
 scan "password_hash"     '(^|[^A-Za-z_])password_hash:[[:space:]]*[^[:space:]#]'
 scan "password_salt"     '(^|[^A-Za-z_])password_salt:[[:space:]]*[^[:space:]#]'
 scan "obfuscation_nonce" '(^|[^A-Za-z_])obfuscation_nonce:[[:space:]]*[^[:space:]#]'
-scan "nonce"             '(^|[^A-Za-z_])nonce:[[:space:]]*[^[:space:]#]'
+scan "nonce"             "(^|[^A-Za-z_])nonce:[[:space:]]*[\"']?[A-Za-z0-9+/=_-]{16,}"
 scan "base64>60"         '[A-Za-z0-9+/]{60,}={0,2}'   "$B64_PATH_RE"
 
 echo

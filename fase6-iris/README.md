@@ -7,6 +7,11 @@
 > [!TIP]
 > IRIS centraliza toda la información del incidente: alerta original, decisiones del agente, sesiones de acceso remoto, artefactos forenses y timeline.
 
+> [!WARNING]
+> El certificado y la CA de desarrollo que trae la imagen de DFIR-IRIS se
+> sustituyeron por un certificado del enclave en la remediación P0-2. Ver
+> [`SECURITY-NOTICE.md`](SECURITY-NOTICE.md).
+
 ## 📋 Estado
 
 - [x] 🐳 DFIR-IRIS en Docker
@@ -118,7 +123,7 @@ volumes:
 
 ### Crear caso manualmente
 
-Acceder a IRIS Web (`https://<HOST>:4833`) y crear caso de prueba.
+Acceder a IRIS Web (`https://iris.oob.local:4833`) y crear caso de prueba.
 
 ### Verificar sincronización
 

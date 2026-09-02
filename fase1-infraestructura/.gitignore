@@ -12,3 +12,9 @@ authelia/users_database.yml
 traefik/acme.json
 mongodb/mongo-keyfile
 mongodb/mongo-keyfile
+
+# Certificados publicos que SI deben versionarse: sin el certificado de la CA
+# nadie que clone el repositorio puede reconstruir la confianza del enclave.
+# Las claves privadas siguen cubiertas por *.key y *.pem.
+!traefik/certs/oob-rootCA.crt
+!traefik/certs/*.cnf

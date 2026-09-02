@@ -21,22 +21,15 @@ repositorio distinto de GitHub con el mismo historial. Ambos requieren purga.
 
 ## Ventana de exposición
 
-_(pendiente: fecha del primer commit que introdujo el material)_ a
-_(pendiente: fecha de la puesta en privado del repositorio)_.
+- **Introducido:** 2026-06-21T19:55:04+02:00, en el commit `1149702`
+  («docs(fase5): complete Velociraptor and MinIO documentation»).
+- **Detectado y contenido:** 1 de septiembre de 2026, al poner en privado los
+  repositorios.
+- **Ventana:** aproximadamente 72 días.
+- **Exposición observada:** 0 forks y 0 stars en el momento de la detección.
 
-Para obtener la fecha de inicio, sin ejecutarlo aquí:
-
-```
-git log --diff-filter=A --format=%aI -1 -- fase5-velociraptor/velociraptor-config/server.config.yaml
-```
-
-Interpretación del resultado: `--diff-filter=A` restringe la búsqueda al commit
-en el que el fichero fue **añadido** por primera vez; `--format=%aI` imprime la
-fecha de autoría en ISO 8601 y `-1` se queda con la más antigua. La fecha
-devuelta es el instante a partir del cual `server.config.yaml` —y con él
-`CA.private_key`— quedó accesible en el historial. Conviene repetir el comando
-para `fase5-velociraptor/client.config.yaml` y para
-`fase5-velociraptor/installer-windows/` y tomar la más temprana de las tres.
+El commit que introdujo las claves privadas de la CA, del frontend y del
+gateway de la GUI se llamaba «complete Velociraptor and MinIO documentation».
 
 ## Impacto
 
@@ -59,15 +52,32 @@ sean los tres clientes de prueba del propio proyecto.
 
 ## Remediación aplicada
 
-1. Rotación completa de la PKI de Velociraptor: nueva CA, nuevos certificados de
-   frontend y gateway, nuevo `obfuscation_nonce`, nuevas credenciales de la GUI.
-2. Reinscripción de los tres clientes contra la nueva CA.
-3. Exclusión del estado de runtime del control de versiones: el directorio
+1. **Rotación completa de la PKI de Velociraptor:** nueva CA, nuevos certificados
+   de frontend y gateway, nuevo `obfuscation_nonce`, nuevas credenciales de la
+   GUI.
+
+   | | Huella SHA-256 de la CA |
+   |---|---|
+   | CA anterior | `8D:09:C6:90:22:7A:F5:26:AF:00:03:FB:79:C5:FF:A0:74:B2:A4:19:62:94:D2:14:59:97:22:0C:3C:D9:CA:9A` |
+   | CA actual | `D6:89:B2:44:C8:C8:22:80:AA:47:1D:5F:44:86:A5:0E:B0:39:A1:F3:69:C2:DE:1E:56:1B:17:64:1E:0D:63:70` |
+
+   Validez de la CA nueva: 2026-09-01 → 2036-08-29.
+
+2. **Reinscripción de los tres clientes** (W11, DC01-TFM, ubuntuserver),
+   reinstalados con MSI y configuración regenerados. El cliente Linux rechazó el
+   servidor con `x509: certificate signed by unknown authority` hasta recibir la
+   CA nueva: es la demostración de comportamiento de que la rotación surtió
+   efecto. Los `client_id` no cambian — derivan de la clave pública del
+   endpoint, que nunca estuvo expuesta.
+3. **Exclusión del estado de runtime del control de versiones:** el directorio
    `velociraptor-config/` y las configuraciones reales dejan de versionarse; en
    el repositorio viven solo plantillas sanitizadas en
    `fase5-velociraptor/config-templates/`. Ver `.gitignore`.
-4. Purga del historial con `git filter-repo` (ver `scripts/purge-history.sh`) y
-   `push --force` a los dos remotos.
+4. **Purga del historial** con `git filter-repo` (ver `scripts/purge-history.sh`)
+   sobre cinco rutas: de 135 a 133 commits — dos quedaron vacíos («Ignore
+   velociraptor generated files» y «Update fase5 velociraptor data»). El pack
+   pasó de ~60,9 MB en blobs a 22,45 MiB. Detalle de la propagación a los
+   remotos en «Hallazgos de enumeración durante la remediación».
 
 ## Causa raíz
 
@@ -80,12 +90,41 @@ añadió al repositorio como si fuera configuración. El repositorio nunca produ
 un error: `git add` y `git commit` aceptaron el material sin advertencia, y no
 había ninguna comprobación que lo rechazara.
 
+## Hallazgos de enumeración durante la remediación
+
+Dos incidencias del propio proceso de purga. Comparten patrón: la operación se
+ejecutó correctamente sobre el inventario disponible, y el inventario estaba
+incompleto.
+
+- **Segundo remoto no contemplado.** El plan inicial solo consideraba `origin`.
+  Existía un segundo remoto, `backup` (`tfm-alerta-temprana-oob-backup`), con el
+  mismo historial completo. Se descubrió por la decoración de refs en la salida
+  de un `git log` ejecutado con otro propósito, no por una comprobación
+  dirigida. La purga y el `push --force` tuvieron que aplicarse también a ese
+  repositorio.
+- **Objetos huérfanos en el servidor.** Tras el `push --force`, el commit
+  `4cfd84c` seguía siendo accesible por SHA directo en GitHub. La purga local
+  estaba verificada con cinco comprobaciones en verde y el material seguía
+  disponible en el servidor: la verificación local dio en verde midiendo el
+  sistema equivocado. Se resolvió borrando y recreando ambos repositorios en
+  GitHub; el commit devuelve ahora `404`.
+
+## Hallazgo secundario sin remediar
+
+Los certificados de frontend y de la GUI del servidor Velociraptor se emitieron
+con 365 días de validez, pese a `security.certificate_validity_days: 730` en la
+configuración. El valor aplicado es el default del producto. La misma
+discrepancia existía en la configuración anterior, generada en junio, de modo
+que el parámetro nunca surtió efecto. Los certificados actuales caducan el 1 de
+septiembre de 2027.
+
 ## Control preventivo
 
 - `scripts/verify-no-secrets.sh`: recorre los ficheros trackeados y falla si
   encuentra bloques PEM de clave privada, campos `private_key` / `password_hash`
-  / `password_salt` / `obfuscation_nonce` / `nonce` con valor, o cadenas base64
-  largas en ficheros de configuración de la Fase 5.
+  / `password_salt` / `obfuscation_nonce` con valor, `nonce` seguido de una
+  cadena con aspecto de secreto (≥ 16 caracteres base64 o hexadecimales), o
+  cadenas base64 largas en ficheros de configuración de la Fase 5.
 - Reglas de `.gitignore` que excluyen `velociraptor-config/` completo (salvo un
   `.gitkeep`), las configuraciones reales (`server.config.yaml`,
   `client.config.yaml`, `client.root.config.yaml`, `api_client.yaml`), el
