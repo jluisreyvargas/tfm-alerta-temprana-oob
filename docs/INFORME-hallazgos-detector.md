@@ -163,7 +163,7 @@ reformulaciones de esta sesión). Verificado después que el árbol vuelve a `ex
 |---|---|---|---|---|
 | T1 | Credencial conocida en fichero propio | En `fase3-agentic/.env.example`, una asignación con la contraseña por defecto de MinIO | **salta** `[credencial-conocida]` | ✅ `fase3-agentic/.env.example:11 [credencial-conocida]` |
 | T2 | Credencial conocida bajo árbol vendorizado | En `fase1-infraestructura/wazuh/single-node/.env.example`, una asignación con otra credencial por defecto de la lista | **no salta** | ✅ sin hallazgo |
-| T3 | Bloque PEM bajo árbol vendorizado | En el mismo fichero, una cabecera `-----BEGIN PRIVATE KEY-----` | **salta** `[PEM PRIVATE KEY]` | ✅ `fase1-infraestructura/wazuh/single-node/.env.example:16 [PEM PRIVATE KEY]` |
+| T3 | Bloque PEM bajo árbol vendorizado | En el mismo fichero, una cabecera PEM de clave privada | **salta** `[PEM PRIVATE KEY]` | ✅ `fase1-infraestructura/wazuh/single-node/.env.example:16 [PEM PRIVATE KEY]` |
 | T4 | Marcador de posición en un `.env.example` | En `fase3-agentic/.env.example`, una asignación con un marcador «sustituir esto» | **no salta** | ✅ sin hallazgo |
 | T5 | Credencial por defecto real en un `.env.example` | La misma línea de T1 (es un `.env.example`) | **salta** | ✅ (mismo hallazgo que T1) |
 

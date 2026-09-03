@@ -1,0 +1,15 @@
+7544864 -rw-rw-r-- 0 1000 1000 1976 Sep  2 15:14 /etc/irisRootCACert.pem
+drwxr-xr-x 1 root root 0 Jun 26 16:07 /iriswebapp/certificates/ldap/
+--- fingerprint DER del certificado extraído ---
+subject=C = FR, ST = Some-State, O = DFIR-IRIS, CN = DFIR-IRIS-Root-CA
+issuer=C = FR, ST = Some-State, O = DFIR-IRIS, CN = DFIR-IRIS-Root-CA
+notBefore=Jan 18 10:16:37 2022 GMT
+notAfter=Jan 16 10:16:37 2032 GMT
+sha256 Fingerprint=12:74:5C:EF:8E:36:96:14:76:6A:4D:14:D8:8F:A7:96:D6:65:F6:37:90:6D:99:B3:C1:49:A8:06:40:63:70:A2
+--- sha256 del fichero PEM (cadena de custodia) ---
+c2be036d5c9945c12860324b725bd636ac33d6ea8a00d064e83bdd5aecdb81ed  docs/evidencias/fase6-p0c/irisRootCACert-demo.pem
+--- extraído el 2026-09-03T21:16:08+02:00 desde iriswebapp_app ---
+--- P0-C · tercera instancia, observada durante la remediación ---
+fecha: 2026-09-03T21:32:55+02:00
+fase6-iris/certificates/rootCA/irisRootCACert.pem | tipo=directory | owner=root:root | mtime=2026-09-03 16:59:03.927575226 +0200
+Docker creó el origen del bind mount como directorio root tras mkdir -p rootCA/.

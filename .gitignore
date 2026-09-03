@@ -86,3 +86,13 @@ fase5-velociraptor/velociraptor/
 # versionarse ni usarse en despliegue. Ver P0-2.
 fase6-iris/certificates/rootCA/
 fase6-iris/certificates/web_certificates/
+
+# Evidencia P0-C Fase 6: CA demo pública de DFIR-IRIS extraída del contenedor.
+# Certificado público, sin clave privada. Excepción puntual a **/*.pem.
+!docs/evidencias/fase6-p0c/irisRootCACert-demo.pem
+
+# Copias de seguridad de ficheros de entorno creadas durante remediaciones.
+# La regla **/.env no las cubre por el sufijo.
+**/.env.pre-*
+**/.env.bak
+**/.env.*.bak

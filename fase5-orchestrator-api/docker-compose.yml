@@ -4,7 +4,7 @@ services:
     container_name: orchestrator
     restart: unless-stopped
     ports:
-      - "8020:8000"
+      - "127.0.0.1:8020:8000"
     networks:
       - oob-network
       - single-node_default
