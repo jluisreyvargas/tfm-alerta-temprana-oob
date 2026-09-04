@@ -115,6 +115,7 @@ flowchart LR
 - **Autenticación propia:** Authelia proporciona MFA independiente del AD.
 - **Control de servicios:** los servicios se ejecutan sobre infraestructura bajo control del operador.
 - **Conectividad restringida:** los agentes de los controladores de dominio usan conexiones salientes mediante Tailscale; no se exponen puertos entrantes innecesarios.
+- **Resolución alineada con la segmentación:** cada host resuelve solo los nombres que su rol necesita y que su política de red le permite alcanzar; una resolución global puentearía la microsegmentación. Estado declarado en [`docs/README-resolucion-nombres.md`](./docs/README-resolucion-nombres.md) y verificado por `scripts/verify-hosts.sh`.
 - **Trazabilidad:** las decisiones de la IA, las aprobaciones humanas y las evidencias se registran en el caso del incidente.
 
 ---

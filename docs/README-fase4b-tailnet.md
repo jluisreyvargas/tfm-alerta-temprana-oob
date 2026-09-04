@@ -136,6 +136,13 @@ La conectividad correcta confirma que la tailnet está operativa y que el canal 
 > manual en `/etc/hosts` del orquestador — documentada en
 > [`README-fase4c-dcagent.md`](README-fase4c-dcagent.md#resolución-de-nombres-en-el-orquestador),
 > no en esta subfase.
+>
+> La resolución por ficheros `hosts` es parte del modelo de segmentación, no un
+> detalle de despliegue: una resolución global permitiría a cualquier host
+> alcanzar cualquier servicio saltándose la ACL (ocurrió — defecto D3). Qué
+> nombre debe existir en qué host, con qué IP, está declarado en
+> [`README-resolucion-nombres.md`](README-resolucion-nombres.md) y lo verifica
+> `scripts/verify-hosts.sh`.
 
 ## Estado final de la tailnet
 
