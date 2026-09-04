@@ -96,3 +96,13 @@ fase6-iris/certificates/web_certificates/
 **/.env.pre-*
 **/.env.bak
 **/.env.*.bak
+
+# Salidas temporales de scripts/verify-hosts.sh --check.
+# Son capturas puntuales del hosts de cada Windows; la fuente de verdad es
+# docs/resolucion-nombres.tsv. Versionarlas crearia una lista mas que mantener.
+scripts/hosts-*.txt
+
+# Salidas temporales de scripts/verify-hosts.sh --check.
+# Son capturas puntuales del hosts de cada Windows; la fuente de verdad es
+# docs/resolucion-nombres.tsv. Versionarlas crearia una lista mas que mantener.
+scripts/hosts-*.txt

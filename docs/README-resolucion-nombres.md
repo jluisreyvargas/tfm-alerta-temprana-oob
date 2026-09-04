@@ -65,6 +65,8 @@ edita el `.tsv`; esta tabla se actualiza a mano para que sigan cuadrando.**
 | w11 | iris.oob.local | 192.168.127.138 | DFIR-IRIS — gestión de casos | Documentación del incidente. |
 | w11 | kvm.oob.local | 192.168.127.138 | GL.iNet KVM — Plan C | Consola de contingencia si RustDesk falla. |
 | dc01 | hs.oob.local | 192.168.127.138 | ControlURL del cliente Tailscale del DC | Ver Excepciones. |
+| dc01 | velociraptor.local | 192.168.127.138 | Velociraptor — GUI forense (:8889) | Puesto de analista. Velociraptor se sirve en su propio puerto TLS, fuera del espacio `.oob.loc>
+
 
 El puesto de analista (`w11`) **no** resuelve `traefik`, `portainer`, `wazuh` ni
 `misp`: son superficies de operador y de infraestructura, no de análisis
