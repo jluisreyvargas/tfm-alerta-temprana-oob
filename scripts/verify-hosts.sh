@@ -13,6 +13,9 @@
 # Alcance: los nombres *.oob.local y los declarados explícitamente en el .tsv.
 # Los alias .local que no pasan por Traefik, VelociraptorServer, localhost y la
 # pila IPv6 se listan como informativos y no cuentan como divergencia.
+# NO vigila MagicDNS (nombres de nodo del tailnet como dc01-tfm): esos los
+# resuelve Headscale, no los ficheros hosts. Ver docs/README-resolucion-nombres.md,
+# "Dos mecanismos de resolución".
 #
 # Uso:
 #   verify-hosts.sh                     Verifica el /etc/hosts local (host ubuntu).
@@ -39,7 +42,9 @@ DOC="${REPO_ROOT}/docs/README-resolucion-nombres.md"
 
 die() { echo "ERROR: $*" >&2; exit 2; }
 
-usage() { sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+# Imprime el bloque de comentario de cabecera (desde la línea 2 hasta el primer
+# renglón que ya no empieza por '#'), sin el '#' inicial.
+usage() { awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "${BASH_SOURCE[0]}"; }
 
 [[ -f "$TSV" ]] || die "no existe $TSV"
 

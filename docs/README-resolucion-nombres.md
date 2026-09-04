@@ -25,11 +25,36 @@ De ahí, dos reglas:
    IP del tailnet (`100.64.0.0/10`), que está reservada para el rendezvous de
    RustDesk y gobernada por la ACL de Headscale.
 
+## Dos mecanismos de resolución
+
+El enclave resuelve nombres por dos vías independientes:
+
+| Mecanismo | Qué resuelve | Verificado por |
+|---|---|---|
+| MagicDNS de Headscale | Nombres de **nodo** del tailnet (`dc01-tfm`, `analyst-w11`, `glkvm`, `orchestrator-tfm`) bajo `tailnet.internal` | Headscale; solo alcanza a los nodos del tailnet |
+| Ficheros `hosts` | Nombres de **servicio** `*.oob.local` y alias `.local` | `scripts/verify-hosts.sh` |
+
+Consecuencias:
+
+- `verify-hosts.sh` vigila el segundo mecanismo, no el primero. Un nombre de
+  nodo puede resolver correctamente por MagicDNS y **no aparecer en ningún
+  `hosts`**; eso es lo esperado, no una divergencia. Por eso `dc01-tfm` no está
+  en la declaración (lo estuvo brevemente al cerrar el P1-0 — ver
+  [`INFORME-P1-0-correcciones.md`](INFORME-P1-0-correcciones.md)).
+- MagicDNS respeta la pertenencia al tailnet: un nodo solo resuelve y alcanza lo
+  que la ACL le permite. Ya proporciona parte de lo que habría dado un DNS
+  propio del enclave, pero **solo para nombres de nodo**, no de servicio. Esto
+  refuerza la decisión de no desplegar un resolver propio (más abajo).
+- `base_domain` es `tailnet.internal` **precisamente** para no colisionar con
+  `oob.local`, el espacio de nombres de los servicios. Headscale se niega a
+  arrancar si el host de `server_url` (`hs.oob.local`) pertenece a
+  `base_domain`. Los dos espacios están separados a propósito.
+
 ## Alcance del control
 
 Vigilado: el espacio de nombres `*.oob.local` en los tres hosts, más los nombres
-declarados explícitamente en `resolucion-nombres.tsv` (hoy, `dc01-tfm` y
-`velociraptor.local`).
+declarados explícitamente en `resolucion-nombres.tsv` (hoy, `velociraptor.local`
+en `w11` y `dc01`).
 
 Fuera de alcance: los alias `.local` de servicios que no pasan por Traefik
 (`velociraptor.local` en el host que corre la pila, `minio.local`), el nombre de
@@ -44,6 +69,11 @@ La tabla siguiente se deriva de ese fichero y debe coincidir con él
 (`verify-hosts.sh --check-doc` lo comprueba). **Al añadir o cambiar un nombre se
 edita el `.tsv`; esta tabla se actualiza a mano para que sigan cuadrando.**
 
+`--check-doc` compara únicamente la terna (host, nombre, ip). **No** verifica las
+columnas de texto (servicio, justificación): una justificación equivocada o
+copiada de otra fila —ocurrió con la fila `dc01 / velociraptor.local` al cerrar
+el P1-0— pasa el control sin ser detectada. Revisar el texto es manual.
+
 | host | nombre | ip | servicio | justificación |
 |---|---|---|---|---|
 | ubuntu | traefik.oob.local | 127.0.0.1 | Traefik — panel y router del enclave | Host que ejecuta la pila Docker; panel y rutas HTTP servidos en loopback. |
@@ -56,7 +86,6 @@ edita el `.tsv`; esta tabla se actualiza a mano para que sigan cuadrando.**
 | ubuntu | iris.oob.local | 127.0.0.1 | DFIR-IRIS — gestión de casos | Registro de incidentes; la misma línea de `hosts` comparte el alias local `iris.local`. |
 | ubuntu | kvm.oob.local | 127.0.0.1 | GL.iNet KVM — Plan C | Consola de contingencia accedida vía Traefik. |
 | ubuntu | hs.oob.local | 192.168.127.138 | Headscale — plano de control | El cliente Tailscale del propio orquestador usa `--login-server https://hs.oob.local`; resuelve a la interfaz del enclave, no a loopback, para que el tráfico del plano de control circule por la interfaz prevista (regla 2). |
-| ubuntu | dc01-tfm | 100.64.0.2 | Agente DC (FastAPI) en el Domain Controller | El orquestador llama al agente por su nombre de nodo del tailnet; entrada documentada en `README-fase4c-dcagent.md`. Añadida en P1-0. |
 | w11 | velociraptor.local | 192.168.127.138 | Velociraptor — GUI forense (:8889) | Puesto de analista. Velociraptor se sirve en su propio puerto TLS, fuera del espacio `.oob.local` de Traefik; por eso el nombre es `.local`. |
 | w11 | hs.oob.local | 192.168.127.138 | Headscale — plano de control / Headscale UI | El analista consulta el estado del tailnet y el registro del canal break-glass. |
 | w11 | auth.oob.local | 192.168.127.138 | Authelia — SSO | Autenticación previa a las UIs del enclave. |
@@ -65,7 +94,7 @@ edita el `.tsv`; esta tabla se actualiza a mano para que sigan cuadrando.**
 | w11 | iris.oob.local | 192.168.127.138 | DFIR-IRIS — gestión de casos | Documentación del incidente. |
 | w11 | kvm.oob.local | 192.168.127.138 | GL.iNet KVM — Plan C | Consola de contingencia si RustDesk falla. |
 | dc01 | hs.oob.local | 192.168.127.138 | ControlURL del cliente Tailscale del DC | Ver Excepciones. |
-| dc01 | velociraptor.local | 192.168.127.138 | Velociraptor — GUI forense (:8889) | Puesto de analista. Velociraptor se sirve en su propio puerto TLS, fuera del espacio `.oob.loc>
+| dc01 | velociraptor.local | 192.168.127.138 | Velociraptor — frontend de agentes (:8001) | Ver Excepciones. |
 
 
 El puesto de analista (`w11`) **no** resuelve `traefik`, `portainer`, `wazuh` ni
@@ -92,6 +121,25 @@ contra el control plane discurre por la red subyacente
 Retirar la entrada rompería el registro del cliente en el próximo arranque, y
 con él el canal break-glass al controlador de dominio. Queda escrito aquí para
 que una limpieza futura no la elimine por parecer inconsistente.
+
+### `velociraptor.local` en el DC01
+
+No es un servicio que el DC consuma como analista: es la configuración del
+cliente Velociraptor instalado en la propia máquina, fijada al reinscribir los
+agentes en el P0-1. Su tráfico va a `192.168.127.138:8001` —el frontend de
+agentes— por el segmento corporativo, no por el tailnet.
+
+Es coherente con la ACL: `tag:dc` no tiene concedido ningún destino en el
+tailnet salvo los puertos de RustDesk, y este tráfico no lo necesita porque no
+pasa por ahí.
+
+**Limitación conocida.** La colección forense viaja por el segmento corporativo,
+no por el canal out-of-band. Si ese segmento queda inutilizable, Velociraptor
+deja de recolectar justo cuando se necesita. Es una asimetría respecto al
+break-glass de la Fase 4, que sí discurre por el tailnet. Se documenta como
+limitación de diseño del laboratorio, no como descuido: llevar la colección al
+tailnet exigiría exponer el frontend de Velociraptor en la interfaz del tailnet
+y abrir la ACL de `tag:dc` hacia él.
 
 ## Defectos históricos (D1–D3)
 
@@ -183,7 +231,10 @@ que se asume comprometido.
 `verify-hosts.sh`: no impide la divergencia, pero la detecta antes de que un
 servicio nuevo la herede. El P1-1 pondrá seis servicios más detrás de Traefik y
 cada uno necesita un nombre en tres máquinas; el control se ejecuta una vez por
-servicio añadido.
+servicio añadido. Además, MagicDNS ya cubre la parte de nombres de **nodo** con
+las garantías que habría dado un resolver propio —respeta la ACL y la
+pertenencia al tailnet—, así que lo que queda por sincronizar a mano es solo el
+espacio de **servicio** `*.oob.local`, más acotado.
 
 **Coste.** Un resolver es un punto único de fallo en el canal de recuperación:
 si cae, se pierde la resolución de `hs.oob.local` y con ella el arranque en frío
@@ -200,8 +251,11 @@ crece hasta hacer inmanejable la edición manual.
 
 - `fase4-breakglass-dc/headscale/config/acl.hujson` — política de
   microsegmentación; el razonamiento «el DC nunca es origen».
-- `docs/README-fase4b-tailnet.md` — enrolado de nodos y por qué MagicDNS no
-  cubre estos nombres (`base_domain: tailnet.internal`).
-- `docs/README-fase4c-dcagent.md` — entrada `dc01-tfm` en el `hosts` del
-  orquestador.
+- `fase4-breakglass-dc/headscale/config/config.yaml` — `magic_dns: true`,
+  `base_domain: tailnet.internal`; MagicDNS resuelve los nombres de nodo del
+  tailnet.
+- `docs/README-fase4b-tailnet.md` — enrolado de nodos; MagicDNS cubre los
+  nombres de nodo (`.tailnet.internal`), no los de servicio (`.oob.local`).
+- `docs/README-fase4c-dcagent.md` — histórico de la resolución de `dc01-tfm`
+  (antes por `/etc/hosts`, hoy por MagicDNS).
 - `docs/README-fase4-pendientes.md` — formato de «mejora evaluada y descartada».

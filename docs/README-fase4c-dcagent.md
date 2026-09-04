@@ -558,28 +558,38 @@ New-NetFirewallRule `
 
 ## Resolución de nombres en el orquestador
 
-> **Solución provisional.** Lo correcto sería resolver `dc01-tfm` vía MagicDNS
-> de Headscale, sin mantener una entrada manual por nodo. MagicDNS no está
-> operativo en el despliegue actual porque `base_domain` del `config.yaml` de
-> Headscale colisiona con el propio dominio de servicios del enclave
-> (`oob.local`, el mismo que sirve `hs.oob.local`, `chat.oob.local`, etc.). La
-> configuración endurecida ya corrige esto (`base_domain: tailnet.internal`,
-> un espacio de nombres separado — ver la nota de la Fase 4a), pero esa
-> configuración está escrita y todavía no aplicada al contenedor en ejecución;
-> hasta que se aplique, esta entrada manual sigue siendo necesaria. Seguimiento
-> en [`README-fase4-pendientes.md`](README-fase4-pendientes.md).
+**El problema (histórico).** `dc01-tfm` es un nombre de nodo del tailnet. Al
+principio MagicDNS no lo resolvía: el `base_domain` de Headscale era `oob.local`,
+el mismo espacio que sirve `hs.oob.local`, `chat.oob.local`, etc., y Headscale se
+niega a arrancar si el host de `server_url` pertenece a `base_domain`. Como
+solución provisional se añadió una entrada manual `100.64.0.2   dc01-tfm` al
+`/etc/hosts` del orquestador.
 
-Para poder usar el nombre `dc01-tfm` desde el orquestador Linux, se ha añadido la entrada correspondiente en `/etc/hosts`:
+**Cómo se resolvió.** El endurecimiento del plano de control (Fase 4a, Paso 8)
+cambió `base_domain` a `tailnet.internal` —un espacio separado del de los
+servicios— y dejó `magic_dns: true`. Esa configuración está aplicada al
+contenedor en ejecución.
 
-```bash
-sudo nano /etc/hosts
-```
+**Estado actual (verificado 2026-09-04).**
+`fase4-breakglass-dc/headscale/config/config.yaml` declara `magic_dns: true` y
+`base_domain: tailnet.internal`. `tailscale dns status` confirma MagicDNS
+habilitado tailnet-wide con sufijo `tailnet.internal`, y `headscale nodes list`
+devuelve los cuatro nodos. MagicDNS resuelve `dc01-tfm` → `100.64.0.2` sin
+necesidad de entrada en `hosts`.
 
-Línea añadida:
+**Cómo se resuelve hoy.** Por MagicDNS de Headscale: systemd-resolved añade
+`tailnet.internal` como dominio de búsqueda y la consulta se dirige al resolver
+de Tailscale. **No** se añade `dc01-tfm` a `/etc/hosts`: sería una entrada
+redundante que, además, un control que vigila ficheros `hosts`
+(`scripts/verify-hosts.sh`) no puede verificar. Los nombres de **servicio**
+`*.oob.local` sí siguen por `hosts`, por diseño — ver
+[`README-resolucion-nombres.md`](README-resolucion-nombres.md).
 
-```
-100.64.0.2   dc01-tfm
-```
+> Queda por retirar del `/etc/hosts` del orquestador una línea
+> `100.64.0.2  DC01-TFM` de la época en que MagicDNS no funcionaba. Mientras
+> exista, `getent hosts dc01-tfm` la resuelve por `files` antes de consultar a
+> MagicDNS; el resultado es el mismo (`100.64.0.2`), pero la línea es
+> innecesaria.
 
 ## Despliegue como servicio
 

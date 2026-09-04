@@ -15,6 +15,9 @@
 # nombres que se declaren aqui explicitamente. Los alias .local de servicios que
 # no pasan por Traefik (velociraptor.local, minio.local) y las entradas del
 # sistema quedan fuera y el verificador no los vigila.
+# Los nombres de nodo del tailnet (dc01-tfm, analyst-w11, ...) los resuelve
+# MagicDNS, no los ficheros hosts: quedan fuera de este control (ver
+# README-resolucion-nombres.md, "Dos mecanismos de resolucion").
 host	nombre	ip	servicio	justificacion
 ubuntu	traefik.oob.local	127.0.0.1	Traefik — panel y router del enclave	Host que ejecuta la pila Docker; panel y rutas HTTP servidos en loopback.
 ubuntu	portainer.oob.local	127.0.0.1	Portainer — gestion de contenedores	Administracion de la pila desde el propio host.
@@ -26,7 +29,6 @@ ubuntu	misp.oob.local	127.0.0.1	MISP — CTI	Fuente de inteligencia consultada p
 ubuntu	iris.oob.local	127.0.0.1	DFIR-IRIS — gestion de casos	Registro de incidentes; la misma linea de hosts comparte el alias local iris.local.
 ubuntu	kvm.oob.local	127.0.0.1	GL.iNet KVM — Plan C	Consola de contingencia accedida via Traefik.
 ubuntu	hs.oob.local	192.168.127.138	Headscale — plano de control	El cliente Tailscale del propio orquestador usa --login-server https://hs.oob.local; resuelve a la interfaz del enclave, no a loopback, para que el trafico del plano de control circule por la interfaz prevista (regla 2).
-ubuntu	dc01-tfm	100.64.0.2	Agente DC (FastAPI) en el Domain Controller	El orquestador llama al agente por su nombre de nodo del tailnet; entrada documentada en README-fase4c-dcagent.md. Anadida en P1-0 (ver INFORME-P1-0.md).
 w11	velociraptor.local	192.168.127.138	Velociraptor — GUI forense (:8889)	Puesto de analista. Velociraptor se sirve en su propio puerto TLS, fuera del espacio .oob.local de Traefik; por eso el nombre es .local y no .oob.local.
 w11	hs.oob.local	192.168.127.138	Headscale — plano de control / Headscale UI	El analista consulta el estado del tailnet y el registro del canal break-glass.
 w11	auth.oob.local	192.168.127.138	Authelia — SSO	Autenticacion previa a las UIs del enclave.

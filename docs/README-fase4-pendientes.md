@@ -76,6 +76,15 @@ DERP embebido lo resuelve.
   `auth.oob.local`, `chat.oob.local`, `n8n.oob.local`. MagicDNS no cubre estos
   nombres porque vive en `tailnet.internal`. Un resolver interno (`dnsmasq`)
   resolvería esto; la distribución de la CA sigue siendo un problema aparte.
+  > **Parcialmente resuelto (2026-09-04, P1-0).** MagicDNS **sí** está operativo
+  > (`magic_dns: true`, `base_domain: tailnet.internal`) y resuelve los nombres
+  > de **nodo** del tailnet (`dc01-tfm`, `analyst-w11`, …) sin entrada en
+  > `hosts`; la entrada manual de `dc01-tfm` en el orquestador es ya redundante.
+  > Los nombres de **servicio** `*.oob.local` siguen por `hosts` **por diseño**
+  > (espacio separado de `tailnet.internal`) y ahora los vigila
+  > `scripts/verify-hosts.sh`. La decisión de no desplegar un resolver propio
+  > está documentada y razonada en
+  > [`README-resolucion-nombres.md`](README-resolucion-nombres.md).
 - **Caducidad del certificado del enclave.** Sin renovación automática, el plano
   de control tiene una fecha de expiración operativa.
 
