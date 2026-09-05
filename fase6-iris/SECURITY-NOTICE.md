@@ -1,5 +1,13 @@
 # Aviso de seguridad — certificado de desarrollo en la interfaz de DFIR-IRIS (P0-2)
 
+> [!NOTE]
+> **Revisión de 4 de septiembre de 2026.** La auditoría completa de la Fase 6
+> (3 de septiembre) reveló que esta remediación fue **parcial**: corrigió el
+> certificado que el servicio presenta, pero no el que la aplicación declaraba
+> confiar. Se corrigen tres imprecisiones del texto original y se añade un
+> [addendum](#addendum--hallazgos-posteriores-3-de-septiembre-de-2026). Informe
+> completo en [`docs/INFORME-AUDITORIA-FASE6.md`](../docs/INFORME-AUDITORIA-FASE6.md).
+
 ## Resumen
 
 No hubo fuga. El material implicado era público por origen: la CA de desarrollo
@@ -9,7 +17,7 @@ interfaz de IRIS de la Fase 6 se sirvió durante más de dos meses con una CA y 
 certificado cuya clave privada es de acceso público, y que además estaba
 caducado y no correspondía a ningún nombre del despliegue.
 
-Ficheros implicados en el repositorio (`fase6-iris/certificates/rootCA/`):
+Material implicado (`fase6-iris/certificates/rootCA/`):
 
 | Elemento | subject | Validez | SHA-256 |
 |---|---|---|---|
@@ -45,11 +53,29 @@ contra `localhost:4833`:
 
 Lo encontró `scripts/verify-no-secrets.sh` durante la remediación P0-1, al
 marcar `fase6-iris/certificates/rootCA/irisRootCAKey.pem` como bloque PEM de
-clave privada trackeado. El análisis posterior reclasificó el hallazgo: no era
-una fuga de clave del proyecto, sino el uso de material de desarrollo ajeno cuya
-clave ya era pública. La categoría pasó de fuga a problema de configuración.
+clave privada **presente en el árbol de trabajo**.
 
-## Corrección
+> [!NOTE]
+> **Corrección (2026-09-04).** La versión original de este documento describía el
+> fichero como «trackeado». La verificación posterior demuestra que nunca entró
+> en el historial de git:
+>
+> ```
+> $ git log --all --oneline --name-status -- 'fase6-iris/certificates/*'
+> (sin salida)
+> $ git rev-list --objects --all | grep -i 'irisRootCAKey\|iris_dev_key'
+> sin rastro
+> ```
+>
+> La detección se produjo sobre el árbol de trabajo, no sobre el repositorio. En
+> consecuencia, **la Fase 6 no requiere purga de historial** (`git filter-repo`),
+> a diferencia de la Fase 5.
+
+El análisis posterior reclasificó el hallazgo: no era una fuga de clave del
+proyecto, sino el uso de material de desarrollo ajeno cuya clave ya era pública.
+La categoría pasó de fuga a problema de configuración.
+
+## Corrección aplicada (2 de septiembre de 2026)
 
 Certificado propio emitido para `iris.oob.local`, firmado por la CA del enclave:
 
@@ -83,6 +109,12 @@ SAN: `iris.oob.local`, `iris.local`, `localhost`, `127.0.0.1`, `192.168.127.138`
 - `curl` sin `-k` a la interfaz: `302`.
 - Acceso desde el navegador del W11 sin aviso de certificado.
 
+> [!IMPORTANT]
+> **Limitación de esta verificación.** Las tres comprobaciones observan el
+> servicio desde el exterior y solo pueden validar el certificado que nginx
+> **presenta**. Ninguna podía detectar el estado del ancla de confianza que la
+> aplicación **declara**, que siguió siendo la CA de desarrollo. Ver el addendum.
+
 ## Causa raíz
 
 El certificado correcto existía desde el 24 de agosto de 2026:
@@ -93,15 +125,87 @@ que la configuración produjera el comportamiento previsto. El sistema informaba
 del problema en cada acceso, mediante el aviso de certificado del navegador; un
 aviso que aparece siempre deja de leerse.
 
-## Riesgos residuales
+---
 
-La interfaz de IRIS sigue publicada directamente en `0.0.0.0:4833`, sin Traefik
-ni Authelia por delante, a diferencia de los servicios de las Fases 1 a 4. El
-cambio de P0-2 corrige el certificado, no la exposición del puerto ni la
-ausencia de autenticación en el borde.
+# Addendum — hallazgos posteriores (3 de septiembre de 2026)
 
-## Alcance limitado
+La auditoría completa de la Fase 6 identificó tres cuestiones que este documento
+no cubría.
 
-Ningún componente del proyecto consumía IRIS por API. La nota de la Fase 5 para
-DFIR-IRIS está preparada pero no automatizada, así que el cambio de
-`SERVER_NAME` no rompió ninguna integración.
+## 1 · El ancla de confianza siguió siendo la CA de desarrollo
+
+La corrección retiró el material de desarrollo del árbol de trabajo, pero **no
+lo sustituyó**. El montaje declarado en `docker-compose.base.yml`
+
+```yaml
+- ./certificates/rootCA/irisRootCACert.pem:/etc/irisRootCACert.pem:ro
+```
+
+quedó apuntando a una ruta inexistente en el anfitrión. Dentro del contenedor el
+fichero seguía presente sobre un inodo huérfano:
+
+```
+7544864 -rw-rw-r-- 0 1000 1000 1976 Sep  2 15:14 /etc/irisRootCACert.pem
+                   ↑
+                   nlink = 0
+```
+
+El contador de enlaces a cero indica que el inodo no tenía ninguna entrada de
+directorio: el fichero había sido eliminado del anfitrión y sobrevivía solo
+porque el espacio de nombres de montaje del contenedor lo mantenía abierto. La
+huella coincidía con la de la CA de desarrollo listada al inicio de este
+documento.
+
+En el siguiente reinicio, Docker habría creado un directorio vacío en su lugar y
+la aplicación habría arrancado sin ancla declarada, sin emitir error.
+
+**Corregido el 3 de septiembre**: `certificates/rootCA/irisRootCACert.pem` es
+ahora la CA del enclave (`AB:11:4F:F8:…`), verificada dentro del contenedor por
+huella y por validación funcional de un certificado del enclave.
+
+## 2 · La clave de firma de sesión era una constante pública
+
+`IRIS_SECRET_KEY` conservaba el valor de `.env.model`
+(`AVerySuperSecretKey-SoNotThisOne`), publicado en el repositorio de DFIR-IRIS.
+Es la clave con la que Flask firma la cookie de sesión: permitía fabricar una
+sesión administrativa válida sin credenciales, sobre un servicio publicado
+entonces en `0.0.0.0:4833` sin proxy inverso ni MFA.
+
+Era el hallazgo de mayor gravedad de la fase y este documento no lo recogía: su
+apartado de riesgos residuales identificaba la exposición del puerto, pero no la
+clave.
+
+**Corregido el 3 de septiembre**: `IRIS_SECRET_KEY` rotada, verificada por
+cambio de la firma de la cookie. `IRIS_SECURITY_PASSWORD_SALT` rotada el 4 de
+septiembre; la verificación del código muestra que esta variable se carga pero no
+se consume — el hashing de contraseñas es bcrypt con salt por contraseña.
+
+## 3 · La exposición del puerto, corregida
+
+El apartado de riesgos residuales señalaba correctamente que la interfaz seguía
+publicada en `0.0.0.0:4833`, fuera de Traefik y Authelia.
+
+**Corregido el 3 de septiembre** mediante `docker-compose.override.yml`, que
+restringe la publicación a `100.64.0.1` (tailnet) y elimina también el enlace
+IPv6 heredado. El acceso desde `192.168.127.0/24` queda cortado.
+
+Pendiente: MFA en el borde, sea el nativo de IRIS (TOTP/WebAuthn) o Authelia por
+delante.
+
+---
+
+# Lección
+
+La remediación P0-2 corrigió lo que el servicio **presenta** y no lo que el
+servicio **confía**. Ambos son TLS, ambos residen en el mismo directorio, y la
+verificación aplicada —tres comprobaciones desde el exterior— solo podía observar
+el primero.
+
+Una remediación verificada exclusivamente desde fuera no puede detectar un fallo
+dentro. La verificación debe cubrir cada superficie que el control pretende
+proteger, no solo la más visible.
+
+Esta lección refuerza la causa raíz ya identificada en el apartado
+correspondiente, y la extiende: no basta con verificar que la configuración
+produce el comportamiento previsto en el punto observado; hay que enumerar antes
+qué puntos observar.
