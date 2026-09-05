@@ -84,7 +84,12 @@ fase5-velociraptor/velociraptor/
 # Material de PKI. Los certificados que trae la imagen son de desarrollo y
 # su clave privada es pública (repositorio oficial de DFIR-IRIS). No deben
 # versionarse ni usarse en despliegue. Ver P0-2.
-fase6-iris/certificates/rootCA/
+# Material privado: nunca versionar.
+fase6-iris/certificates/rootCA/*Key.pem
+fase6-iris/certificates/rootCA/*.key
+# Anclas de confianza publicas del enclave: se versionan (reproducibilidad).
+!fase6-iris/certificates/rootCA/irisRootCACert.pem
+!fase6-iris/certificates/rootCA/ca-bundle-oob.crt
 fase6-iris/certificates/web_certificates/
 
 # Evidencia P0-C Fase 6: CA demo pública de DFIR-IRIS extraída del contenedor.
