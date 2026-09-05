@@ -1,0 +1,23 @@
+services:
+  rttys:
+    # Imagen fijada por digest. Namespace personal de Docker Hub (no organizacion
+    # de gl-inet); conviene mantener copia local con `docker save`.
+    image: glzhitong/glkvm-cloud@sha256:a04a12250bf593d0428e0f220f7ede28368548f3ba5d3dad8688084eaa94b33d
+
+    # !override REEMPLAZA la lista del compose base. Sin esta etiqueta, Compose
+    # FUSIONA las listas de ports y el contenedor intenta bindear 0.0.0.0:5912
+    # y 192.168.0.70:5912 simultaneamente -> "address already in use" contra si
+    # mismo. La sintaxis valida, el resultado no.
+    ports: !override
+      # Restringido a la interfaz LAN por la que llega el GL-RM1 (192.168.0.36).
+      # Evita exposicion en tailscale0, ens34 y los bridges de Docker.
+      - "192.168.0.70:5912:5912"
+      - "192.168.0.70:10443:10443"
+
+  coturn:
+    # Retirado del despliegue (decision de acceso por LAN):
+    #   - allowed-peer-ip=0.0.0.0/0 invalido en coturn -> 3072 reinicios
+    #   - "corregirlo" tal cual dejaria un relay abierto
+    #   - colision del 3478 con el STUN del DERP embebido (Fase 4)
+    #   - imagen edge-alpine sin fijar
+    profiles: ["disabled"]

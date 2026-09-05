@@ -1,0 +1,4 @@
+# Copias de configuracion del GL-RM1: contienen RTTYS_TOKEN y WEBRTC_PASSWORD
+# en claro. Nunca deben entrar al indice.
+*
+!.gitignore

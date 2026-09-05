@@ -1,0 +1,21 @@
+[req]
+distinguished_name = dn
+req_extensions     = ext
+prompt             = no
+
+[dn]
+C  = ES
+O  = TFM Enclave OOB
+OU = Seguridad
+CN = glkvm-device.oob.local
+
+[ext]
+subjectAltName   = @alt
+keyUsage         = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+
+[alt]
+DNS.1 = glkvm-device.oob.local
+DNS.2 = localhost
+IP.1  = 192.168.0.36
+IP.2  = 127.0.0.1
