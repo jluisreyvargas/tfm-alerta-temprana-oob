@@ -1,0 +1,20 @@
+services:
+  nginx:
+    ports: !override
+      - "100.64.0.1:${INTERFACE_HTTPS_PORT:-443}:${INTERFACE_HTTPS_PORT:-443}"
+
+  app:
+    volumes:
+      - ./certificates/rootCA/ca-bundle-oob.crt:/etc/ssl/certs/ca-bundle-oob.crt:ro
+    environment:
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle-oob.crt
+      - SSL_CERT_FILE=/etc/ssl/certs/ca-bundle-oob.crt
+      - CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle-oob.crt
+
+  worker:
+    volumes:
+      - ./certificates/rootCA/ca-bundle-oob.crt:/etc/ssl/certs/ca-bundle-oob.crt:ro
+    environment:
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-bundle-oob.crt
+      - SSL_CERT_FILE=/etc/ssl/certs/ca-bundle-oob.crt
+      - CURL_CA_BUNDLE=/etc/ssl/certs/ca-bundle-oob.crt
