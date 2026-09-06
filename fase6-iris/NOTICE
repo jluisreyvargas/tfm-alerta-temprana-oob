@@ -1,0 +1,21 @@
+Este directorio contiene el codigo fuente de DFIR-IRIS v2.4.27, distribuido
+bajo LGPL-3.0 (ver LICENSE.txt). Es codigo de terceros sin modificar,
+incorporado al repositorio en el commit a07dc0d.
+
+Proyecto original: https://github.com/dfir-iris/iris-web
+
+Ficheros propios del TFM en este directorio:
+  README.md
+  SECURITY-NOTICE.md
+  NOTICE
+  docker-compose.override.yml
+  systemd/tfm-fase6-iris.service
+  certificates/rootCA/  (anclas de confianza del enclave)
+  .env.example
+
+Divergencia respecto a upstream: fase6-iris/.gitignore incorpora la linea
+'!.env.example' para permitir versionar la plantilla de variables. Es la
+unica modificacion sobre un fichero de terceros en este directorio.
+
+Todo lo demas es codigo vendorizado. Las metricas de lineas de codigo del
+proyecto deben excluir este directorio.

@@ -28,3 +28,6 @@ services:
     depends_on:
       app:
         condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3.13.7-management-alpine
