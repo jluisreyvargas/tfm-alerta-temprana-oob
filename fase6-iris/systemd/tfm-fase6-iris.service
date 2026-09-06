@@ -1,0 +1,22 @@
+[Unit]
+Description=TFM Fase 6 - DFIR-IRIS (arranque limpio via Compose)
+Documentation=https://github.com/jluisreyvargas/tfm-alerta-temprana-oob
+Requires=docker.service
+After=docker.service tailscaled.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/jose/tfm-alerta-temprana-oob/fase6-iris
+User=jose
+Group=jose
+# down + up garantiza endpoints de red nuevos y que Compose honre
+# depends_on y el healthcheck, que el demonio ignora al restaurar.
+ExecStart=/usr/bin/docker compose down --remove-orphans
+ExecStart=/usr/bin/docker compose up -d --wait --wait-timeout 180
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target
