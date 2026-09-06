@@ -26,7 +26,7 @@ ubuntu	chat.oob.local	127.0.0.1	Rocket.Chat — War Rooms	Coordinacion de incide
 ubuntu	wazuh.oob.local	127.0.0.1	Wazuh — panel del SIEM	Revision de alertas y reglas desde el host operador.
 ubuntu	n8n.oob.local	127.0.0.1	n8n — orquestador de workflows	Edicion y supervision de los workflows del enclave.
 ubuntu	misp.oob.local	127.0.0.1	MISP — CTI	Fuente de inteligencia consultada por el triaje.
-ubuntu	iris.oob.local	127.0.0.1	DFIR-IRIS — gestion de casos	Registro de incidentes; la misma linea de hosts comparte el alias local iris.local.
+ubuntu	iris.oob.local	100.64.0.1	DFIR-IRIS — gestion de casos	Registro de incidentes; publicado solo en el tailnet tras P0-D; la misma linea de hosts comparte el alias iris.local.
 ubuntu	kvm.oob.local	127.0.0.1	GL.iNet KVM — Plan C	Consola de contingencia accedida via Traefik.
 ubuntu	hs.oob.local	192.168.127.138	Headscale — plano de control	El cliente Tailscale del propio orquestador usa --login-server https://hs.oob.local; resuelve a la interfaz del enclave, no a loopback, para que el trafico del plano de control circule por la interfaz prevista (regla 2).
 w11	velociraptor.local	192.168.127.138	Velociraptor — GUI forense (:8889)	Puesto de analista. Velociraptor se sirve en su propio puerto TLS, fuera del espacio .oob.local de Traefik; por eso el nombre es .local y no .oob.local.
@@ -34,7 +34,7 @@ w11	hs.oob.local	192.168.127.138	Headscale — plano de control / Headscale UI	E
 w11	auth.oob.local	192.168.127.138	Authelia — SSO	Autenticacion previa a las UIs del enclave.
 w11	chat.oob.local	192.168.127.138	Rocket.Chat — War Rooms	Canal primario de coordinacion del analista.
 w11	n8n.oob.local	192.168.127.138	n8n — orquestador	Revision de ejecuciones y aprobaciones desde el War Room.
-w11	iris.oob.local	192.168.127.138	DFIR-IRIS — gestion de casos	Documentacion del incidente.
+w11	iris.oob.local	100.64.0.1	DFIR-IRIS — gestion de casos	Documentacion del incidente.
 w11	kvm.oob.local	192.168.127.138	GL.iNet KVM — Plan C	Consola de contingencia si RustDesk falla.
 dc01	hs.oob.local	192.168.127.138	ControlURL del cliente Tailscale del DC	No es un servicio que el DC consuma como cliente: es la configuracion de su propio agente de red (tailscale debug prefs -> "ControlURL": "https://hs.oob.local"). Sin esta entrada el cliente no resuelve su plano de control en el proximo arranque y se pierde el canal break-glass. Ver seccion Excepciones.
 dc01	velociraptor.local	192.168.127.138	Velociraptor — frontend de agentes (:8001)	Configuracion del cliente Velociraptor instalado en el DC, no un servicio que el DC consuma como analista. El trafico va por el segmento corporativo, no por el tailnet: la coleccion forense no viaja por el canal OOB (ver P0-1). Coherente con la ACL, que no concede al DC ningun destino en el tailnet salvo RustDesk.
