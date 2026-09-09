@@ -134,9 +134,9 @@ def main():
     config = load_config()
 
     try:
-        with open(sys.argv[1], "r", encoding="utf-8") as handle:
+        with open(sys.argv[1], "r", encoding="utf-8", errors="replace") as handle:
             alert = json.load(handle)
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         log(f"No se pudo leer la alerta {sys.argv[1]}: {exc}")
         sys.exit(1)
 
