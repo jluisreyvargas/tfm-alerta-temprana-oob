@@ -78,7 +78,7 @@ el P1-0— pasa el control sin ser detectada. Revisar el texto es manual.
 |---|---|---|---|---|
 | ubuntu | traefik.oob.local | 127.0.0.1 | Traefik — panel y router del enclave | Host que ejecuta la pila Docker; panel y rutas HTTP servidos en loopback. |
 | ubuntu | portainer.oob.local | 127.0.0.1 | Portainer — gestión de contenedores | Administración de la pila desde el propio host. |
-| ubuntu | auth.oob.local | 127.0.0.1 | Authelia — IdP y MFA del enclave | SSO de todas las UIs; resuelto en loopback vía Traefik. |
+| ubuntu | auth.oob.local | 127.0.0.1 | Authelia — IdP y MFA del enclave | SSO de las UIs del enclave, salvo kvm.oob.local (ver Excepciones); resuelto en loopback vía Traefik. |
 | ubuntu | chat.oob.local | 127.0.0.1 | Rocket.Chat — War Rooms | Coordinación de incidentes desde el host operador. |
 | ubuntu | wazuh.oob.local | 127.0.0.1 | Wazuh — panel del SIEM | Revisión de alertas y reglas desde el host operador. |
 | ubuntu | n8n.oob.local | 127.0.0.1 | n8n — orquestador de workflows | Edición y supervisión de los workflows del enclave. |
@@ -152,7 +152,8 @@ declaran en el puesto de analista. Es una decisión, no una omisión:
 
 - `traefik` y `portainer` son superficies de operador: la administración del proxy y de la
   pila de contenedores se hace desde el Ubuntu.
-- `wazuh` y `misp` no se consultan desde el puesto (decisión D2 del P1-1a).
+- `wazuh` y `misp` no se consultan desde el puesto: son superficies de operador y
+  de infraestructura, no de análisis (regla 1).
 
 **Consecuencia aceptada.** Tras la Fase D del P1-1a, que retira los puertos directos `:4443`
 y `:12443`, el panel del SIEM y MISP solo serán alcanzables desde el Ubuntu. Si un incidente
@@ -175,7 +176,21 @@ del propio enclave. Es una mitigación parcial con límite conocido, no una solu
 Queda abierto para una fase posterior decidir si el Plan C debe disponer de una ruta que no
 atraviese la pila cuya caída justificaría usarlo.
 
+La UI excluida del SSO es precisamente aquella cuya autenticación propia no gobierna el
+acceso a los dispositivos. El reconocimiento de la plataforma rttys (ver
+`docs/api-reconocimiento-fase8.md`, hallazgo P0-6) verificó por comportamiento que un
+usuario autenticado sin grupo asignado alcanza la consola del GL-RM1 conociendo su
+identificador. La excepción de Authelia y ese hallazgo se componen, lo que eleva la
+prioridad de resolverla. La remediación en curso es el hook de autorización descrito en
+[`docs/diseno-hook-autorizacion.md`](diseno-hook-autorizacion.md).
+
 ## Defectos históricos (D1–D3)
+
+**Nota de alcance.** Esta numeración `D1`–`D3` es local a este documento y no
+guarda relación con las decisiones `D1`–`D3` de
+[`INFORME-AUDITORIA-FASE8.md`](INFORME-AUDITORIA-FASE8.md) (arquitectura del
+KVM): aquí son defectos detectados y corregidos, allí son decisiones de diseño.
+Coinciden en la etiqueta, no en el significado.
 
 Los tres se comprobaron en runtime antes de corregirlos. Son la razón de ser de
 este control: **ningún control falló** — la ACL de Headscale hace exactamente lo
