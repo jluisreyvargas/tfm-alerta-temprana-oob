@@ -111,3 +111,7 @@ scripts/hosts-*.txt
 # Son capturas puntuales del hosts de cada Windows; la fuente de verdad es
 # docs/resolucion-nombres.tsv. Versionarlas crearia una lista mas que mantener.
 scripts/hosts-*.txt
+
+# Credenciales de scripts/dc-signed.sh (P1-4). No cubierto por **/.env: el
+# fichero se llama dc-signed.env, no .env.
+scripts/dc-signed.env
