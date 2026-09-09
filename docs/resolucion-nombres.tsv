@@ -29,6 +29,8 @@ ubuntu	misp.oob.local	127.0.0.1	MISP — CTI	Fuente de inteligencia consultada p
 ubuntu	iris.oob.local	100.64.0.1	DFIR-IRIS — gestion de casos	Registro de incidentes; publicado solo en el tailnet tras P0-D; la misma linea de hosts comparte el alias iris.local.
 ubuntu	kvm.oob.local	127.0.0.1	GL.iNet KVM — Plan C	Consola de contingencia accedida via Traefik.
 ubuntu	hs.oob.local	192.168.127.138	Headscale — plano de control	El cliente Tailscale del propio orquestador usa --login-server https://hs.oob.local; resuelve a la interfaz del enclave, no a loopback, para que el trafico del plano de control circule por la interfaz prevista (regla 2).
+ubuntu	minio.oob.local	127.0.0.1	MinIO — consola del almacen de evidencia	Administracion del bucket evidence desde el host operador. Sustituye el acceso directo a :9001, que se cierra en la Fase D del P1-1a.
+ubuntu	velociraptor.oob.local	127.0.0.1	Velociraptor — GUI forense	Interfaz de coleccion servida via Traefik. Sustituye el acceso directo a :8889. El frontend de agentes (:8001) queda fuera de Traefik por el TLS mutuo y conserva el alias velociraptor.local.
 w11	velociraptor.local	192.168.127.138	Velociraptor — GUI forense (:8889)	Puesto de analista. Velociraptor se sirve en su propio puerto TLS, fuera del espacio .oob.local de Traefik; por eso el nombre es .local y no .oob.local.
 w11	hs.oob.local	192.168.127.138	Headscale — plano de control / Headscale UI	El analista consulta el estado del tailnet y el registro del canal break-glass.
 w11	auth.oob.local	192.168.127.138	Authelia — SSO	Autenticacion previa a las UIs del enclave.
@@ -36,5 +38,7 @@ w11	chat.oob.local	192.168.127.138	Rocket.Chat — War Rooms	Canal primario de c
 w11	n8n.oob.local	192.168.127.138	n8n — orquestador	Revision de ejecuciones y aprobaciones desde el War Room.
 w11	iris.oob.local	100.64.0.1	DFIR-IRIS — gestion de casos	Documentacion del incidente.
 w11	kvm.oob.local	192.168.127.138	GL.iNet KVM — Plan C	Consola de contingencia si RustDesk falla.
+w11	minio.oob.local	192.168.127.138	MinIO — consola del almacen de evidencia	El analista verifica la evidencia recolectada. Sin esta fila, cerrar :9001 en la Fase D deja al puesto sin acceso (regla R1 del plan).
+w11	velociraptor.oob.local	192.168.127.138	Velociraptor — GUI forense	Puesto de analista. Sustituye velociraptor.local:8889, cuyo acceso directo se cierra en la Fase D.
 dc01	hs.oob.local	192.168.127.138	ControlURL del cliente Tailscale del DC	No es un servicio que el DC consuma como cliente: es la configuracion de su propio agente de red (tailscale debug prefs -> "ControlURL": "https://hs.oob.local"). Sin esta entrada el cliente no resuelve su plano de control en el proximo arranque y se pierde el canal break-glass. Ver seccion Excepciones.
 dc01	velociraptor.local	192.168.127.138	Velociraptor — frontend de agentes (:8001)	Configuracion del cliente Velociraptor instalado en el DC, no un servicio que el DC consuma como analista. El trafico va por el segmento corporativo, no por el tailnet: la coleccion forense no viaja por el canal OOB (ver P0-1). Coherente con la ACL, que no concede al DC ningun destino en el tailnet salvo RustDesk.

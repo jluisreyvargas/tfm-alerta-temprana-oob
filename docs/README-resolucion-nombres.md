@@ -83,15 +83,19 @@ el P1-0— pasa el control sin ser detectada. Revisar el texto es manual.
 | ubuntu | wazuh.oob.local | 127.0.0.1 | Wazuh — panel del SIEM | Revisión de alertas y reglas desde el host operador. |
 | ubuntu | n8n.oob.local | 127.0.0.1 | n8n — orquestador de workflows | Edición y supervisión de los workflows del enclave. |
 | ubuntu | misp.oob.local | 127.0.0.1 | MISP — CTI | Fuente de inteligencia consultada por el triaje. |
-| ubuntu | iris.oob.local | 127.0.0.1 | DFIR-IRIS — gestión de casos | Registro de incidentes; la misma línea de `hosts` comparte el alias local `iris.local`. |
+| ubuntu | iris.oob.local | 100.64.0.1 | DFIR-IRIS — gestión de casos | Registro de incidentes; publicado solo en el tailnet tras P0-D; la misma línea de `hosts` comparte el alias `iris.local`. |
 | ubuntu | kvm.oob.local | 127.0.0.1 | GL.iNet KVM — Plan C | Consola de contingencia accedida vía Traefik. |
+| ubuntu | minio.oob.local | 127.0.0.1 | MinIO — consola del almacén de evidencia | Administración del bucket `evidence` desde el host operador. Sustituye el acceso directo a :9001, que se cierra en la Fase D del P1-1a. |
+| ubuntu | velociraptor.oob.local | 127.0.0.1 | Velociraptor — GUI forense | Interfaz de colección servida vía Traefik. Sustituye el acceso directo a :8889. El frontend de agentes (:8001) queda fuera de Traefik por el TLS mutuo y conserva el alias `velociraptor.local`. |
 | ubuntu | hs.oob.local | 192.168.127.138 | Headscale — plano de control | El cliente Tailscale del propio orquestador usa `--login-server https://hs.oob.local`; resuelve a la interfaz del enclave, no a loopback, para que el tráfico del plano de control circule por la interfaz prevista (regla 2). |
-| w11 | velociraptor.local | 192.168.127.138 | Velociraptor — GUI forense (:8889) | Puesto de analista. Velociraptor se sirve en su propio puerto TLS, fuera del espacio `.oob.local` de Traefik; por eso el nombre es `.local`. |
+| w11 | velociraptor.local | 192.168.127.138 | Velociraptor — GUI forense (:8889) y frontend de agentes (:8001) | **Doble uso.** El puesto ejecuta además un cliente Velociraptor (servicio `Velociraptor`, `Running/Automatic`) cuyo `client.config.yaml` apunta a `https://velociraptor.local:8001/`, con TLS mutuo contra la CA de Velociraptor. La Fase D del P1-1a cierra el :8889 pero **no** el :8001: esta fila NO se retira. |
 | w11 | hs.oob.local | 192.168.127.138 | Headscale — plano de control / Headscale UI | El analista consulta el estado del tailnet y el registro del canal break-glass. |
 | w11 | auth.oob.local | 192.168.127.138 | Authelia — SSO | Autenticación previa a las UIs del enclave. |
 | w11 | chat.oob.local | 192.168.127.138 | Rocket.Chat — War Rooms | Canal primario de coordinación del analista. |
 | w11 | n8n.oob.local | 192.168.127.138 | n8n — orquestador | Revisión de ejecuciones y aprobaciones desde el War Room. |
-| w11 | iris.oob.local | 192.168.127.138 | DFIR-IRIS — gestión de casos | Documentación del incidente. |
+| w11 | iris.oob.local | 100.64.0.1 | DFIR-IRIS — gestión de casos | Documentación del incidente. |
+| w11 | minio.oob.local | 192.168.127.138 | MinIO — consola del almacén de evidencia | El analista verifica la evidencia recolectada. Sin esta fila, cerrar :9001 en la Fase D deja al puesto sin acceso (regla R1 del plan). |
+| w11 | velociraptor.oob.local | 192.168.127.138 | Velociraptor — GUI forense | Puesto de analista. Sustituye `velociraptor.local:8889`, cuyo acceso directo se cierra en la Fase D. |
 | w11 | kvm.oob.local | 192.168.127.138 | GL.iNet KVM — Plan C | Consola de contingencia si RustDesk falla. |
 | dc01 | hs.oob.local | 192.168.127.138 | ControlURL del cliente Tailscale del DC | Ver Excepciones. |
 | dc01 | velociraptor.local | 192.168.127.138 | Velociraptor — frontend de agentes (:8001) | Ver Excepciones. |
@@ -140,6 +144,36 @@ break-glass de la Fase 4, que sí discurre por el tailnet. Se documenta como
 limitación de diseño del laboratorio, no como descuido: llevar la colección al
 tailnet exigiría exponer el frontend de Velociraptor en la interfaz del tailnet
 y abrir la ACL de `tag:dc` hacia él.
+
+### Nombres no declarados en el W11: `traefik`, `portainer`, `wazuh`, `misp`
+
+`traefik.oob.local`, `portainer.oob.local`, `wazuh.oob.local` y `misp.oob.local` no se
+declaran en el puesto de analista. Es una decisión, no una omisión:
+
+- `traefik` y `portainer` son superficies de operador: la administración del proxy y de la
+  pila de contenedores se hace desde el Ubuntu.
+- `wazuh` y `misp` no se consultan desde el puesto (decisión D2 del P1-1a).
+
+**Consecuencia aceptada.** Tras la Fase D del P1-1a, que retira los puertos directos `:4443`
+y `:12443`, el panel del SIEM y MISP solo serán alcanzables desde el Ubuntu. Si un incidente
+exigiera acceso desde el puesto, el procedimiento es añadir la fila al `.tsv` y al `hosts`,
+no reabrir el puerto.
+
+**Regla derivada**, que conviene destacar porque gobierna toda la Fase D: ningún puerto
+directo se cierra hasta que el nombre que lo sustituye esté declarado y resuelva desde cada
+host que lo usa hoy. Un puerto cerrado sin nombre alternativo no es endurecimiento, es
+pérdida de acceso.
+
+### `kvm.oob.local` atraviesa Traefik
+
+La consola de contingencia resuelve al Ubuntu y su tráfico pasa por Traefik hasta un
+contenedor de la Fase 8 (puerto interno 8180). Se excluye de Authelia para no añadir una
+dependencia de autenticación al camino de recuperación, pero esa exclusión elimina **una
+dependencia de tres**: la ruta sigue necesitando Docker, Traefik y la resolución de nombres
+del propio enclave. Es una mitigación parcial con límite conocido, no una solución.
+
+Queda abierto para una fase posterior decidir si el Plan C debe disponer de una ruta que no
+atraviese la pila cuya caída justificaría usarlo.
 
 ## Defectos históricos (D1–D3)
 
