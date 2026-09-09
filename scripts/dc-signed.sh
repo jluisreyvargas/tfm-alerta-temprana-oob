@@ -68,9 +68,9 @@ if [[ -f "$ENV_FILE" ]]; then
   set +a
 fi
 
-AGENT_URL=http://100.64.0.2:8000
-AGENT_TOKEN=e8b1be9366fad010d97f7f07485af36f604f59e5caf12e08941b73ab2f606184
-AGENT_HMAC_SECRET=192cb3c5a0f04e57b38a18888492ea0dc41a77eea98fe900b9dd51ed3c1749d0
+AGENT_URL="${AGENT_URL:?Falta AGENT_URL (ej. http://100.64.0.2:8000). Definir en el entorno o en $ENV_FILE}"
+AGENT_TOKEN="${AGENT_TOKEN:?Falta AGENT_TOKEN. Definir en el entorno o en $ENV_FILE}"
+AGENT_HMAC_SECRET="${AGENT_HMAC_SECRET:?Falta AGENT_HMAC_SECRET. Definir en el entorno o en $ENV_FILE}"
 
 # Lista informativa: la autoridad real es ALLOWED_SCRIPTS en agent_dc.py.
 ALLOWED_SCRIPTS=(
