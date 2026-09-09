@@ -20,8 +20,11 @@ services:
     container_name: minio
     command: server /data --console-address ":9001"
     ports:
+      # 9001 (consola) retirado en el P1-1a Fase B: se sirve por
+      # https://minio.oob.local a traves de Traefik, con secure-headers y Authelia.
+      # 9000 (API S3) se conserva: lo consume el orchestrator por DNS interno
+      # de Docker (MINIO_ENDPOINT=minio:9000). Se trata en el P1-1b.
       - "9000:9000"
-      - "9001:9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER no definido, crear .env}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD no definido, crear .env}
@@ -35,6 +38,15 @@ services:
       retries: 5
       start_period: 20s
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=oob-network"
+      - "traefik.http.routers.minio.rule=Host(`minio.oob.local`)"
+      - "traefik.http.routers.minio.entrypoints=websecure"
+      - "traefik.http.routers.minio.tls=true"
+      - "traefik.http.routers.minio.service=minio"
+      - "traefik.http.routers.minio.middlewares=secure-headers@file,authelia@file"
+      - "traefik.http.services.minio.loadbalancer.server.port=9001"
     networks:
       - oob-network
 
