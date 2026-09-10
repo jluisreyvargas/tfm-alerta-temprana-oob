@@ -75,8 +75,10 @@ services:
     image: wazuh/wazuh-dashboard:4.14.0
     hostname: wazuh.dashboard
     restart: always
-    ports:
-      - 4443:5601
+    # Sin 'ports': el 4443 se retiro en el P1-1a Fase C. El dashboard se sirve
+    # por https://wazuh.oob.local a traves de Traefik, con secure-headers y
+    # Authelia. Publicarlo ademas anulaba el proxy: cualquiera con acceso de
+    # red entraba por el 4443 sin pasar por el middleware.
     environment:
       - INDEXER_USERNAME=admin
       - INDEXER_PASSWORD=${INDEXER_PASSWORD}
@@ -111,7 +113,7 @@ services:
       - "traefik.http.services.wazuh.loadbalancer.server.scheme=https"
       - "traefik.docker.network=oob-network"
       # Added this middleware to go though Authelia authentication    
-      #- "traefik.http.routers.wazuh.middlewares=secure-headers@file,authelia@file"
+      - "traefik.http.routers.wazuh.middlewares=secure-headers@file,authelia@file"
 
 volumes:
   wazuh_api_configuration:
