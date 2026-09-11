@@ -58,6 +58,16 @@ detección no puede residir en el dispositivo:
   saturable (P2-7) y `nginx-kvmd.conf` lleva `access_log off`. La tabla
   `device_event_logs` no ve el nivel 2: sus eventos proceden todos de rttys.
 
+**Ampliación (mejora 6).** La descripción de esta vía como "la web UI local del
+dispositivo" es incompleta. El inventario de la mejora 6 encontró `dropbear`
+escuchando en `0.0.0.0:22` con autenticación por contraseña habilitada para
+`root`: una segunda vía a shell que no pasa por kvmd, ni por nginx, ni por
+`auth_request`. Documentada como RA-4 en
+`docs/mejora6-endurecimiento-dispositivo.md`, con su justificación y su vía de
+remediación. El sondeo de `/api/atx/click` descrito abajo como pendiente **ya se
+ejecutó**: responde `401`, de modo que la premisa de este riesgo —"operador con
+credencial local", no "cualquier equipo de la LAN"— queda verificada.  
+
 **Control compensatorio.** El observador ha de ser independiente del dispositivo:
 Wazuh en DC01 registrando un apagado inesperado, o la caída de su heartbeat vista
 desde el enclave. Auditoría *a posteriori*, no control en tiempo real.
