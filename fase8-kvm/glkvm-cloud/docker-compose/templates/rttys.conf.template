@@ -54,3 +54,6 @@ oidc-generic-allowed-usernames: {{OIDC_ALLOWED_USERNAMES}}
 oidc-generic-allowed-groups: {{OIDC_ALLOWED_GROUPS}}
 oidc-admin-group: {{OIDC_ADMIN_GROUP}}
 oidc-admin-users: {{OIDC_ADMIN_USERS}}
+
+# Authorization hook (TFM · mejora 1 · divergencia respecto al upstream)
+user-hook-url: http://n8n:5678/webhook/kvm-hook
