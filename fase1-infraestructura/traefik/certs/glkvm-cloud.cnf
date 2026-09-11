@@ -1,0 +1,23 @@
+[req]
+distinguished_name = dn
+req_extensions     = ext
+prompt             = no
+
+[dn]
+C  = ES
+O  = TFM Enclave OOB
+OU = Seguridad
+CN = glkvm-cloud.oob.local
+
+[ext]
+subjectAltName   = @alt
+keyUsage         = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+
+[alt]
+DNS.1 = glkvm-cloud.oob.local
+DNS.2 = kvm.oob.local
+DNS.3 = glkvm_cloud
+DNS.4 = localhost
+IP.1  = 192.168.0.70
+IP.2  = 127.0.0.1
