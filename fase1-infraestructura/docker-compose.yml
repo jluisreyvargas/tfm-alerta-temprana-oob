@@ -37,6 +37,16 @@ services:
       - portainer_data:/data
     networks:
       - oob-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=oob-network"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.oob.local`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.routers.portainer.middlewares=secure-headers@file,authelia@file"
+      - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9443"
+      - "traefik.http.services.portainer.loadbalancer.server.scheme=https"
 
   authelia:
     image: authelia/authelia:latest

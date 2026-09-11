@@ -31,6 +31,12 @@ access_control:
     - domain: 'hs.oob.local'
       subject: 'group:ir_lead'
       policy: two_factor
+    - domain: 'misp.oob.local'
+      subject: 'group:ir_lead'
+      policy: two_factor
+    - domain: 'portainer.oob.local'
+      subject: 'group:ir_lead'
+      policy: two_factor
     - domain: 'n8n.oob.local'
       resources:
         - '^/webhook/bg-credential.*'
