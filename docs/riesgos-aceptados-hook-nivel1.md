@@ -99,12 +99,24 @@ alias de red porque `glkvm_cloud` no está cubierto por el certificado
 usa el ancla de confianza propia. Figura aquí precisamente por eso: es una
 excepción acotada y consciente, no un olvido.
 
-**Pendiente de acotar antes de activar.** Si Authelia emite su cookie sobre el
-dominio `.oob.local` y no sobre el host concreto, el navegador la envía también a
-`kvm.oob.local` y lo que cruza el bridge en claro no es sólo el `sid` de rttys,
-sino la cookie de SSO del enclave. La captura del paso de activación permisiva
-(§4) lo resuelve por observación. Si se confirma, la magnitud de RA-2 aumenta y
-hay que decidir si se filtra la cabecera antes de reenviarla.
+**Alcance confirmado (11 sep 2026).** Authelia emite su cookie sobre
+`domain: oob.local` — verificado en `fase1-infraestructura/authelia/configuration.yml`,
+sección `session.cookies`. El navegador del operador la envía por tanto también a
+`kvm.oob.local`, y `callUserHookUrl` la copia junto al resto de cabeceras. Lo que
+cruza el bridge en claro hacia n8n **no es sólo el `sid` de rttys: es también la
+cookie de sesión del SSO del enclave**, con la que se accede a Wazuh, MISP,
+Portainer, RocketChat, MinIO y Headscale-UI.
+
+Eso amplía el riesgo en dos direcciones. En tránsito, cualquier contenedor de
+`oob-network` observa una credencial de alcance mucho mayor que el previsto. En
+reposo, la salida del nodo Webhook de n8n queda guardada en su base de datos
+durante 1 hora de vida útil de la cookie (`expiration: 3600`), en tantas filas
+como aperturas de consola haya.
+
+**Mitigación mínima, no aplicada:** filtrar la cabecera `Cookie` en el primer
+nodo del webhook, conservando sólo el `sid` de rttys, que es lo único que el
+oráculo del F8-D8 necesita. No elimina la exposición en tránsito —el filtrado
+ocurre después de recibir— pero sí la de reposo.
 
 ### RA-3 · El hook autoriza la emisión, no la vida de la sesión
 
@@ -147,12 +159,12 @@ ser de la prueba V6.
 
 | # | Condición | Estado |
 |---|---|---|
-| C1 | Este documento en el repositorio y referenciado desde el README | |
-| C2 | Latencia de los pasos 2 y 4 del webhook medida desde el contenedor de n8n, muy por debajo de 3 s (V10) | |
-| C3 | Webhook desplegado en modo **permisivo** (registra y devuelve `200` incondicionalmente) | |
-| C4 | Cabeceras reales capturadas para las tres acciones (`connect`, `cmd`, `web`) | |
-| C5 | Alcance real de RA-2 acotado con la captura de C4 | |
-| C6 | Decidida la política del §7 del diseño (exención del rol `admin`) | |
+| C1 | Este documento en el repositorio y referenciado desde el README | Cumplida |
+| C2 | Latencia medida desde el contenedor de n8n (V10) | Cumplida — flujo completo p50 103 ms, p95 135 ms, contra 3.000 |
+| C3 | Webhook desplegado en modo **permisivo** | Cumplida — y sustituido después por la lógica de decisión |
+| C4 | Cabeceras reales capturadas para las tres acciones | Parcial — capturadas las de `/connect/`; `/web/` sin capturar. `X-Original-URL` se construye con `URL.String()` (api.go:382), no con el `RawPath` defectuoso |
+| C5 | Alcance real de RA-2 acotado | **Cumplida** — alcance mayor del previsto, ver RA-2 |
+| C6 | Decidida la política del §7 del diseño (exención del rol `admin`) | Cumplida — el rol `admin` NO se exime |
 
 C3 merece justificación: activar el hook contra un webhook permisivo deja el
 sistema funcionalmente como está hoy —fail-open, que es el estado actual del
