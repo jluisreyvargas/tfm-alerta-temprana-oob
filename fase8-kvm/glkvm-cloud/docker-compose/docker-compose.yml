@@ -77,7 +77,17 @@ services:
       - "traefik.http.routers.kvm.entrypoints=websecure"
       - "traefik.http.routers.kvm.tls=true"
       - "traefik.http.routers.kvm.middlewares=secure-headers@file"
+      - "traefik.http.routers.kvm.service=kvm"
       - "traefik.http.services.kvm.loadbalancer.server.port=8180"
+      # Proxy /web/ del dispositivo: rttys redirige a <devid>.oob.local con un
+      # vale rttysid y ese trafico entra por ListenHttpProxy (10443), que va sin
+      # TLS porque REVERSE_PROXY_ENABLED=true. Una regla por dispositivo.
+      - "traefik.http.routers.kvmproxy.rule=Host(`zsb25f8.oob.local`)"
+      - "traefik.http.routers.kvmproxy.entrypoints=websecure"
+      - "traefik.http.routers.kvmproxy.tls=true"
+      - "traefik.http.routers.kvmproxy.middlewares=secure-headers@file"
+      - "traefik.http.routers.kvmproxy.service=kvmproxy"
+      - "traefik.http.services.kvmproxy.loadbalancer.server.port=10443"
 
   coturn:
     image: ${COTURN_IMAGE:-coturn/coturn:edge-alpine}

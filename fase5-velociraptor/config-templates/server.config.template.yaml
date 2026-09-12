@@ -52,7 +52,7 @@ GUI:
   bind_port: 8889
   gw_certificate: "<<GENERADO_EN_DESPLIEGUE>>"
   gw_private_key: "<<GENERADO_EN_DESPLIEGUE>>"
-  public_url: https://velociraptor.local:8889/app/index.html
+  public_url: https://velociraptor.oob.local/app/index.html
   links:
   - text: Documentation
     url: https://docs.velociraptor.app/
