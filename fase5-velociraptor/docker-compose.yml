@@ -12,6 +12,16 @@ services:
     volumes:
       - ./velociraptor-config:/velociraptor
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=oob-network"
+      - "traefik.http.routers.velociraptor.rule=Host(`velociraptor.oob.local`)"
+      - "traefik.http.routers.velociraptor.entrypoints=websecure"
+      - "traefik.http.routers.velociraptor.tls=true"
+      - "traefik.http.routers.velociraptor.service=velociraptor"
+      - "traefik.http.routers.velociraptor.middlewares=secure-headers@file,authelia@file"
+      - "traefik.http.services.velociraptor.loadbalancer.server.port=8889"
+      - "traefik.http.services.velociraptor.loadbalancer.server.scheme=https"
     networks:
       - oob-network
 
