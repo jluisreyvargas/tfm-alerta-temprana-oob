@@ -1,0 +1,377 @@
+{
+  "updatedAt": "2026-09-12T11:27:56.475Z",
+  "createdAt": "2026-09-10T11:43:13.870Z",
+  "name": "KVM Hook",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "kvm-hook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1072,
+        -144
+      ],
+      "id": "ef2f58bf-3473-4e03-8e7b-34b83816da3f",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Decidir').item.json.body) }}",
+        "options": {
+          "responseCode": "={{ $('Decidir').item.json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -240,
+        -384
+      ],
+      "id": "273ea474-a240-4a21-95a2-22b37e6d9eac",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "url": "http://glkvm_cloud:8180/api/devices",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Host",
+              "value": "kvm.oob.local"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $('Cookie').item.json.sid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -656,
+        -144
+      ],
+      "id": "612bd3e1-6e60-4464-aa2c-4b2631ef233d",
+      "name": "Devices",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://glkvm_cloud:8180/api/me",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Host",
+              "value": "kvm.oob.local"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $('Cookie').item.json.sid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -432,
+        -144
+      ],
+      "id": "2f3e9b31-e0be-4509-8a1b-bba95677dbf4",
+      "name": "Me",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://glkvm_cloud:8180/api/users",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Host",
+              "value": "kvm.oob.local"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $('Cookie').item.json.sid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -224,
+        -144
+      ],
+      "id": "835c1950-ca4b-4c00-a7b9-2a280865f6ee",
+      "name": "Users",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://glkvm_cloud:8180/api/device-groups",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Host",
+              "value": "kvm.oob.local"
+            },
+            {
+              "name": "Cookie",
+              "value": "={{ $('Cookie').item.json.sid }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        -144
+      ],
+      "id": "6e672c53-e2dc-45c8-b936-f0371becb4c7",
+      "name": "DeviceGroups",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c20ef0f3-2e65-4fef-9484-4db2fdbcf33f",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -176
+      ],
+      "id": "4192a453-f922-4c59-b7be-72be9ff93937",
+      "name": "If",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        -160
+      ],
+      "id": "5be43819-419f-477e-b298-eecab28f8d07",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "noData",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "6ad80f41-d8be-4d8d-8cdd-7370bb0b3e75",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fase 8 · mejora 1 — decisión de autorización del hook de rttys.\n// Entradas de confianza: sólo X-Rttys-Hook, X-Original-Method, X-Original-URL\n// (rttys las fija con Set, sobrescribiendo lo que mande el cliente) y la\n// cookie validada contra el oráculo. Nada más de la petición es fiable.\n\nconst hdrs = $('Webhook').item.json.headers || {};\nconst raw = String(hdrs['x-original-url'] || '');\nconst metodo = String(hdrs['x-original-method'] || '');\nconst esHook = String(hdrs['x-rttys-hook'] || '') === 'true';\n\nconst traza = {\n  ts: Math.floor(Date.now() / 1000),\n  url: raw,\n  metodo,\n  accion: null,\n  devid: null,\n  username: null,\n  role: null,\n  decision: 'deny',\n  motivo: null,\n};\n\nconst salir = (status, motivo) => {\n  traza.decision = status === 200 ? 'allow' : 'deny';\n  traza.motivo = motivo;\n  return [{ json: { status, body: { decision: traza.decision, motivo }, traza } }];\n};\n\n// Sobre válido sólo si ok === true. Un cuerpo sin campo `ok` (404 de la API,\n// HTML del middleware WebUIHost) no es aprobación.\nconst sobre = (nombre) => {\n  try {\n    const j = $(nombre).item.json;\n    return j && j.ok === true ? j : null;\n  } catch (e) {\n    return null;\n  }\n};\n\n// ---- Paso 1: acción y devid --------------------------------------------\nif (!esHook) return salir(403, 'sin X-Rttys-Hook');\n\nconst ruta = raw.split('?')[0];\nconst m = ruta.match(/^\\/(connect|cmd|web)\\/([A-Za-z0-9_-]{1,64})(?:\\/|$)/);\nif (!m) return salir(403, 'URL no reconocida');\n\nconst accion = m[1];\nconst devid = m[2];\ntraza.accion = accion;\ntraza.devid = devid;\n\n// ---- Paso 2: identidad --------------------------------------------------\nconst me = sobre('Me');\nconst usuario = me && me.data && me.data.user;\nif (!usuario || !usuario.username) return salir(403, 'identidad no resuelta');\n\ntraza.username = usuario.username;\ntraza.role = usuario.role;\n\n// ---- Paso 3: autorización sobre el dispositivo --------------------------\nconst devices = sobre('Devices');\nif (!devices || !devices.data || !Array.isArray(devices.data.items)) {\n  return salir(403, 'oraculo no disponible');\n}\n\nconst item = devices.data.items.find((d) => d.ddns === devid);\n\nif (usuario.role !== 'admin') {\n  // Camino normal: ListDevices ya filtra por grupo. Si no está, no procede.\n  if (!item) return salir(403, 'dispositivo no asignado');\n} else {\n  // El admin ve todos los dispositivos, así que el oráculo no discrimina.\n  // C6: no se exime. Hay que resolver su asignación por otra vía.\n  if (!item) return salir(403, 'dispositivo inexistente');\n  if (!item.deviceGroupId) return salir(403, 'dispositivo sin grupo');\n\n  const users = sobre('Users');\n  const grupos = sobre('DeviceGroups');\n  if (!users || !grupos) return salir(403, 'resolucion de grupos no disponible');\n\n  const fila = (users.data.items || []).find((u) => u.username === usuario.username);\n  if (!fila) return salir(403, 'usuario no listado');\n\n  const mios = (fila.userGroupList || []).map((g) => g.userGroupId);\n  const grupo = (grupos.data.items || []).find((g) => g.id === item.deviceGroupId);\n  if (!grupo) return salir(403, 'grupo de dispositivo no encontrado');\n\n  const suyos = (grupo.userGroupList || []).map((g) => g.userGroupId);\n  if (!mios.some((id) => suyos.includes(id))) {\n    return salir(403, 'admin sin asignacion al grupo');\n  }\n}\n\n// ---- Paso 4: política por acción ---------------------------------------\nif (accion === 'connect') return salir(200, 'consola autorizada');\n\n// cmd y web exigen aprobación de segunda persona, aún no construida.\nreturn salir(403, 'aprobacion no implementada');"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -144
+      ],
+      "id": "8ff7f119-d5cb-4228-a621-bf7e90b320fa",
+      "name": "Decidir",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Conserva sólo el sid de rttys. La cabecera Cookie del operador incluye\n// también la sesión de Authelia (domain: oob.local), que no hace falta aquí\n// y no debe circular por el resto del flujo ni quedar en las llamadas a rttys.\nconst bruta = String($('Webhook').first().json.headers.cookie || '');\nconst sid = bruta.split(';')\n  .map(c => c.trim())\n  .find(c => c.startsWith('sid='));\nreturn [{ json: { sid: sid || '' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        -144
+      ],
+      "id": "f2ea5425-e432-44ae-bc11-f5c3d0e7f6d2",
+      "name": "Cookie"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Cookie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Devices": {
+      "main": [
+        [
+          {
+            "node": "Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Me": {
+      "main": [
+        [
+          {
+            "node": "Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Users": {
+      "main": [
+        [
+          {
+            "node": "DeviceGroups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeviceGroups": {
+      "main": [
+        [
+          {
+            "node": "Decidir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cookie": {
+      "main": [
+        [
+          {
+            "node": "Devices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "activeVersionId": "dbdcc7c2-8b3b-40ba-8831-19c07d5a5538",
+  "versionCounter": 184,
+  "triggerCount": 1,
+  "tags": [],
+  "versionMetadata": {
+    "name": "Version dbdcc7c2",
+    "description": ""
+  }
+}

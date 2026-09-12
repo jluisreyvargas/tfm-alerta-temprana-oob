@@ -1,0 +1,832 @@
+{
+  "updatedAt": "2026-08-31T21:19:26.462Z",
+  "createdAt": "2026-08-30T11:54:17.608Z",
+  "name": "fase4d-breakglass",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rc-breakglass",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        -464
+      ],
+      "id": "8fdb5467-5139-4df0-b4a0-07cf6ed79863",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst body = $input.first().json.body || $input.first().json;\nconst received = String(body.token || '');\nconst expected = String($env.RC_OUTGOING_TOKEN || '');\n\nif (!expected) throw new Error('RC_OUTGOING_TOKEN no configurado');\nif (received.length !== expected.length ||\n    !crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected))) {\n  throw new Error('Token de integracion invalido');\n}\n\nreturn [{\n  json: {\n    channel_id:   body.channel_id,\n    channel_name: body.channel_name,\n    message_id:   body.message_id,\n    user_id:      body.user_id,\n    user_name:    body.user_name,\n    text:         String(body.text || '').trim(),\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -464
+      ],
+      "id": "bfe30565-00d3-493a-bcd2-4521c0fc6748",
+      "name": "Verify RC Token"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst m = item.text.match(/^!ir\\s+(\\w+)(?:\\s+(\\S+))?(?:\\s+(\\S+))?/i);\n\nif (!m) return [{ json: { ...item, verb: 'help', invalid: true } }];\n\nconst SCRIPTS = ['disable_account.ps1','enable_account.ps1',\n                 'collect_logs.ps1','isolate_host.ps1','reset_password.ps1'];\n\nconst verb = m[1].toLowerCase();\nconst arg1 = m[2] || '';\nconst arg2 = m[3] || '';\nconst out = { ...item, verb, arg1, arg2, invalid: false };\n\nif (verb === 'run') {\n  if (!SCRIPTS.includes(arg1)) {\n    out.invalid = true; out.error = `Script no permitido desde el canal: ${arg1}`;\n  } else if (!/^[A-Za-z0-9._\\-\\\\]{1,64}$/.test(arg2)) {\n    out.invalid = true; out.error = 'Target invalido';\n  }\n}\n\nif (verb === 'rustdesk') {\n  const ttl = parseInt(arg1 || '30', 10);\n  if (!Number.isInteger(ttl) || ttl < 1 || ttl > 240) {\n    out.invalid = true; out.error = 'TTL fuera de rango (1-240)';\n  } else out.ttl_minutes = ttl;\n}\n\nif ((verb === 'approve' || verb === 'deny') && !/^REQ-[a-f0-9]{8}$/.test(arg1)) {\n  out.invalid = true; out.error = 'Identificador de solicitud invalido';\n}\n\nreturn [{ json: out }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        -464
+      ],
+      "id": "62ceaa57-6b82-4c7b-bbe1-4038f8d96246",
+      "name": "Parse Command"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.RC_URL }}/api/v1/chat.getMessage",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "msgId",
+              "value": "={{ $json.message_id }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            },
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        96,
+        -464
+      ],
+      "id": "90f29b47-b10e-4537-a6ea-e9d64b7b0a89",
+      "name": "Verify Message Authorship"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cmd     = $('Parse Command').first().json;\nconst msgResp = $input.first().json;\n\nif (!msgResp.success || !msgResp.message) {\n  throw new Error('Mensaje no encontrado en Rocket.Chat');\n}\nif (msgResp.message.u._id !== cmd.user_id) {\n  throw new Error('Autor del mensaje no coincide con el payload');\n}\n\n// Autorización por allowlist mantenida en el orquestador.\n// Rocket.Chat Community no permite roles propios y el bot no tiene\n// view-full-other-user-info, por lo que users.info no devuelve roles.\n// Ventaja de diseño: un compromiso de Rocket.Chat permite publicar\n// mensajes, pero no añadirse a la lista de aprobadores.\nconst approvers = ($env.IR_APPROVER_IDS || '').split(',').map(s => s.trim());\n\nreturn [{\n  json: {\n    ...cmd,\n    authorized:  approvers.includes(msgResp.message.u._id),\n    rc_username: msgResp.message.u.username,\n    rc_user_id:  msgResp.message.u._id,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -464
+      ],
+      "id": "0c36d2ec-6f27-4d13-80a6-049225f8c17a",
+      "name": "Authorize"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ !$json.authorized || $json.invalid }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "528a57f1-7b65-45bf-bc29-c98fc8227bbb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rechazado"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "304216bb-c272-4335-9461-ac6084ea2a25",
+                    "leftValue": "={{ ['run','rustdesk'].includes($json.verb) }}",
+                    "rightValue": "run, rustdesk",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "solicitud"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c6bbf763-c96f-4277-a57c-b8e435beab5b",
+                    "leftValue": "={{ ['approve','deny'].includes($json.verb) }}",
+                    "rightValue": "approve, deny",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "decision"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "866d9216-8c93-4433-a599-5a94c1df3b76",
+                    "leftValue": "={{ ['help','status'].includes($json.verb) }}",
+                    "rightValue": "status, help",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -224
+      ],
+      "id": "c02bf054-fb7f-49e6-b03e-7b85242d2869",
+      "name": "Route Command"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nlet msg;\n\nif (!d.authorized) {\n  msg = `🚫 @${d.user_name}: no estás autorizado para operar el canal break-glass.`;\n} else if (d.invalid) {\n  msg = `⚠️ ${d.error || 'Comando no reconocido'}`;\n} else if (d.verb === 'help') {\n  msg = `**Comandos break-glass**\\n` +\n        `\\`!ir run <script.ps1> <target>\\` — solicitar ejecución\\n` +\n        `\\`!ir rustdesk <minutos>\\` — solicitar acceso remoto\\n` +\n        `\\`!ir approve REQ-xxxxxxxx\\` — aprobar (requiere segundo responsable)\\n` +\n        `\\`!ir deny REQ-xxxxxxxx\\` — denegar\\n` +\n        `\\`!ir status\\` — solicitudes pendientes`;\n} else {\n  msg = 'ℹ️ Sin solicitudes pendientes.';\n}\n\nreturn [{ json: { channel_id: d.channel_id, mensaje: msg } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -240
+      ],
+      "id": "5cbbe3a0-cf4a-4c36-8e12-63c8d04ac393",
+      "name": "Build Reply"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst cmd = $input.first().json;\nconst store = $getWorkflowStaticData('global');\n\nif (!store.requests) store.requests = {};\n\nconst AHORA  = Date.now();\nconst TTL_MS = 15 * 60 * 1000;\n\n// Purga de solicitudes caducadas\nfor (const [k, v] of Object.entries(store.requests)) {\n  if (AHORA - v.created_at > TTL_MS) delete store.requests[k];\n}\n\nconst requestId = 'REQ-' + crypto.randomBytes(4).toString('hex');\n\nstore.requests[requestId] = {\n  request_id:   requestId,\n  verb:         cmd.verb,\n  script:       cmd.verb === 'run' ? cmd.arg1 : 'rustdesk_enable.ps1',\n  target:       cmd.verb === 'run' ? cmd.arg2 : '',\n  ttl_minutes:  cmd.ttl_minutes || 30,\n  requester_id: cmd.rc_user_id,\n  requester:    cmd.rc_username,\n  channel_id:   cmd.channel_id,\n  created_at:   AHORA,\n  status:       'pending',\n};\n\nconst accion = cmd.verb === 'run'\n  ? `Ejecutar \\`${cmd.arg1}\\` sobre \\`${cmd.arg2}\\``\n  : `Activar acceso remoto RustDesk (TTL ${cmd.ttl_minutes} min)`;\n\nconst mensaje =\n  `⏳ **Solicitud \\`${requestId}\\` pendiente de aprobación**\\n` +\n  `**Acción:** ${accion}\\n` +\n  `**Solicitante:** @${cmd.rc_username}\\n` +\n  `**Caduca:** en 15 minutos\\n\\n` +\n  `Un segundo responsable debe aprobar con \\`!ir approve ${requestId}\\`.\\n` +\n  `_El solicitante no puede aprobar su propia petición._`;\n\nreturn [{ json: { request_id: requestId, channel_id: cmd.channel_id, mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "1d2c67ec-e45d-4fe9-ad19-53df37d65b9a",
+      "name": "Create Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cmd = $input.first().json;\nconst store = $getWorkflowStaticData('global');\nconst requestId = cmd.arg1;\nconst req = (store.requests || {})[requestId];\n\nif (!req) {\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` no encontrada o caducada.` } }];\n}\n\nif (req.status !== 'pending') {\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` ya resuelta (${req.status}).` } }];\n}\n\nif (Date.now() - req.created_at > 15 * 60 * 1000) {\n  req.status = 'expired';\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` caducada.` } }];\n}\n\n// REGLA DE DOS PERSONAS\nif (req.requester_id === cmd.rc_user_id) {\n  return [{ json: { ok: false, channel_id: cmd.channel_id, autoaprobacion: true,\n    mensaje: `🚫 **Rechazado:** el solicitante no puede aprobar su propia petición.\\n` +\n             `La solicitud \\`${requestId}\\` requiere un segundo responsable.` } }];\n}\n\nif (cmd.verb === 'deny') {\n  req.status = 'denied';\n  req.approver = cmd.rc_username;\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `🛑 Solicitud \\`${requestId}\\` denegada por @${cmd.rc_username}.` } }];\n}\n\nreq.status      = 'approved';\nreq.approver    = cmd.rc_username;\nreq.approver_id = cmd.rc_user_id;\nreq.approved_at = Date.now();\n\nreturn [{\n  json: {\n    ok: true,\n    request_id:  requestId,\n    script:      req.script,\n    target:      req.target,\n    ttl_minutes: req.ttl_minutes,\n    verb:        req.verb,\n    requester:   req.requester,\n    approver:    cmd.rc_username,\n    channel_id:  req.channel_id,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        112
+      ],
+      "id": "1b9b008b-018b-417c-8827-a68e8a7922e6",
+      "name": "Validate Approval"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "81a3639d-43ba-4061-8278-f2959f1db154",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        112
+      ],
+      "id": "454d1d5f-473c-4415-9786-9ffa34ef6fd5",
+      "name": "Approved?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            },
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ roomId: $json.channel_id, text: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        560,
+        128
+      ],
+      "id": "1fc71ffd-d624-4a5a-bd22-aa4118f844cf",
+      "name": "Post Reply2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst d = $input.first().json;\n\nconst payload = d.verb === 'rustdesk'\n  ? { script: 'rustdesk_enable.ps1', ttl_minutes: d.ttl_minutes }\n  : { script: d.script, target: d.target };\n\nconst bodyStr = JSON.stringify(payload);\nconst ts      = Math.floor(Date.now() / 1000).toString();\nconst nonce   = crypto.randomBytes(16).toString('hex');\nconst sig     = crypto.createHmac('sha256', $env.AGENT_HMAC_SECRET)\n                      .update(`${ts}.${nonce}.${bodyStr}`)\n                      .digest('hex');\nreturn [{ json: { ...d, bodyStr, ts, nonce, sig,\n  dbg_url: `${$env.DC_AGENT_URL}/run`,\n  dbg_token_len: String($env.AGENT_TOKEN || '').length,\n  dbg_token_ini: String($env.AGENT_TOKEN || '').slice(0,6),\n} }];\nreturn [{ json: { ...d, bodyStr, ts, nonce, sig } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        336
+      ],
+      "id": "af063c5b-e095-46a9-afcb-7b53a1214989",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.DC_AGENT_URL }}/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AGENT_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "=application/json"
+            },
+            {
+              "name": "X-Timestamp",
+              "value": "={{ $json.ts }}"
+            },
+            {
+              "name": "X-Nonce",
+              "value": "={{ $json.nonce }}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{ $json.sig }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "=application/json",
+        "body": "={{ $json.bodyStr }}",
+        "options": {
+          "timeout": 70000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -304,
+        336
+      ],
+      "id": "9469b7d0-55bf-4bf0-9a9c-78e06361d6d0",
+      "name": "Call DC Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const agent = $('Call DC Agent').first().json;\nconst meta  = $('Validate Approval').first().json;\nconst store = $getWorkflowStaticData('global');\n\nif (!store.credentials) store.credentials = {};\n\n// El agente mezcla la salida del binario con el JSON: tomamos la última línea\nlet salida = {};\ntry {\n  const lineas = String(agent.stdout || '').trim().split('\\n');\n  salida = JSON.parse(lineas[lineas.length - 1]);\n} catch (e) {\n  salida = {};\n}\n\nlet mensaje;\n\nif (meta.verb === 'rustdesk' && salida.password) {\n  const ttlMs = (meta.ttl_minutes || 30) * 60 * 1000;\n\n  // Purga de credenciales caducadas\n  const ahora = Date.now();\n  for (const [k, v] of Object.entries(store.credentials)) {\n    if (ahora > v.expires_at) delete store.credentials[k];\n  }\n\n  store.credentials[meta.request_id] = {\n    password:    salida.password,\n    rustdesk_id: '161180321',   // provisional: se resolverá desde hbbs\n    expires_at:  ahora + ttlMs,\n    consumed:    false,\n    requester:   meta.requester,\n    approver:    meta.approver,\n  };\n\n  mensaje =\n    `✅ **Acceso break-glass concedido** — solicitud \\`${meta.request_id}\\`\\n` +\n    `**Servicio:** ${salida.service || 'desconocido'} · **TTL:** ${meta.ttl_minutes} min\\n` +\n    `**Solicitado por:** @${meta.requester} · **Aprobado por:** @${meta.approver}\\n\\n` +\n    `🔑 **Credencial:** [Recuperar acceso](${$env.CREDENTIAL_BASE_URL}?id=${meta.request_id})\\n` +\n    `_Requiere MFA. Se muestra una sola vez y caduca con el TTL._`;\n} else {\n  mensaje =\n    `${agent.returncode === 0 ? '✅' : '⚠️'} **Acción ejecutada** — solicitud \\`${meta.request_id}\\`\\n` +\n    `**Script:** \\`${meta.script}\\` · **Código:** ${agent.returncode}\\n` +\n    `**Solicitado por:** @${meta.requester} · **Aprobado por:** @${meta.approver}\\n` +\n    (agent.stdout ? '```\\n' + String(agent.stdout).slice(0, 1200) + '\\n```' : '');\n}\n\nreturn [{ json: { channel_id: meta.channel_id, mensaje } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        336
+      ],
+      "id": "bf24fbfc-a48a-4cce-b7f5-0f27ce4cefc2",
+      "name": "Build Agent Reply"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            },
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "roomId",
+              "value": "={{ $json.channel_id }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.mensaje }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        336
+      ],
+      "id": "ce355d25-a00a-4f00-82a6-a4204ef6f4cb",
+      "name": "Post Agent Result"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            },
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ roomId: $json.channel_id, text: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        304,
+        -240
+      ],
+      "id": "bfbeaf9c-7ae3-4c33-8270-96d33f9ef50e",
+      "name": "Post Reply Consulta"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            },
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ roomId: $json.channel_id, text: $json.mensaje }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        304,
+        -64
+      ],
+      "id": "c50f3487-863a-48bb-b7a0-c7661ad71c11",
+      "name": "Post Pending Solicitud"
+    },
+    {
+      "parameters": {
+        "path": "bg-credential",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        640
+      ],
+      "id": "50122d19-9eb1-4d21-89a6-4460fe7e37e0",
+      "name": "Webhook de recuperación"
+    },
+    {
+      "parameters": {
+        "jsCode": "const req = $input.first().json;\nconst requestId = (req.query && req.query.id) || '';\nconst store = $getWorkflowStaticData('global');\nconst cred = (store.credentials || {})[requestId];\n\n// Authelia ya validó MFA y pertenencia al grupo antes de llegar aquí\nconst usuario = (req.headers && req.headers['remote-user']) || 'desconocido';\n\nconst pagina = (titulo, cuerpo) =>\n  `<html><head><meta charset=\"utf-8\"><title>Break-glass</title></head>\n   <body style=\"font-family:sans-serif;padding:2rem;max-width:40rem\">\n   <h3>${titulo}</h3>${cuerpo}</body></html>`;\n\nif (!cred) {\n  return [{ json: { html: pagina('Credencial no encontrada',\n    '<p>La solicitud no existe o ya expiró.</p>') } }];\n}\nif (cred.consumed) {\n  return [{ json: { html: pagina('Credencial ya consumida',\n    `<p>Recuperada por <b>${cred.consumed_by}</b>. Solicita un nuevo acceso.</p>`) } }];\n}\nif (Date.now() > cred.expires_at) {\n  delete store.credentials[requestId];\n  return [{ json: { html: pagina('Credencial caducada',\n    '<p>El TTL de la sesión ha expirado.</p>') } }];\n}\n\nconst pass = cred.password;\nconst id   = cred.rustdesk_id;\n\ncred.consumed    = true;\ncred.consumed_by = usuario;\ncred.consumed_at = Date.now();\ncred.password    = '';\n\nreturn [{\n  json: {\n    audit: `CREDENCIAL request_id=${requestId} consumida_por=${usuario}`,\n    html: pagina(`Acceso break-glass — ${requestId}`,\n      `<p><b>ID RustDesk:</b> <code style=\"font-size:1.2em\">${id}</code></p>\n       <p><b>Contraseña:</b> <code style=\"font-size:1.2em\">${pass}</code></p>\n       <p style=\"margin-top:1.5rem\">\n         <a href=\"rustdesk://connection/new/${id}\"\n            style=\"background:#0b6;color:#fff;padding:.6rem 1rem;\n                   text-decoration:none;border-radius:4px\">Abrir en RustDesk</a>\n       </p>\n       <p style=\"color:#a00;margin-top:2rem\">\n         Esta credencial no volverá a mostrarse.</p>`)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        640
+      ],
+      "id": "1c36e622-dd2f-4639-b98c-6f6ce54307ff",
+      "name": "Retrieve And Burn"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -96,
+        640
+      ],
+      "id": "33fcecc4-c815-464c-a861-1f11005bbdc4",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst d = $input.first().json;\n\nlet rustdeskId = 'no_resuelto';\ntry {\n  const peers = JSON.parse(fs.readFileSync('/data/peers.json', 'utf8'));\n  // El inventario hostname <-> ID se mantiene en el campo 'note' de hbbs.\n  // Filtrar por él evita depender del orden y distingue el endpoint objetivo\n  // de otros clientes registrados en el mismo servidor de rendezvous.\n  const peer = peers.find(p => p.note === 'dc01-tfm');\n  if (peer) rustdeskId = peer.id;\n} catch (e) {\n  // Se registra pero no bloquea el flujo\n}\n\nreturn [{ json: { ...d, rustdesk_id: rustdeskId } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        336
+      ],
+      "id": "24647aea-c86a-4178-acd2-b6ee6dff7fe2",
+      "name": "Resolve RustDesk ID"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify RC Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify RC Token": {
+      "main": [
+        [
+          {
+            "node": "Parse Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Command": {
+      "main": [
+        [
+          {
+            "node": "Verify Message Authorship",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Message Authorship": {
+      "main": [
+        [
+          {
+            "node": "Authorize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Authorize": {
+      "main": [
+        [
+          {
+            "node": "Route Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Command": {
+      "main": [
+        [
+          {
+            "node": "Build Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validate Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Reply": {
+      "main": [
+        [
+          {
+            "node": "Post Reply Consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Request": {
+      "main": [
+        [
+          {
+            "node": "Post Pending Solicitud",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Approval": {
+      "main": [
+        [
+          {
+            "node": "Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved?": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Reply2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Call DC Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call DC Agent": {
+      "main": [
+        [
+          {
+            "node": "Resolve RustDesk ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Agent Reply": {
+      "main": [
+        [
+          {
+            "node": "Post Agent Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Reply Consulta": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook de recuperación": {
+      "main": [
+        [
+          {
+            "node": "Retrieve And Burn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve And Burn": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve RustDesk ID": {
+      "main": [
+        [
+          {
+            "node": "Build Agent Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": {
+    "global": {
+      "requests": {
+        "REQ-9281645d": {
+          "request_id": "REQ-9281645d",
+          "verb": "rustdesk",
+          "script": "rustdesk_enable.ps1",
+          "target": "",
+          "ttl_minutes": 20,
+          "requester_id": "KSaeE4jFabWrTSQKy",
+          "requester": "ir_lead2",
+          "channel_id": "GENERAL",
+          "created_at": 1788297594642,
+          "status": "pending"
+        },
+        "REQ-4ad71790": {
+          "request_id": "REQ-4ad71790",
+          "verb": "rustdesk",
+          "script": "rustdesk_enable.ps1",
+          "target": "",
+          "ttl_minutes": 20,
+          "requester_id": "QN5wbMxDfzLAf9bjb",
+          "requester": "ir_lead",
+          "channel_id": "GENERAL",
+          "created_at": 1788297671747,
+          "status": "approved",
+          "approver": "ir_lead2",
+          "approver_id": "KSaeE4jFabWrTSQKy",
+          "approved_at": 1788297699247
+        }
+      },
+      "credentials": {
+        "REQ-4ad71790": {
+          "password": "",
+          "rustdesk_id": "161180321",
+          "expires_at": 1788298913638,
+          "consumed": true,
+          "requester": "ir_lead",
+          "approver": "ir_lead2",
+          "consumed_by": "jose",
+          "consumed_at": 1788297717762
+        }
+      }
+    }
+  },
+  "meta": null,
+  "pinData": {},
+  "activeVersionId": "86c0a850-bdcb-4a01-b742-7175d3d85ffb",
+  "versionCounter": 373,
+  "triggerCount": 2,
+  "tags": [],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}

@@ -14,10 +14,12 @@
 #     esta instancia de n8n; no debe publicarse en el repo)
 set -euo pipefail
 
-WORKFLOW_ID="TUzKK9OBP39SYILa"
+# Uso: ./export-workflow.sh [WORKFLOW_ID] [RUTA_SALIDA]
+# Sin argumentos exporta el workflow de Fase 2 a su ruta habitual.
+WORKFLOW_ID="${1:-TUzKK9OBP39SYILa}"
 CONTAINER="n8n"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OUTPUT="${SCRIPT_DIR}/workflows/wazuh-alert-handler.json"
+OUTPUT="${2:-${SCRIPT_DIR}/workflows/wazuh-alert-handler.json}"
 TMP_RAW="$(mktemp)"
 trap 'rm -f "$TMP_RAW"' EXIT
 
