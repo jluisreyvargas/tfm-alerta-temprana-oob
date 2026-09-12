@@ -1,0 +1,15 @@
+services:
+  misp-core:
+    ports: !override
+      - "127.0.0.1:${CORE_HTTP_PORT:-1280}:80"
+      - "127.0.0.1:${CORE_HTTPS_PORT:-12443}:443"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=oob-network"
+      - "traefik.http.routers.misp.rule=Host(`misp.oob.local`)"
+      - "traefik.http.routers.misp.entrypoints=websecure"
+      - "traefik.http.routers.misp.tls=true"
+      - "traefik.http.routers.misp.middlewares=secure-headers@file,authelia@file"
+      - "traefik.http.routers.misp.service=misp"
+      - "traefik.http.services.misp.loadbalancer.server.port=443"
+      - "traefik.http.services.misp.loadbalancer.server.scheme=https"

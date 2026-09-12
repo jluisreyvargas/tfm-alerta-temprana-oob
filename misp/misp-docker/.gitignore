@@ -12,3 +12,9 @@ docker-compose.override.yml
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Divergencia respecto a upstream: este override NO es configuracion local del
+# usuario, es la aportacion del proyecto. Contiene las etiquetas de Traefik y la
+# restriccion de los puertos a loopback del P1-1a Fase C. Sin versionarlo, un
+# clone reconstruye MISP publicado en 0.0.0.0 y sin router, sin error visible.
+!/docker-compose.override.yml
