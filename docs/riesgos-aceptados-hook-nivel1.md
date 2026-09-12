@@ -113,10 +113,23 @@ reposo, la salida del nodo Webhook de n8n queda guardada en su base de datos
 durante 1 hora de vida útil de la cookie (`expiration: 3600`), en tantas filas
 como aperturas de consola haya.
 
-**Mitigación mínima, no aplicada:** filtrar la cabecera `Cookie` en el primer
-nodo del webhook, conservando sólo el `sid` de rttys, que es lo único que el
-oráculo del F8-D8 necesita. No elimina la exposición en tránsito —el filtrado
-ocurre después de recibir— pero sí la de reposo.
+**Mitigación aplicada (11 sep 2026).** Un nodo Code `Cookie`, primero del flujo
+tras el Webhook, extrae sólo el `sid` de rttys, y las cuatro llamadas al oráculo
+usan `$('Cookie').item.json.sid` en lugar de la cabecera completa. Verificado:
+`operador1` sigue aprobando y `operador2` deniega por `dispositivo no asignado`
+—no por `identidad no resuelta`, que sería el síntoma de un filtrado roto.
+
+**Lo que no elimina.** La cabecera entra igualmente, de modo que la exposición en
+tránsito permanece; y la salida del nodo `Webhook` sigue conteniendo la cookie
+completa y queda guardada en la base de n8n. Eliminar la exposición en reposo
+exige además desactivar el guardado de ejecuciones correctas.
+
+**Decisión: se acepta la exposición en reposo.** Desactivar el guardado
+eliminaría el único registro de los accesos denegados — `device_event_logs`
+sólo recoge sesiones establecidas, nunca intentos rechazados (ver
+`docs/mejora3-trazabilidad-operador.md` §3). Cambiar una traza que existe por una
+exposición que ya está acotada por la vida de la cookie no compensa. Revisable si
+se construye un registro de decisiones independiente de las ejecuciones de n8n.
 
 ### RA-3 · El hook autoriza la emisión, no la vida de la sesión
 
@@ -162,7 +175,7 @@ ser de la prueba V6.
 | C1 | Este documento en el repositorio y referenciado desde el README | Cumplida |
 | C2 | Latencia medida desde el contenedor de n8n (V10) | Cumplida — flujo completo p50 103 ms, p95 135 ms, contra 3.000 |
 | C3 | Webhook desplegado en modo **permisivo** | Cumplida — y sustituido después por la lógica de decisión |
-| C4 | Cabeceras reales capturadas para las tres acciones | Parcial — capturadas las de `/connect/`; `/web/` sin capturar. `X-Original-URL` se construye con `URL.String()` (api.go:382), no con el `RawPath` defectuoso |
+| C4 | Cabeceras reales capturadas para las tres acciones | Cumplida — `/connect/` y `/web/` capturadas; `/cmd/` verificada por comportamiento (V7). `X-Original-URL` de `/web/` trae ruta completa con `proto` y `addr`, utilizable como clave de aprobación |
 | C5 | Alcance real de RA-2 acotado | **Cumplida** — alcance mayor del previsto, ver RA-2 |
 | C6 | Decidida la política del §7 del diseño (exención del rol `admin`) | Cumplida — el rol `admin` NO se exime |
 
