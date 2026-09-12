@@ -275,3 +275,64 @@ upstream.
 Los pasos 1 a 3 no modifican el comportamiento del sistema. El paso 4 sí, y a
 partir de ahí el hook está activo: un webhook mal construido deniega todo acceso
 por el nivel 1.
+
+
+---
+
+## 11. Correcciones posteriores (11 de septiembre de 2026)
+
+Este diseño se cerró antes de construir. La construcción corrigió cuatro puntos.
+El texto original se conserva sin reescribir.
+
+### 11.1 · El `total: 0` del §1 es evidencia histórica
+
+`operador1` fue asignado al grupo TFM después de escribirse este documento, de
+modo que hoy `GET /api/devices` con su sesión devuelve `total: 1`. Quien
+reejecute el comando del §1 obtiene otro resultado.
+
+La cuenta permanente para el caso negativo es **`operador2`**, rol `user`, sin
+grupo. Es el sujeto de V1 y no cambiará de grupo.
+
+### 11.2 · «Falla cerrado» del §6 es incierto para el error interno
+
+El §6 afirma que `callUserHookUrl` falla cerrado. Es cierto para caída de n8n
+(verificado, V4) y para respuesta distinta de `200`, pero **no para un error
+dentro del flujo de n8n**: con *Respond via Respond to Webhook node*, un camino
+que no alcanza un nodo de respuesta hace que n8n cierre con `200`, y rttys lo lee
+como aprobación.
+
+Mitigación adoptada: la salida de error de cada nodo se cablea al `Respond` que
+deniega. Principio resultante: **todo conector de salida debe llegar a un nodo de
+respuesta**. Ver `docs/cierre-mejora1-hook.md` §3.
+
+### 11.3 · V9 estaba mal enunciada
+
+«Cookie ausente o manipulada → 403» no prueba el webhook: sin cookie, `httpAuth`
+rechaza con `401` **antes** de invocar el hook. La prueba ejerce la primera capa,
+no la segunda.
+
+Para ejercer el webhook hace falta una cookie con formato válido y sesión
+inexistente; el motivo esperado entonces es `identidad no resuelta`.
+
+### 11.4 · Aprobar `/cmd/` es aprobar cualquier comando
+
+El hook se invoca en `api.go:241`, **antes** de `BindJSON`. El webhook nunca ve
+el comando: sólo recibe `devid` y acción por `X-Original-URL`. La política por
+comando no es construible en este punto de control.
+
+Para `/web/`, en cambio, `X-Original-URL` **sí** trae el destino completo
+(`proto` y `addr`), verificado en la captura de
+`/web/zsb25f8/http/127.0.0.1:80/`. La clave de aprobación puede incluir el
+destino y no sólo `(username, devid)`, cosa que el §5 dejaba abierta.
+
+### 11.5 · Estado de construcción
+
+Construido y verificado: pasos 1, 2, 3 y 5 del §4, con la política de C6 —el rol
+`admin` **no** se exime, y su asignación se resuelve por intersección de grupos
+de usuario vía `/api/users` y `/api/device-groups`.
+
+**No construido:** la aprobación de segunda persona (F8-D5). `/cmd/` y `/web/`
+deniegan incondicionalmente con motivo `aprobacion no implementada`. V8 —rechazo
+de la autoaprobación— vive en ese bloque y sigue pendiente.
+
+Ver `docs/cierre-mejora1-hook.md` y `docs/webhook-kvm-hook-construccion.md`.

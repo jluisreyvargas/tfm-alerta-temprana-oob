@@ -221,9 +221,9 @@ Familias: `auth`, `2fa`, `init`, `info`, `ws`, `atx`, `hid`, `msd`, `switch`,
   que aparenta el control sin ejercerlo. Segunda superficie de gestión del
   dispositivo, no inventariada. Existen `/etc/kvmd/ipmipasswd` (822 B) y
   `/etc/kvmd/vncpasswd` (637 B), dos almacenes de credenciales fuera del
-  inventario de cuatro del P0-3.
+  inventario de cuatro del P0-3. **[Corregido — §9.1]**
 - `/same_check` servido **en claro por el puerto 80**, el único `location` que
-  no redirige a HTTPS, con CORS `*`.
+  no redirige a HTTPS, con CORS `*`. **[Ampliado — §9.5]**
 - `/dav/` proxied a `127.0.0.1:8080`, donde no escucha ningún proceso.
   Configurado sin backend.
 
@@ -373,3 +373,89 @@ Para el nivel 1, en cambio, el registro de sesión ya existe:
 `created_at` y `ended_at`. El flujo de aprobación puede cerrar el ciclo sobre esa
 tabla en lugar de construir un registro paralelo, siempre que antes exista más de
 un usuario.
+
+
+---
+
+## 9. Correcciones posteriores (11 de septiembre de 2026)
+
+Este reconocimiento se cerró antes de construir las mejoras. La construcción
+corrigió cinco de sus conclusiones. El texto original se conserva sin reescribir:
+lo que se sabía en cada momento es parte del registro, y las correcciones son en
+sí mismas un resultado.
+
+### 9.1 · `ipmipasswd` y `vncpasswd` no son almacenes de credenciales
+
+El §4.3 los presenta como dos almacenes fuera del inventario del P0-3, citando
+sus tamaños. **Son plantillas del linaje PiKVM, sin entradas**: los bytes son
+cabecera explicativa, y el propio texto de `vncpasswd` indica que sin entradas
+VNCAuth queda deshabilitado. La única referencia en `override.yaml` está
+comentada; nada escucha en 623 ni 5900.
+
+Inferir contenido del tamaño de un fichero es el mismo error que identificar un
+proceso por el nombre que muestra `ps` (P0-4).
+
+El inventario del P0-3 sí crece, por otra vía: `S01selfCloud` guarda `TOKEN` y
+`WEBRTC_PASSWORD` en claro. Ver `docs/mejora6-endurecimiento-dispositivo.md` §4.
+
+### 9.2 · El modo de fallo abierto del hook tiene una segunda forma
+
+El §3 describe el fallo abierto como ausencia de configuración. Es incompleto.
+Con n8n respondiendo mediante un nodo *Respond to Webhook*, **cualquier error no
+capturado dentro del flujo hace que n8n cierre la petición con `200`**, y rttys
+lo lee como aprobación. Ocurrió dos veces durante la construcción sin buscarlo.
+
+La primera forma se detecta con V6; la segunda sólo con V5. Ver
+`docs/cierre-mejora1-hook.md` §3.
+
+### 9.3 · El P1-4 queda cerrado, y el registro cubre menos de lo que parece
+
+La reformulación del §5 era correcta: la atribución la resuelve `actor_name`, no
+`client_ip`, y sólo faltaba más de un principal. Con tres cuentas, discrimina.
+
+Pero `device_event_logs` **registra sesiones establecidas, no autorizaciones**.
+Verificado por ausencia: las denegaciones del hook no dejan rastro —corta antes
+de `handleUserConnection`— y una aprobación que no abre consola tampoco. El
+único registro de los accesos denegados está en las ejecuciones de n8n.
+
+Ver `docs/mejora3-trazabilidad-operador.md` §3.
+
+(No confundir con el P1-4 del informe de auditoría de Fase 6, que es otro
+hallazgo: una API key sin consumidor.)
+
+### 9.4 · Los dos huecos del §6, cerrados
+
+**Hueco 1 — captura HAR.** Sustituida por una vía mejor: activar el hook contra
+un webhook permisivo, que entrega las cabeceras reales de producción y de paso
+cierra V6 y mide V10. Capturadas las de `/connect/` y `/web/`; `/cmd/` verificada
+por comportamiento.
+
+**Hueco 2 — autenticación del resto de la API del dispositivo.** Sondeado con
+ventana acordada: `GET /api/atx`, `GET /redfish/v1/Systems` y
+`POST /api/atx/click?button=power` responden **`401`**, con DC01 sin alterar. La
+premisa de RA-1 —«operador con credencial local», no «cualquier equipo de la
+LAN»— queda verificada.
+
+### 9.5 · `/same_check` es un oráculo de identidad
+
+El §4.3 lo anota como servido en claro con CORS `*`. Sondeado, hace más: acepta
+un parámetro `mac` y responde si coincide con la del dispositivo, con comparación
+literal sensible al formato (`94:83:c4:cb:25:f8` → `true`; sin separadores o con
+guiones → `false`). Sin autenticación, por HTTP plano, con
+`Access-Control-Allow-Origin: *`.
+
+El CORS permisivo permite consultarlo desde el navegador de cualquiera que visite
+una página web, sin estar en la LAN. Ver
+`docs/mejora6-endurecimiento-dispositivo.md` §5.
+
+### 9.6 · El observador independiente del §8 no discrimina por sí solo
+
+El §8 delega la detección del `powerreset` del nivel 2 en la caída del heartbeat
+de DC01 vista desde el enclave. Medido: **con Headscale detenido, un DC01 que se
+reinicia queda fuera del tailnet**. Un `powerreset` reinicia DC01, de modo que un
+atacante que tumbe antes Headscale produce la misma señal —ausencia— que una
+caída del coordinador.
+
+La detección debe apoyarse en el registro local de Wazuh en DC01, que se escribe
+en el equipo aunque no llegue al enclave. Ver
+`docs/mejora5-prueba-mensual-resiliencia.md` §2.1.
