@@ -151,7 +151,7 @@ Todas las fases principales están completadas. La Fase 5 se divide en **dos car
 | **5B** | **Fase 5 · Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver Fase 5B](./fase5-velociraptor) |
 | **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, sincronización bidireccional y timeline. | [Ver Fase 6](./fase6-iris) |
 | **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./fase7-observabilidad) |
-| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, mTLS y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm) |
+| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, autorización por dispositivo, validación TLS del canal y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm) |
 
 ### Relación entre las dos partes de la Fase 5
 
@@ -183,6 +183,33 @@ flowchart LR
 | 🧠 **Agent precision** | Triage del agente frente a experto humano | > 80 % |
 | 🚫 **False positive rate** | Alertas que no llegan a aprobación | < 15 % |
 | ⚙️ **Script success rate** | Ejecuciones en DC con resultado correcto | > 98 % |
+
+---
+
+## 🔬 Resultados transversales
+
+Tres resultados que no pertenecen a ninguna fase y son reproducibles fuera de
+este enclave. Los tres están medidos, no argumentados.
+
+**Credenciales y superficie de arranque.** Lo que se crea para poner un proyecto
+en marcha sobrevive a todas las revisiones posteriores, porque precede a la
+arquitectura que acaba contradiciendo y porque funciona. Cuatro instancias
+verificadas, de mayo a agosto, ninguna encontrada por una revisión deliberada.
+Regla derivada: un inventario de credenciales necesita dos ejes, qué existe **y
+cuándo se creó**. → [`docs/credenciales-de-arranque.md`](./docs/credenciales-de-arranque.md),
+[`docs/revision-credenciales-fases1-8.md`](./docs/revision-credenciales-fases1-8.md)
+
+**Delegar autorización en un orquestador de flujos tiene un modo de fallo
+abierto.** Un error no capturado dentro de n8n hace que responda `200` por
+defecto, que el consumidor lee como aprobación. El control falla cerrado ante
+caída del servicio y **abierto** ante error propio, que es el caso más probable.
+→ [`docs/cierre-mejora1-hook.md`](./docs/cierre-mejora1-hook.md) §3
+
+**Los instrumentos de diagnóstico fallan en silencio.** Ocho casos registrados en
+el proyecto, todos con la misma forma: el instrumento no protesta y devuelve algo
+plausible en lugar de un error. La única defensa es contrastar con un segundo
+instrumento que mida lo mismo por otra vía.
+→ [`docs/api-reconocimiento-fase8.md`](./docs/api-reconocimiento-fase8.md) §1
 
 ---
 

@@ -19,20 +19,40 @@
 - [x] GL-RM1 registrado en la plataforma por ruta LAN (`192.168.0.70:5912`)
 - [x] Arranque en frío verificado (4 reinicios, con y sin `gl-cloud`)
 - [x] Vídeo y teclado funcionales por acceso directo al dispositivo
-- [x] Certificado del dispositivo emitido desde `oob-rootCA`, persistente
+- [x] Certificado del dispositivo emitido desde `oob-rootCA`, persistente —
+  emitido y verificable (`glkvm-device.crt`, SAN `IP:192.168.0.36`,
+  `serverAuth`), pero **no en uso**: la autenticación del dispositivo ante rttys
+  sigue siendo el token (`device.go:470`). `rtty` admite `-c`/`-k` para
+  certificado de cliente; la autenticación mutua queda como mejora posible
 - [x] Planos de control externos del fabricante desactivados y verificados
 - [x] Monitorización de capacidad con prueba negativa validada
 - [x] Imagen de la plataforma fijada por digest
 - [x] Puertos restringidos a la interfaz LAN
 
-**Pendiente** — ver [Mejoras previstas](#mejoras-previstas)
+**Mejoras previstas** — estado a 11 sep 2026, detalle en
+[Mejoras previstas](#mejoras-previstas)
 
-- [ ] Validación TLS del canal rtty (`-C` con `oob-rootCA`)
-- [ ] Trazabilidad del operador en `device_event_logs`
-- [ ] Flujo de solicitud de sesión con aprobación
-- [ ] Política de dos personas para `powerreset`
+- [x] Validación TLS del canal rtty (`-C` con `oob-rootCA`) — mejora 2, con
+  prueba negativa. Exigió antes emitir un certificado de servidor para rttys:
+  presentaba la CA raíz del enclave, cuya clave privada estaba montada en el
+  contenedor
+- [x] Trazabilidad del operador en `device_event_logs` — mejora 3. Resuelta con
+  cuentas nominales, no con PROXY protocol. Alcance: registra sesiones
+  establecidas, **no** intentos denegados
+- [x] Autorización por dispositivo en el nivel 1 — mejora 1. `user-hook-url`
+  cubre `/connect/`, `/cmd/` y `/web/`; remedia el P0-6
+- [ ] Flujo de solicitud de sesión con aprobación de segunda persona — diseñado
+  (F8-D5), **no construido**. `/cmd/` y `/web/` deniegan incondicionalmente
+- [ ] ~~Política de dos personas para `powerreset`~~ — **no es construible tal
+  como estaba enunciada**. `powerreset` es una acción del nivel 2, que no
+  atraviesa rttys ni el hook. Lo gobernable desde el nivel 1 son `/cmd/` y
+  `/web/`; el nivel 2 queda como vía de emergencia auditada *a posteriori*
+  (RA-1). Ver `docs/riesgos-aceptados-hook-nivel1.md`
 - [ ] Integración con IRIS y Rocket.Chat
-- [ ] Prueba funcional mensual procedimentada
+- [x] Prueba funcional mensual procedimentada — mejora 5, M1–M7 con criterio de
+  aprobado fijado. El planteamiento original (detener Headscale) no medía nada:
+  el plano de datos sobrevive. El modo de fallo real es coordinador caído **más**
+  nodo reiniciado
 
 > **Nota histórica**
 > La versión anterior de este README marcaba como completadas cuatro
@@ -319,11 +339,28 @@ Con fecha de revisión en la defensa del TFM.
 
 ### 1. Flujo de solicitud de sesión con aprobación
 
-Réplica del modelo de la Fase 4 para RustDesk, adaptado al KVM. Es la mejora de
-mayor valor pendiente: convierte un acceso permanente en uno solicitado,
-aprobado, temporal y auditado.
+**Parcialmente construida** (11 sep 2026). El reconocimiento cambió su
+naturaleza: no era una mejora de proceso, sino **la única autorización por
+dispositivo que existe en el nivel 1**.
 
-**Diseño propuesto:**
+Verificado antes de construir: `operador1` sin grupo recibía `{"total": 0}` de
+`GET /api/devices` y, a la vez, `302` hacia la consola en `GET /connect/zsb25f8`.
+El modelo de autorización decía que no había dispositivos visibles y la ruta de
+acceso llevaba a la shell del GL-RM1. Eso es el **P0-6**, y `user-hook-url` lo
+remedia sin parchear rttys: intercepta `/connect/`, `/cmd/` y `/web/`.
+
+**Construido:** autorización por dispositivo. El webhook resuelve identidad con
+`/api/me` y consulta el propio `ListDevices` del producto como oráculo, de modo
+que hereda el esquema de grupos sin reimplementarlo. El rol `admin` **no** se
+exime: su asignación se resuelve por intersección de grupos de usuario.
+
+**No construido:** la aprobación de segunda persona. `/cmd/` y `/web/` deniegan
+incondicionalmente con motivo `aprobacion no implementada`.
+
+Ver `docs/diseno-hook-autorizacion.md`, `docs/cierre-mejora1-hook.md` y
+`docs/webhook-kvm-hook-construccion.md`.
+
+**Diseño original, conservado como referencia:**
 
 ```text
 Analista ──▶ n8n: "solicitar sesión KVM en DC01, 30 min"
@@ -337,56 +374,154 @@ Analista ──▶ n8n: "solicitar sesión KVM en DC01, 30 min"
                 └─▶ Publicación del enlace en el War Room + temporizador
 ```
 
-Cuestiones a resolver antes de implementar:
+Las tres cuestiones que este README anticipó resultaron ser las correctas, y
+así se resolvieron:
 
-- El dispositivo no expone API de gestión de sesiones. Habría que orquestar
-  sobre la API de rttys (nivel 1) o sobre la del propio GL-RM1, aún sin
-  documentar en este proyecto.
-- El nivel 2 no puede depender de n8n: si n8n cae, el break-glass debe seguir
-  funcionando. El flujo de aprobación aplicaría al nivel 1, y el nivel 2
-  quedaría como vía manual con registro obligatorio *a posteriori*.
-- La política de dos personas para `powerreset` exige un mecanismo que impida
-  el atajo. Con acceso directo al dispositivo, un operador con credenciales
-  puede reiniciar el DC sin pasar por el flujo. Esto es una **limitación
-  estructural del nivel 2**, no un defecto de implementación, y debe
-  documentarse como tal.
+- **API de gestión de sesiones.** Resuelto por el nivel 1: `user-hook-url` es un
+  punto de control del propio rttys, sin API nueva. El hook recibe `devid` y
+  acción en `X-Original-URL`, y la cookie del analista para resolver identidad.
+  Presupuesto de 3 s de timeout; medido p95 de 135 ms.
+- **El nivel 2 no depende de n8n.** Verificado (V4): con n8n detenido,
+  `/connect/` devuelve `403` —el hook falla cerrado— y `https://192.168.0.36`
+  sigue operativo. Las dos mitades cuentan: el hook cerrado sin vía de emergencia
+  sería un enclave inaccesible, y la vía sin hook sería el P0-6. El nivel 2 queda
+  como vía manual auditada *a posteriori*, tal como este README anticipaba.
+
+  Matiz encontrado al construir: `callUserHookUrl` falla cerrado ante caída de
+  n8n y ante respuesta distinta de `200`, pero **abierto** ante un error interno
+  del propio flujo, que responde `200` por defecto. Mitigado cableando la salida
+  de error de cada nodo al camino que deniega.
+- **La política de dos personas para `powerreset` no es construible.** Con
+  acceso directo al dispositivo, un operador con credenciales reinicia el DC sin
+  pasar por el flujo. Confirmado además que las acciones de potencia exigen
+  credencial (`POST /api/atx/click` → `401` desde la LAN), de modo que la premisa
+  es «operador con credencial local», no «cualquier equipo de la red». Queda
+  documentado como **RA-1**, riesgo aceptado, en
+  `docs/riesgos-aceptados-hook-nivel1.md`, con su control compensatorio: la
+  detección ha de residir en un observador independiente del dispositivo.
 
 ### 2. Validación TLS del canal rtty
 
-Colocar `oob-rootCA.crt` en ruta persistente del dispositivo, añadir `-C <ruta>`
-al heredoc de `S01selfCloud` y emitir el certificado de rttys con SAN para
-`192.168.0.70`. Elimina el `SSL certificate error(18)` que aparece hoy en cada
-conexión.
+**Implementada** (11 sep 2026). `oob-rootCA.crt` en `/etc/kvmd/user/`, `-C` en el
+heredoc de `S01selfCloud` —nunca en `rtty-loop.sh`, que se regenera— y
+certificado `glkvm-cloud.crt` con SAN `IP:192.168.0.70` y `serverAuth`.
+
+El paso previo resultó ser el hallazgo: rttys presentaba **la CA raíz del
+enclave** como certificado de servidor, y su clave privada estaba montada en el
+contenedor del fabricante. El `-x` de rtty no era un descuido: era lo único que
+hacía funcionar el canal, porque ese certificado no podía validar.
+
+Verificada con prueba negativa: con `-C` apuntando a una CA que no es la
+emisora, rtty no conecta. Ver `docs/mejora2-tls-canal-rtty.md`.
 
 ### 3. Trazabilidad del operador
 
-`device_event_logs` registra `client_ip = 172.18.0.1` —el gateway del bridge de
-Docker— para cualquier analista. Requiere PROXY protocol o cabeceras reenviadas
-desde Traefik hasta rttys. Sin esto, la atribución de un `powerreset` sobre el
-DC es inexistente.
+**Resuelta** (11 sep 2026), y **no con PROXY protocol**, que queda descartado.
+
+`client_ip` era la pista equivocada. La tabla tiene además `actor_user_id` y
+`actor_name`, poblados en todos los eventos de operador; lo que faltaba era más
+de un principal — `users` tenía una sola fila. Con tres cuentas nominales, la
+atribución discrimina. La IP del analista, con credencial compartida, tampoco
+habría identificado a nadie.
+
+Alcance: la tabla registra **sesiones establecidas**, no intentos. Las
+denegaciones del hook no dejan rastro, porque corta antes de
+`handleUserConnection`. Ver `docs/mejora3-trazabilidad-operador.md`.
 
 ### 4. Consola de dispositivo por subdominio (nivel 1)
 
-El Remote Control de la plataforma genera URLs del tipo
-`https://<deviceId>.kvm.oob.local/...`. Requiere regla `HostRegexp` en Traefik y
-un certificado con SAN `*.kvm.oob.local` — los comodines TLS son de un solo
-nivel y `*.oob.local` no lo cubre. Descartado a favor del acceso directo, pero
-sería la vía para que el nivel 1 tenga vídeo propio.
+**Analizada y descartada** (11 sep 2026), pero por una razón distinta de la que
+se creía. No era sólo comodidad: hoy `/web/` sirve la interfaz del propio GL-RM1
+**dentro del origen** `https://kvm.oob.local`, de modo que el JavaScript del
+dispositivo —la pieza de terceros que el enclave no considera confiable—
+comparte origen con la consola de la plataforma. Un subdominio por dispositivo
+le daría origen propio.
+
+No se implementa porque con **un solo KVM** el aislamiento no separa nada, y el
+coste toca cuatro capas: certificado con SAN `*.kvm.oob.local` (los comodines son
+de un solo nivel), enrutado de cliente de la SPA —la consola usa
+`/#/rtty/<devid>`, con fragmento que no llega al servidor—, la validación de Host
+de `api.go:185`, y reglas en Traefik.
+
+**Condición de reevaluación:** si el enclave incorpora un segundo KVM, debe
+implementarse antes de habilitar `/web/` para ambos. Ver
+`docs/mejora4-consola-subdominio.md`.
 
 ### 5. Prueba funcional mensual
 
-Procedimentar y registrar en IRIS: abrir consola, confirmar vídeo y teclado,
-**con Headscale detenido**. Es la prueba que valida la premisa de la fase. Sin
-ejecutar acciones de potencia.
+**Procedimentada** (11 sep 2026), con los modos de fallo medidos en la primera
+ejecución. El planteamiento original no medía nada: **detener Headscale casi no
+rompe el tailnet**, porque Tailscale separa plano de control y plano de datos y
+los nodos registrados siguen comunicándose. Una prueba así pasa siempre.
+
+El modo de fallo real es **coordinador caído más nodo reiniciado**: DC01
+reiniciado con Headscale parado queda fuera del tailnet hasta que el coordinador
+vuelve.
+
+Consecuencia para la detección del nivel 2: la caída del heartbeat de DC01 no
+discrimina un `powerreset` malicioso de una caída del coordinador, porque un
+`powerreset` reinicia DC01 y un atacante puede tumbar Headscale primero. La
+detección debe apoyarse en el registro local de Wazuh.
+
+Procedimiento M1–M7 con criterio de aprobado fijado antes de ejecutar, en
+`docs/mejora5-prueba-mensual-resiliencia.md`.
 
 ### 6. Endurecimiento adicional del dispositivo
 
+**Inventariada** (11 sep 2026), con correcciones aplicadas y riesgos aceptados.
+Es la mejora que más creció respecto a su alcance original. Detalle completo en
+`docs/mejora6-endurecimiento-dispositivo.md`.
+
+**Base establecida.** Lo que persiste: `/` monta un overlay sobre un squashfs de
+solo lectura, de modo que los cambios en `/etc` sobreviven. Lo que puede
+deshacerlos es un script de arranque: `S99custom` ejecuta como root **todo lo que
+coincida con `S??*`** en `/etc/kvmd/user/scripts/`.
+
+**Aplicado:**
+
+- `/etc/dropbear` estaba en `777`. El directorio de la clave de host SSH era
+  escribible por cualquiera: borrar un fichero depende del permiso del
+  directorio, no del fichero. Corregido a `755`.
+- Eliminados dos residuos de edición en `/etc/kvmd/user/scripts/`. Uno de ellos,
+  `S01selfCloud.bak-19700101`, **coincidía con el patrón `S??*` y se ejecutaba
+  como root en cada arranque** junto al original; la colisión estaba amortiguada
+  por un `pgrep`, no por diseño.
+
+**Riesgos aceptados, documentados:**
+
+- **RA-4 · SSH con contraseña para `root`, abierto a la LAN.** `dropbear` escucha
+  en `0.0.0.0:22` sin `-s`. Amplía la descripción de la vía de emergencia de
+  RA-1: hay una segunda vía a shell que no pasa por kvmd ni por `auth_request`.
+  Se acepta porque la contraseña es propia y distinta de la de la web UI, y
+  porque endurecer sin clave pública instalada dejaría al operador fuera del
+  break-glass.
+- **RA-5 · El token del dispositivo es visible en `/proc/<pid>/cmdline`**, porque
+  `rtty` lo recibe como argumento `-t`. Cuarta vía de fuga del mismo secreto y la
+  más accesible: no requiere privilegio. No es remediable desde el proyecto.
+- **RA-6 · `/same_check` es un oráculo de identidad.** Dada una MAC en formato con
+  dos puntos, responde si coincide con la del dispositivo. Sin autenticación, en
+  claro por el puerto 80, con CORS `*` — consultable desde el navegador de
+  cualquiera que visite una página web, sin estar en la LAN.
+
+**Corrección al reconocimiento:** `ipmipasswd` y `vncpasswd` **no** son almacenes
+de credenciales, son plantillas de PiKVM sin entradas. El inventario del P0-3 sí
+crece por otra vía: `S01selfCloud` guarda `TOKEN` y `WEBRTC_PASSWORD` en claro.
+
+**Propuestas pendientes:**
+
+- Activar el segundo factor de kvmd, que cierra el P2-9 —`/api/2fa/is_enabled`
+  anuncia sin autenticación que no hay segundo factor— y no toca SSH, de modo que
+  no compromete RA-4. Requiere guardar el secreto fuera del enclave.
+- Recortar `ntpd` de `0.0.0.0:123` a cliente.
+- Cerrar la variante en claro de `/same_check` por el puerto 80.
 - Rotación del syslog: el buffer de 22 h es saturable por cualquier componente
   en bucle, y así se perdió la evidencia forense del incidente de julio.
-- Revisión de `S99cloudflare`, `S99zerotier` y `S99netbird`: inertes por
-  ausencia de fichero de configuración, no por decisión. Un JSON de 30 bytes
-  los activa. ZeroTier y NetBird además escriben `ip_forward=1` en
-  `/etc/sysctl.conf` al arrancar y no lo revierten al parar.
+- `S99cloudflare`, `S99zerotier` y `S99netbird`: inertes por ausencia de fichero
+  de configuración, no por decisión — verificado que los tres salen por esa
+  guarda antes de evaluar la bandera `.enable`. Un JSON de 30 bytes los activa.
+  ZeroTier y NetBird además escriben `ip_forward=1` en `/etc/sysctl.conf` al
+  arrancar y no lo revierten al parar. Distinto de Tailscale, que **sí** tiene su
+  JSON con `{"enable": false}` y conserva estado de nodo persistido.
 - `docker save` de la imagen de la plataforma: namespace personal de Docker Hub.
 
 ---
