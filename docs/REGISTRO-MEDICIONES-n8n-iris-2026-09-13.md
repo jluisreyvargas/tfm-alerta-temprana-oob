@@ -422,3 +422,128 @@ del contenedor; la interfaz de n8n sigue accesible.
   manifiesto actual convertiría un hueco de almacenamiento en un registro
   falso de cadena de custodia — ya señalado en la sección P3 de la revisión,
   y esta sesión de medición no cambia esa conclusión.
+
+## 8. Adenda — cierre de la Fase 5_4a
+
+Sesión de cierre, 2026-09-13 tarde/noche. Las secciones 1-7 se conservan tal
+como se redactaron; esta adenda cierra dos de los puntos que quedaban
+abiertos allí (M-5, M-8) sin reescribir sus entradas originales, y registra
+lo que apareció al ejercitar el flujo completo con alertas reales.
+
+### Cierre parcial de M-5
+
+El valor `kScBxrDSCtRDxZmnm` **sí es** el user ID real del bot de
+Rocket.Chat: confirmado en la salida del nodo `Crear War Room`, donde
+`group.u._id` es exactamente ese valor, con `username: orchestrator-bot`.
+Que coincida en formato con un ID de credencial de n8n es casualidad — ambos
+son `ObjectId` de Mongo, de la misma forma pero de dos almacenes distintos.
+La cuestión abierta que M-5 dejaba sin medir —si Rocket.Chat valida ese
+campo del cuerpo o lo ignora— queda resuelta: **era correcto**, no una
+coincidencia inofensiva sobre un dato erróneo.
+
+Lo que de M-5 sigue en pie es el hueco de saneado ya descrito allí: ese
+mismo valor viaja en `parameters`, y `export-workflow.sh` no lo cubre.
+
+### Cierre de M-8
+
+`GET /case/activities/list?cid=4` devolvió `is_from_api: true` para el caso
+creado por n8n. El instrumento funciona tal como F28 de la revisión lo
+preveía. Matiz que queda abierto: se verificó con **una sola** llamada al
+caso. El riesgo de reutilización de cookie que M-8 planteaba se manifestaría
+con llamadas encadenadas sobre el mismo caso — que es justo lo que hará el
+Workflow 2 al añadir una nota y un evento de timeline después de crear el
+caso. Sin medir ese escenario todavía.
+
+### M-12 · `$env` no resuelve en expresiones de nodos HTTP
+
+La cabecera `X-User-Id` con valor `={{ $env.RC_BOT_USER_ID }}` produjo
+«authorization failed» en Rocket.Chat; con el literal en su lugar, funciona.
+`printenv RC_BOT_USER_ID` dentro del contenedor devuelve el valor correcto,
+así que la variable existe y está accesible al proceso — lo que falla es su
+resolución dentro de la expresión de un nodo HTTP Request, que termina
+enviando la cabecera vacía. `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` está fijado
+en el compose, pero esa variable gobierna el acceso a `$env` desde nodos
+Code, no desde expresiones de parámetros de otros tipos de nodo.
+
+Lo relevante no es el fallo en sí, sino su mensaje: «authorization failed»
+apunta al token, no a la variable no resuelta — es el tipo de mensaje que
+casi lleva a regenerar una credencial que estaba sana. Es un error de
+diagnóstico inducido por el mensaje, no causado por el fallo real.
+
+Estado: el nodo `Referencia en War Room` usa el literal como solución
+temporal. El valor no es secreto en sí mismo — es el user ID público del
+bot, visible en cualquier respuesta de la API de Rocket.Chat —, pero al ir
+como literal acabará en el JSON versionado del workflow porque el saneado de
+`export-workflow.sh` no cubre `parameters` (mismo hueco que M-5). Pendiente
+de investigar por qué `$env` no resuelve ahí.
+
+### M-13 · Carrera entre las ramas paralelas de Rocket.Chat e IRIS
+
+Con `Preparar Caso IRIS` colgando de `Abrir War Room` en paralelo con
+`Crear War Room`, la rama de IRIS llegaba antes de que el canal existiera, y
+`$('Crear War Room').first()` lanzaba `Node 'Crear War Room' hasn't been
+executed`. El encadenamiento opcional entre ramas paralelas no protege
+contra esto, tal como ya advierte el comentario de `Code Merge Final`.
+
+El nodo afectado por esta carrera era, en concreto, `Aviso Fallo IRIS` — el
+nodo que precisamente debe avisar cuando algo falla —, y al llevar
+`continueErrorOutput`, el fallo no quedaba visible en ningún sitio: se
+perdía en silencio.
+
+Resuelto serializando el cableado (`Contexto en War Room → Preparar Caso
+IRIS`, en vez de dos ramas paralelas desde `Abrir War Room`) y resolviendo
+`room_id` una sola vez dentro del Code, con la convención `salidaDe()` para
+no volver a depender de referencias cruzadas a nodos que podrían no haberse
+ejecutado todavía.
+
+### M-14 · AbuseIPDB devuelve 0 para una IP maliciosa conocida
+
+En las pruebas con `185.220.101.5` (nodo de salida Tor conocido), AbuseIPDB
+devolvió `abuse_confidence: 0`, `abuse_total_reports: 0`,
+`abuse_country: N/A` y `abuse_is_tor: false`, mientras que en la misma
+alerta VirusTotal marcó 12 motores como maliciosos y MISP aportó 5
+atributos.
+
+`Code CTI Context` no distingue «sin reputación registrada» de «no se pudo
+consultar la fuente»: los `?? 0` que usa convierten cualquier fallo de la
+consulta en un cero legítimo, indistinguible de una IP realmente limpia. El
+score consolidado de esa alerta fue 14 (CRITICA) pese a perder una de las
+tres fuentes de CTI, así que el resultado final fue correcto — pero por la
+robustez del cálculo de score frente a una fuente ausente, no porque
+AbuseIPDB hubiera funcionado. Sin medir la causa concreta del cero (clave
+agotada, error de la API, formato de respuesta inesperado). Es el mismo
+patrón que M-1: la ausencia de señal es indistinguible de la señal cero, y
+nada en el flujo actual lo señala.
+
+### M-15 · Tres campos que el triaje envía vacíos desde siempre
+
+El cuerpo que n8n manda a `langgraph-agent` interpola
+`{{$json.wazuh.timestamp}}`, pero `Normalize Alert` produce el campo
+`event_timestamp`, no `timestamp` — ese campo no existe en el objeto que se
+interpola. El mismo cuerpo pide también `cti.misp_threat_level` y
+`cti.misp_attributes_summary`, que `Code CTI Context` nunca produce (solo
+genera `misp_total`). Los tres llegan al agente como cadena vacía, dentro de
+un JSON por lo demás válido, sin que nada emita un error. El triaje lleva
+funcionando sin marca de tiempo de evento y sin contexto MISP resumido desde
+que existe, sin que esto hubiera sido detectado hasta ejercitar el flujo
+completo con alertas reales en esta sesión.
+
+### Estado final de la Fase 5_4a
+
+El bloqueante 3 de la revisión (tabla de `severity_id`) se verificó por
+comportamiento, no solo por lectura de código: una alerta CRITICA produjo un
+caso real en IRIS con severidad Critical (caso #4, `severity_id: 6`). Los
+dos caminos del flujo del Workflow 1 —éxito y fallo— se ejercitaron con
+alertas reales, no como supuestos de diseño. El camino de fallo se probó
+forzando una URL inválida en el nodo de creación del caso, y el War Room y
+el aviso de fallo se comportaron como el diseño corregido preveía.
+
+La corrección de la tabla `SEV` está **aplicada y commiteada** (`7d20797`),
+no pendiente: la sección 7 se redactó antes de aplicarla. Lo que sigue
+abierto es su verificación. Esta prueba cubre únicamente CRITICA, que es el
+valor que la tabla vieja ya mapeaba bien (`CRITICA: 6` en ambas); **MEDIA y
+BAJA, que eran precisamente los dos valores mal mapeados, no se han
+ejercitado todavía**. Una alerta de nivel bajo y sin grupos de
+autenticación produciría BAJA y permitiría confirmar que llega a IRIS como
+Low (3) y no como Medium (4). Hasta entonces el bloqueante 3 está corregido
+con verificación parcial.
