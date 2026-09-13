@@ -23,6 +23,15 @@
 
     { "action": "accept", "src": ["tag:analyst"], "dst": ["tag:kvm:443,80,22"] },
 
+    // P1-1a Fase C: el borde TLS del enclave por el tailnet. El criterio de la
+    // Fase 4 es que el analista alcance en contingencia lo critico: IRIS
+    // (documentacion del incidente) y Rocket.Chat (coordinacion) se declaran en
+    // docs/resolucion-nombres.tsv sobre 100.64.0.1 desde el P0-D, pero ninguna
+    // regla concedia el 443. Verificado: ping OK y TCP a 443 y 4833 rechazados
+    // desde 100.64.0.4. Conceder el 443 no concede los servicios: cada router
+    // conserva su middleware y su regla de Authelia.
+    { "action": "accept", "src": ["tag:analyst"], "dst": ["tag:orchestrator:443"] },
+
     // Excepción acotada al principio "el DC nunca es origen":
     // el cliente RustDesk debe registrarse contra el servidor de
     // rendezvous del enclave. Limitado a los puertos de señalización
