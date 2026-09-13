@@ -7,8 +7,15 @@ services:
     image: velociraptor-oob:0.76.6
     container_name: velociraptor
     ports:
+      # 8889 (GUI) retirado en el P1-1a Fase D: se sirve por
+      # https://velociraptor.oob.local a traves de Traefik, con secure-headers.
+      # Sin Authelia por incompatibilidad con su Basic Auth, ver
+      # docs/DECISION-velociraptor-fuera-sso.md
+      #
+      # 8001 (frontend de agentes) NO se toca: TLS mutuo contra la CA de
+      # Velociraptor con use_self_signed_ssl, terminar TLS en Traefik rompe el
+      # pinning verificado en el P0-1.
       - "8001:8001"
-      - "8889:8889"
     volumes:
       - ./velociraptor-config:/velociraptor
     restart: unless-stopped
