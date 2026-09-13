@@ -28,6 +28,16 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=oob-network"
+      - "traefik.http.routers.iris.rule=Host(`iris.oob.local`)"
+      - "traefik.http.routers.iris.entrypoints=websecure"
+      - "traefik.http.routers.iris.tls=true"
+      - "traefik.http.routers.iris.service=iris"
+      - "traefik.http.routers.iris.middlewares=secure-headers@file,authelia@file"
+      - "traefik.http.services.iris.loadbalancer.server.port=4833"
+      - "traefik.http.services.iris.loadbalancer.server.scheme=https"
 
   rabbitmq:
     image: rabbitmq:3.13.7-management-alpine
