@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-25T22:38:55.984Z",
+  "updatedAt": "2026-09-13T23:26:37.064Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -17,8 +17,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1440,
-        -1264
+        -1760,
+        -1872
       ],
       "id": "45f31686-d997-46bc-8b6a-283cf4bc072e",
       "name": "Webhook"
@@ -30,8 +30,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1040,
-        -1264
+        -1360,
+        -1872
       ],
       "id": "e2047e33-1686-45e8-acbc-2123d087bd00",
       "name": "Normalize Alert"
@@ -63,8 +63,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -880,
-        -1264
+        -1200,
+        -1872
       ],
       "id": "be927338-a61c-4a95-a22f-20cde7e8bb22",
       "name": "If"
@@ -79,8 +79,8 @@
       "type": "n8n-nodes-base.rocketchat",
       "typeVersion": 1,
       "position": [
-        -208,
-        -720
+        -1040,
+        -1136
       ],
       "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
       "name": "Post a message",
@@ -101,8 +101,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        240,
-        -1392
+        -80,
+        -2000
       ],
       "id": "af430703-2616-44da-974f-f0d1056ff22e",
       "name": "Merge",
@@ -115,8 +115,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        400,
-        -1248
+        144,
+        -1856
       ],
       "id": "d8f4f830-bee1-4e14-8e9f-8563cca7285e",
       "name": "Code CTI Context"
@@ -148,8 +148,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -128,
-        -1760
+        -448,
+        -2368
       ],
       "id": "decce2a4-2e35-406f-9439-d7bd2efc95b4",
       "name": "AbuseIPDB",
@@ -175,8 +175,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -128,
-        -1584
+        -448,
+        -2192
       ],
       "id": "efcab7cb-c20b-434f-a60e-afdc1601ab95",
       "name": "VirusTotal",
@@ -201,8 +201,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -896,
-        -896
+        -1680,
+        -1504
       ],
       "id": "0915b25c-6ce4-4aca-a58b-d2c51da06a47",
       "name": "Merge1",
@@ -231,8 +231,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1200,
-        -880
+        -1920,
+        -1488
       ],
       "id": "7910d63e-d5c5-4b0f-9b8f-34cc94eeecf3",
       "name": "HTTP Request"
@@ -244,8 +244,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -688,
-        -896
+        -1472,
+        -1504
       ],
       "id": "71356f00-f2b5-4240-ab78-5d80b61a4cd7",
       "name": "Code Merge Final"
@@ -266,8 +266,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -128,
-        -1424
+        -448,
+        -2032
       ],
       "id": "67f4fff8-9c3a-4226-ad7e-831d32b58176",
       "name": "MISP",
@@ -290,8 +290,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1232,
-        -1264
+        -1552,
+        -1872
       ],
       "id": "39a292c2-c4c0-4a3f-990c-b57d1693e195",
       "name": "Code in JavaScript"
@@ -303,8 +303,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -656,
-        -1264
+        -976,
+        -1872
       ],
       "id": "642df071-dd5b-4b47-9a5f-3893ab6027dc",
       "name": "Dedup"
@@ -337,8 +337,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -480,
-        -896
+        -1264,
+        -1504
       ],
       "id": "5fa80c64-d894-49e6-aa5d-a5e362adb682",
       "name": "Abrir War Room"
@@ -354,7 +354,7 @@
           "parameters": [
             {
               "name": "X-User-Id",
-              "value": "={{ $env.RC_BOT_USER_ID }}"
+              "value": "kScBxrDSCtRDxZmnm"
             }
           ]
         },
@@ -366,8 +366,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        16,
-        -912
+        -816,
+        -1296
       ],
       "id": "7d3ea1e0-2e5d-4750-9abc-5d04853ae23d",
       "name": "Contexto en War Room",
@@ -389,7 +389,7 @@
           "parameters": [
             {
               "name": "X-User-Id",
-              "value": "={{ $env.RC_BOT_USER_ID }}"
+              "value": "kScBxrDSCtRDxZmnm"
             }
           ]
         },
@@ -401,8 +401,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        256,
-        -912
+        -576,
+        -1056
       ],
       "id": "410ac306-cad7-49f1-bf46-ddad0b617840",
       "name": "Anuncio en General",
@@ -424,7 +424,7 @@
           "parameters": [
             {
               "name": "X-User-Id",
-              "value": "={{ $env.RC_BOT_USER_ID }}"
+              "value": "kScBxrDSCtRDxZmnm"
             }
           ]
         },
@@ -436,8 +436,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -208,
-        -912
+        -1040,
+        -1296
       ],
       "id": "4134429c-bfec-4210-b463-64774bc47570",
       "name": "Crear War Room",
@@ -478,11 +478,180 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -448,
-        -1264
+        -768,
+        -1872
       ],
       "id": "f1c0c3ae-b94b-4549-967c-975f978d9533",
       "name": "CTI Aplicable"
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst status = Number(r.statusCode ?? 0);\nconst body = r.body ?? {};\nconst prep = $('Preparar Caso IRIS').first().json;\n\n// IRIS colapsa la mayoria de errores de negocio a un mensaje generico sin\n// detalle de campo (app/business/cases.py:116-118), asi que body.data no es\n// fiable para explicar que fallo.\nconst iris_ok = status >= 200 && status < 300 &&\n                body.status === 'success' &&\n                Boolean(body.data?.case_id);\n\nreturn [{ json: {\n  ...prep,\n  iris_ok,\n  iris_case_id: body.data?.case_id ?? null,\n  iris_soc_id: body.data?.soc_id ?? null,\n  iris_status: status,\n  iris_motivo: iris_ok ? '' :\n    `HTTP ${status} — ${String(body.message ?? 'sin mensaje de IRIS').slice(0, 200)}`,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -1536
+      ],
+      "id": "a1679f9b-b63e-4dfb-976e-2521cd0e3791",
+      "name": "Evaluar Respuesta IRIS",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b7ac836d-7a7b-4944-883a-75faf301534a",
+              "leftValue": "={{ $json.iris_ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        -1552
+      ],
+      "id": "72d10689-006f-4c8d-8cae-e0bdcd73f9af",
+      "name": "¿Caso IRIS creado?",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "=kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"roomId\": \"{{ $json.room_id }}\",\n  \"text\": \"📁 Caso IRIS creado: *#{{ $json.iris_case_id }}* — {{ $json.iris_payload.case_name }}\\n🔗 https://iris.oob.local/case?cid={{ $json.iris_case_id }}\\n🔖 SOC ID: {{ $json.iris_payload.case_soc_id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        -1568
+      ],
+      "id": "ed6f36fa-fb11-4b1e-915f-8d3723f754aa",
+      "name": "Referencia en War Room",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "{{ $env.RC_BOT_USER_ID }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=={\n  \"roomId\": \"{{ $json.room_id }}\",\n  \"text\": \"⚠ *No se pudo crear el caso en IRIS*\\n{{ $json.iris_motivo }}\\n🔖 Alerta Wazuh: {{ $('Code Merge Final').first().json.wazuh.alert_id }}\\nEl incidente queda sin registro en IRIS: crearlo a mano o revisar el workflow.\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        -1024
+      ],
+      "id": "f74baf44-3a37-4607-a18c-94e21985972e",
+      "name": "Aviso Fallo IRIS",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://iris.oob.local:4833/manage/cases/add",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.iris_payload) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -320,
+        -1376
+      ],
+      "id": "4b1c0ad7-e628-436a-bfb9-c392027d8e73",
+      "name": "Crear Caso IRIS",
+      "credentials": {
+        "dfirIrisApi": {
+          "id": "REEMPLAZAR",
+          "name": "DFIR-IRIS account"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Esta llamada va al 4833 publicado en la tailnet por el override de fase 6, no pasa por Traefik ni Authelia, y no hereda la protección 2FA del dominio."
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('Code Merge Final').first().json;\nconst w = d.wazuh ?? {};\nconst c = d.cti ?? {};\nconst dec = d.decision ?? {};\n\nconst norm = s => String(s ?? '').trim().toUpperCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\n// $('Nodo').first() lanza excepcion si el nodo no llego a ejecutarse. El\n// encadenamiento opcional no protege: el error se produce antes de evaluarlo.\n// Misma convencion que Code Merge Final.\nfunction salidaDe(nombre) {\n  try {\n    return $(nombre).first()?.json ?? {};\n  } catch (e) {\n    return {};\n  }\n}\n\n// El roomId se resuelve aqui, una sola vez, y viaja en el item. Si se\n// referenciara desde las plantillas de los nodos de Rocket.Chat, una\n// ejecucion en la que 'Crear War Room' no haya corrido todavia rompe el\n// nodo de aviso — justamente el que debe avisar de los fallos.\nconst war = salidaDe('Crear War Room');\nconst room_id = war.group?._id ?? war.channel?._id ?? '';\n\n// Vocabulario cerrado en origen: fase3-agentic/app/llm.py:173 rechaza\n// severidades fuera de SEVERITY_VALUES y agents.py:81-86 cae al motor\n// determinista si el guardrail se dispara. Todos los caminos de triage_agent\n// producen severity_real. El defecto es red de seguridad, no camino esperado.\n// Tabla real de IRIS (fase6-iris/source/app/post_init.py:694-707):\n// 1=Unspecified, 2=Informational, 3=Low, 4=Medium, 5=High, 6=Critical\nconst SEV = { CRITICA: 6, ALTA: 5, MEDIA: 4, BAJA: 3 };\nconst sevLabel = norm(dec.severity_real);\nconst severity_id = SEV[sevLabel] ?? 1;\nconst sev_no_reconocida = !(sevLabel in SEV);\n\n// F14-bis: estos IDs vienen del orden de carga de una taxonomia MISP de\n// terceros en el primer arranque de IRIS (post_init.py:638-660), no son\n// constantes declaradas. Verificar contra la instancia antes de produccion\n// real: GET /manage/case-classifications/list\nconst grupos = (w.rule_groups ?? []).map(g => String(g).toLowerCase());\nlet classification_id = 14; // intrusion-attempts:exploit-known-vuln\nif (grupos.some(g => ['authentication_failed', 'authentication_failures',\n                      'sshd', 'win_authentication_failed'].includes(g))) {\n  classification_id = 15; // intrusion-attempts:login-attempts\n} else if (grupos.some(g => ['rootcheck', 'rootkit', 'malware'].includes(g))) {\n  classification_id = 10; // malicious-code:rootkit\n}\n\n// El texto del LLM viaja influido por rule_desc/full_log, que un atacante\n// controla parcialmente. Se neutraliza lo que rompe el Markdown de IRIS.\nconst md = (s, max = 600) => String(s ?? '')\n  .replace(/[`*_~<>[\\]|#]/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, max) || 'N/D';\n\nconst corto = md(w.rule_desc, 80);\nconst case_name = `[${sevLabel}] ${w.rule_id} — ${corto} · ${w.agent_name}`;\n\nconst lineas = [\n  `## Incidente ${sevLabel}`,\n  '',\n  `| Campo | Valor |`,\n  `| --- | --- |`,\n  `| Regla | ${w.rule_id} (nivel Wazuh ${w.rule_level}) |`,\n  `| Descripción | ${md(w.rule_desc, 200)} |`,\n  `| Agente | ${md(w.agent_name, 60)} (${md(w.agent_ip, 40)}) |`,\n  `| IP origen | ${md(w.src_ip, 40)} |`,\n  `| Evento | ${md(w.event_timestamp, 40)} |`,\n  `| Ingesta en el enclave | ${md(w.ingest_timestamp, 40)} |`,\n  `| Alerta Wazuh | ${md(w.alert_id, 60)} |`,\n  '',\n  `## Triaje — motor ${md(dec.analysis_mode, 60)}`,\n  '',\n  `- Severidad: **${sevLabel}** (score ${dec.score ?? 'N/D'})`,\n  `- ATT&CK: ${md(dec.mitre_technique, 80)} / ${md(dec.mitre_tactic, 80)}`,\n  `  (fuente: ${md(dec.mitre_source, 40)})`,\n  `- Resumen: ${md(dec.summary)}`,\n  `- Recomendación: ${md(dec.recommendation)}`,\n  '',\n  `## Inteligencia`,\n  '',\n  `- AbuseIPDB: ${c.abuse_confidence ?? 0}% de confianza, ` +\n    `${c.abuse_total_reports ?? 0} reportes, país ${md(c.abuse_country, 10)}` +\n    `${c.abuse_is_tor ? ', **nodo Tor**' : ''}`,\n  `- VirusTotal: ${c.vt_malicious ?? 0} motores maliciosos, ` +\n    `${c.vt_suspicious ?? 0} sospechosos, ${c.vt_harmless ?? 0} inocuos ` +\n    `(ASN ${md(c.vt_asn, 20)}, ${md(c.vt_as_owner, 60)})`,\n  `- MISP: ${c.misp_total ?? 0} atributos coincidentes`,\n];\n\nif (c.enrichment_skipped) {\n  lineas.push(`- ⚠ Enriquecimiento omitido: ${md(c.enrichment_skipped, 120)}`);\n}\n\n// Solo se escribe la seccion cuando hay algo que contar: una linea fija de\n// \"guardrail: false\" en cada caso se vuelve invisible en una semana.\nconst avisos = [];\nif (dec.guardrail_triggered) {\n  avisos.push(`- 🛡 **Guardarraíl activado:** ${md(dec.guardrail_reason, 300)}`);\n}\nif (dec.llm_proposed_severity &&\n    norm(dec.llm_proposed_severity) !== sevLabel) {\n  avisos.push(`- El modelo propuso **${md(dec.llm_proposed_severity, 20)}**; ` +\n              `prevalece la del motor determinista.`);\n}\nif (dec.degraded_reason) {\n  avisos.push(`- ⚠ Triaje degradado: ${md(dec.degraded_reason, 300)}`);\n}\nif (sev_no_reconocida) {\n  avisos.push(`- ⚠ **Severidad no reconocida:** ` +\n              `\\`${md(dec.severity_real, 40)}\\` → Unspecified. ` +\n              `Revisar el vocabulario del triaje.`);\n}\n\nif (avisos.length) {\n  lineas.push('', '## Contención y anomalías', '', ...avisos);\n}\n\nlineas.push('', '---', '',\n  `War Room: #${md(d.war_room_name, 60)}`,\n  `Caso creado automáticamente por n8n desde el enclave OOB.`);\n\nreturn [{ json: {\n  ...d,\n  sev_no_reconocida,\n  room_id,\n  iris_payload: {\n    case_name,\n    case_description: lineas.join('\\n'),\n    case_customer: 1,          // IrisInitialClient, verificado 2026-09-13\n    case_soc_id: String(w.alert_id ?? ''),\n    classification_id,\n    severity_id,\n  },\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        -1296
+      ],
+      "id": "05ac2d06-93f3-4f32-b23a-6e5be3839828",
+      "name": "Preparar Caso IRIS",
+      "onError": "continueErrorOutput"
     }
   ],
   "connections": {
@@ -664,6 +833,11 @@
             "node": "Anuncio en General",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Preparar Caso IRIS",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -711,6 +885,79 @@
           }
         ]
       ]
+    },
+    "Evaluar Respuesta IRIS": {
+      "main": [
+        [
+          {
+            "node": "¿Caso IRIS creado?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Fallo IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Caso IRIS creado?": {
+      "main": [
+        [
+          {
+            "node": "Referencia en War Room",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Fallo IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Crear Caso IRIS": {
+      "main": [
+        [
+          {
+            "node": "Evaluar Respuesta IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Fallo IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Caso IRIS": {
+      "main": [
+        [
+          {
+            "node": "Crear Caso IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Fallo IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -721,7 +968,11 @@
   "staticData": {
     "global": {
       "seen": {
-        "550|ubuntuserver|/etc/prueba-1787697629.conf": 1787697629974
+        "550|ubuntuserver|/etc/cups/subscriptions.conf.O": 1789339398591,
+        "550|ubuntuserver|/etc/velociraptor.writeback.yaml.bak": 1789339399133,
+        "553|ubuntuserver|/etc/systemd/system/multi-user.target.wants/snap-thunderbird-1201.mount": 1789339404558,
+        "553|ubuntuserver|/etc/systemd/system/snap-thunderbird-1201.mount": 1789339405011,
+        "553|ubuntuserver|/etc/systemd/system/snapd.mounts.target.wants/snap-thunderbird-1201.mount": 1789339405426
       }
     }
   },
@@ -729,12 +980,12 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "104add13-bbd8-4d96-8e40-8e32dc0de486",
-  "versionCounter": 474,
+  "activeVersionId": "5b07385e-c21e-4f71-be83-31c807556e76",
+  "versionCounter": 1867,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 104add13",
+    "name": "Version 5b07385e",
     "description": ""
   }
 }
