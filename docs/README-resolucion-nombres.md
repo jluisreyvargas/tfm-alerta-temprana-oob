@@ -85,19 +85,21 @@ el P1-0— pasa el control sin ser detectada. Revisar el texto es manual.
 | ubuntu | misp.oob.local | 127.0.0.1 | MISP — CTI | Fuente de inteligencia consultada por el triaje. |
 | ubuntu | iris.oob.local | 100.64.0.1 | DFIR-IRIS — gestión de casos | Registro de incidentes; publicado solo en el tailnet tras P0-D; la misma línea de `hosts` comparte el alias `iris.local`. |
 | ubuntu | kvm.oob.local | 127.0.0.1 | GL.iNet KVM — Plan C | Consola de contingencia accedida vía Traefik. |
+| ubuntu | zsb25f8.oob.local | 127.0.0.1 | GL-RM1 — proxy `/web/` de rttys | Destino del redirect de rttys tras la aprobación del hook: el tráfico entra por `ListenHttpProxy` (10443) con un vale `rttysid`. Sin Authelia, como `kvm.oob.local`. Una regla de Traefik por dispositivo: el patrón no escala. |
 | ubuntu | minio.oob.local | 127.0.0.1 | MinIO — consola del almacén de evidencia | Administración del bucket `evidence` desde el host operador. Sustituye el acceso directo a :9001, que se cierra en la Fase D del P1-1a. |
 | ubuntu | velociraptor.oob.local | 127.0.0.1 | Velociraptor — GUI forense | Interfaz de colección servida vía Traefik. Sustituye el acceso directo a :8889. El frontend de agentes (:8001) queda fuera de Traefik por el TLS mutuo y conserva el alias `velociraptor.local`. |
 | ubuntu | hs.oob.local | 192.168.127.138 | Headscale — plano de control | El cliente Tailscale del propio orquestador usa `--login-server https://hs.oob.local`; resuelve a la interfaz del enclave, no a loopback, para que el tráfico del plano de control circule por la interfaz prevista (regla 2). |
 | w11 | velociraptor.local | 192.168.127.138 | Velociraptor — GUI forense (:8889) y frontend de agentes (:8001) | **Doble uso.** El puesto ejecuta además un cliente Velociraptor (servicio `Velociraptor`, `Running/Automatic`) cuyo `client.config.yaml` apunta a `https://velociraptor.local:8001/`, con TLS mutuo contra la CA de Velociraptor. La Fase D del P1-1a cierra el :8889 pero **no** el :8001: esta fila NO se retira. |
 | w11 | hs.oob.local | 192.168.127.138 | Headscale — plano de control / Headscale UI | El analista consulta el estado del tailnet y el registro del canal break-glass. |
 | w11 | auth.oob.local | 192.168.127.138 | Authelia — SSO | Autenticación previa a las UIs del enclave. |
-| w11 | chat.oob.local | 192.168.127.138 | Rocket.Chat — War Rooms | Canal primario de coordinación del analista. |
+| w11 | chat.oob.local | 100.64.0.1 | Rocket.Chat — War Rooms | Canal primario de coordinación del analista. Apunta al tailnet y no al segmento corporativo para que el canal sobreviva a la caída de este, que es el criterio de la Fase 4. Requiere la regla `tag:analyst -> tag:orchestrator:443`. |
 | w11 | n8n.oob.local | 192.168.127.138 | n8n — orquestador | Revisión de ejecuciones y aprobaciones desde el War Room. |
 | w11 | iris.oob.local | 100.64.0.1 | DFIR-IRIS — gestión de casos | Documentación del incidente. |
 | w11 | minio.oob.local | 192.168.127.138 | MinIO — consola del almacén de evidencia | El analista verifica la evidencia recolectada. Sin esta fila, cerrar :9001 en la Fase D deja al puesto sin acceso (regla R1 del plan). |
 | w11 | misp.oob.local | 192.168.127.138 | MISP — CTI | Única ruta a la UI de MISP tras el cierre del :12443. Declarada para la verificación funcional del P1-1a Fase C desde el puesto de analista. |
 | w11 | velociraptor.oob.local | 192.168.127.138 | Velociraptor — GUI forense | Puesto de analista. Sustituye `velociraptor.local:8889`, cuyo acceso directo se cierra en la Fase D. |
 | w11 | kvm.oob.local | 192.168.127.138 | GL.iNet KVM — Plan C | Consola de contingencia si RustDesk falla. |
+| w11 | zsb25f8.oob.local | 192.168.127.138 | GL-RM1 — proxy `/web/` de rttys | El redirect lo sigue el navegador del analista, así que el nombre debe resolver aquí o el control remoto del dispositivo falla. |
 | dc01 | hs.oob.local | 192.168.127.138 | ControlURL del cliente Tailscale del DC | Ver Excepciones. |
 | dc01 | velociraptor.local | 192.168.127.138 | Velociraptor — frontend de agentes (:8001) | Ver Excepciones. |
 

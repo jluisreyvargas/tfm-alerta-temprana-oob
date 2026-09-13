@@ -14,7 +14,10 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
+      # P1-1a Fase C: el dashboard y la API de Traefik se restringen a loopback.
+      # api.insecure sigue en true a proposito: el panel se usa solo desde el
+      # propio servidor, no desde otros equipos. Ver DECISION-dashboard-traefik.md
+      - "127.0.0.1:8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
