@@ -11,7 +11,7 @@ services:
       - N8N_PROTOCOL=https
       - WEBHOOK_URL=https://n8n.oob.local/
       - GENERIC_TIMEZONE=Europe/Madrid
-      - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/misp.crt
+      - NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/oob-rootCA.crt
       - NODE_FUNCTION_ALLOW_BUILTIN=crypto,fs
       - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       - N8N_PROXY_HOPS=1
@@ -27,7 +27,7 @@ services:
       - CREDENTIAL_BASE_URL=https://n8n.oob.local/webhook/bg-credential
     volumes:
       - n8n_data:/home/node/.n8n
-      - ./n8n/certs/misp.crt:/usr/local/share/ca-certificates/misp.crt:ro
+      - ./certs/oob-rootCA.crt:/usr/local/share/ca-certificates/oob-rootCA.crt:ro
       - ../../fase4-breakglass-dc/rustdesk/peers.json:/data/peers.json:ro
     networks:
       - oob-network
