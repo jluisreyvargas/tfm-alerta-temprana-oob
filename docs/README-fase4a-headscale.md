@@ -34,19 +34,39 @@ La ruta que se ha validado para lanzar correctamente el servicio es:
 
 ## Configuración validada
 
-> **Nota — configuración escrita, endurecimiento aún no aplicado al contenedor
-> en ejecución.** Los bloques de `docker-compose.headscale.yml`, `config.yaml`
-> y `acl.hujson` que siguen a continuación **ya reflejan la versión endurecida**
-> (`server_url` público vía Traefik, gRPC/métricas en loopback, DERP embebido,
-> política ACL). Lo que sigue pendiente no es escribir esa configuración —ya
-> está en el repositorio— sino **aplicarla**: el contenedor `headscale` sigue
-> en ejecución desde antes de que estos ficheros se modificaran por última vez,
-> así que el servicio real todavía atiende con los parámetros previos al
-> endurecimiento hasta que se recree (`docker compose down && docker compose up -d`
-> sobre `docker-compose.headscale.yml`). El detalle completo, incluidos los
-> pasos operativos pendientes tras el reinicio (reetiquetado de nodos, validación
-> de la política ACL), se documenta en
-> [`README-fase4-pendientes.md`](README-fase4-pendientes.md).
+> **Nota — la configuración se aplica solo al recrear el contenedor.** Los
+> bloques de `docker-compose.headscale.yml`, `config.yaml` y `acl.hujson` que
+> siguen reflejan la versión endurecida (`server_url` público vía Traefik,
+> gRPC/métricas en loopback, DERP embebido, política ACL), **y está aplicada
+> desde el 28/08/2026**: ver la sección 8 de
+> [`README-fase4-pendientes.md`](README-fase4-pendientes.md), con la tabla de
+> antes y después y su verificación empírica.
+>
+> Lo que permanece es el mecanismo: con `policy.mode: file`, Headscale carga la
+> ACL **al arrancar**, así que cualquier cambio posterior en `acl.hujson` no
+> llega a los nodos hasta que el contenedor se reinicia. Ninguno de los comandos
+> de `headscale policy` lo revela: `check` valida el fichero, `get` imprime el
+> fichero, y `set` está deshabilitado fuera del modo `database`. La política
+> vigente solo se comprueba desde un nodo destino:
+>
+> ```bash
+> sudo tailscale debug netmap | python3 -c 'import sys,json
+> d=json.load(sys.stdin)
+> for r in (d.get("PacketFilterRules") or []):
+>     print(r["SrcIPs"][0], sorted(set((p["Ports"]["First"], p["Ports"]["Last"])
+>           for p in r["DstPorts"] if ":" not in p["IP"])))'
+> ```
+>
+> El compose vive en el mismo directorio que se monta como `/etc/headscale`, así
+> que `docker compose` desde `fase4-breakglass-dc/` no lo encuentra:
+>
+> ```bash
+> cd fase4-breakglass-dc/headscale/config
+> docker compose -f docker-compose.headscale.yml restart headscale
+> ```
+>
+> Detalle en
+> [`HALLAZGO-headscale-politica-modo-file.md`](HALLAZGO-headscale-politica-modo-file.md).
 
 Se ha usado la imagen oficial `docker.io/headscale/headscale:0.28.0`, que sigue siendo una versión estable soportada en la documentación de despliegue en contenedor de Headscale.
 
