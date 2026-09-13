@@ -19,7 +19,7 @@ services:
       - "traefik.http.routers.velociraptor.entrypoints=websecure"
       - "traefik.http.routers.velociraptor.tls=true"
       - "traefik.http.routers.velociraptor.service=velociraptor"
-      - "traefik.http.routers.velociraptor.middlewares=secure-headers@file,authelia@file"
+      - "traefik.http.routers.velociraptor.middlewares=secure-headers@file"
       - "traefik.http.services.velociraptor.loadbalancer.server.port=8889"
       - "traefik.http.services.velociraptor.loadbalancer.server.scheme=https"
     networks:

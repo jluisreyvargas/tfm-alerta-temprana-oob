@@ -34,9 +34,6 @@ access_control:
     - domain: 'misp.oob.local'
       subject: 'group:ir_lead'
       policy: two_factor
-    - domain: 'velociraptor.oob.local'
-      subject: 'group:ir_lead'
-      policy: two_factor
     - domain: 'portainer.oob.local'
       subject: 'group:ir_lead'
       policy: two_factor

@@ -95,6 +95,7 @@ el P1-0— pasa el control sin ser detectada. Revisar el texto es manual.
 | w11 | n8n.oob.local | 192.168.127.138 | n8n — orquestador | Revisión de ejecuciones y aprobaciones desde el War Room. |
 | w11 | iris.oob.local | 100.64.0.1 | DFIR-IRIS — gestión de casos | Documentación del incidente. |
 | w11 | minio.oob.local | 192.168.127.138 | MinIO — consola del almacén de evidencia | El analista verifica la evidencia recolectada. Sin esta fila, cerrar :9001 en la Fase D deja al puesto sin acceso (regla R1 del plan). |
+| w11 | misp.oob.local | 192.168.127.138 | MISP — CTI | Única ruta a la UI de MISP tras el cierre del :12443. Declarada para la verificación funcional del P1-1a Fase C desde el puesto de analista. |
 | w11 | velociraptor.oob.local | 192.168.127.138 | Velociraptor — GUI forense | Puesto de analista. Sustituye `velociraptor.local:8889`, cuyo acceso directo se cierra en la Fase D. |
 | w11 | kvm.oob.local | 192.168.127.138 | GL.iNet KVM — Plan C | Consola de contingencia si RustDesk falla. |
 | dc01 | hs.oob.local | 192.168.127.138 | ControlURL del cliente Tailscale del DC | Ver Excepciones. |
