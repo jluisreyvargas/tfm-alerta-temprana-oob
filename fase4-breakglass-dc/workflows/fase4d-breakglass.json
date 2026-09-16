@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-12T21:32:27.764Z",
+  "updatedAt": "2026-09-16T19:29:25.594Z",
   "createdAt": "2026-08-30T11:54:17.608Z",
   "name": "fase4d-breakglass",
   "description": null,
@@ -15,8 +15,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1040,
-        -624
+        -1776,
+        -1376
       ],
       "id": "8fdb5467-5139-4df0-b4a0-07cf6ed79863",
       "name": "Webhook"
@@ -28,21 +28,21 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -832,
-        -624
+        -1520,
+        -1376
       ],
       "id": "bfe30565-00d3-493a-bcd2-4521c0fc6748",
       "name": "Verify RC Token"
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst m = item.text.match(/^!ir\\s+(\\w+)(?:\\s+(\\S+))?(?:\\s+(\\S+))?(?:\\s+(\\S+))?/i);\n\nif (!m) return [{ json: { ...item, verb: 'help', invalid: true } }];\n\nconst SCRIPTS = ['disable_account.ps1','enable_account.ps1',\n                 'collect_logs.ps1','isolate_host.ps1','reset_password.ps1'];\n\nconst verb = m[1].toLowerCase();\nconst arg1 = m[2] || '';\nconst arg2 = m[3] || '';\nconst arg3 = m[4] || '';\nconst out = { ...item, verb, arg1, arg2, arg3, invalid: false };\n\nif (verb === 'run') {\n  if (!SCRIPTS.includes(arg1)) {\n    out.invalid = true; out.error = `Script no permitido desde el canal: ${arg1}`;\n  } else if (!/^[A-Za-z0-9._\\-\\\\]{1,64}$/.test(arg2)) {\n    out.invalid = true; out.error = 'Target invalido';\n  }\n}\n\nif (verb === 'rustdesk') {\n  const ttl = parseInt(arg1 || '30', 10);\n  if (!Number.isInteger(ttl) || ttl < 1 || ttl > 240) {\n    out.invalid = true; out.error = 'TTL fuera de rango (1-240)';\n  } else out.ttl_minutes = ttl;\n}\n\n// KVM (Fase 8): concede una ventana de 15 min a un usuario de rttys.\n// Uso: !ir kvm <devid> <cmd|web> <usuario_rttys>\n// 'connect' no se solicita: se autoriza sin aprobación (F8-D5).\nif (verb === 'kvm') {\n  if (!/^[A-Za-z0-9_-]{1,64}$/.test(arg1)) {\n    out.invalid = true; out.error = 'devid invalido';\n  } else if (!['cmd','web'].includes(arg2)) {\n    out.invalid = true; out.error = 'Accion invalida (cmd|web)';\n  } else if (!/^[a-zA-Z0-9]{1,32}$/.test(arg3)) {\n    out.invalid = true; out.error = 'Falta el usuario de rttys al que se concede';\n  }\n}\n\nif ((verb === 'approve' || verb === 'deny') && !/^REQ-[a-f0-9]{8}$/.test(arg1)) {\n  out.invalid = true; out.error = 'Identificador de solicitud invalido';\n}\n\nreturn [{ json: out }];"
+        "jsCode": "const item = $input.first().json;\n\n// !ir nota <texto libre>. Se intercepta antes de la regex general porque esta\n// captura argumentos (\\S+) —tokens sin espacios— y una nota es una frase: el\n// texto se perderia en silencio a partir del tercer espacio.\n// El texto no se sanea aqui: viaja a IRIS como event_title y es el nodo que\n// construye el payload quien decide que hacer con el.\nconst libre = String(item.text ?? '').match(/^!ir\\s+timeline\\s+([\\s\\S]+)$/i);\nif (libre) {\n  const texto = libre[1].trim();\n  const out = { ...item, verb: 'timeline', arg1: '', arg2: '', arg3: '',\n                texto, invalid: false };\n  if (texto.length < 3) {\n    out.invalid = true;\n    out.error = 'Nota demasiado corta (minimo 3 caracteres)';\n  } else if (texto.length > 500) {\n    out.invalid = true;\n    out.error = `Nota demasiado larga (${texto.length} caracteres, maximo 500)`;\n  }\n  return [{ json: out }];\n}\n\nconst m = item.text.match(/^!ir\\s+(\\w+)(?:\\s+(\\S+))?(?:\\s+(\\S+))?(?:\\s+(\\S+))?/i);\n\nif (!m) return [{ json: { ...item, verb: 'help', invalid: true } }];\n\nconst SCRIPTS = ['disable_account.ps1','enable_account.ps1',\n                 'collect_logs.ps1','isolate_host.ps1','reset_password.ps1'];\n\nconst verb = m[1].toLowerCase();\nconst arg1 = m[2] || '';\nconst arg2 = m[3] || '';\nconst arg3 = m[4] || '';\nconst out = { ...item, verb, arg1, arg2, arg3, invalid: false };\n\nif (verb === 'run') {\n  if (!SCRIPTS.includes(arg1)) {\n    out.invalid = true; out.error = `Script no permitido desde el canal: ${arg1}`;\n  } else if (!/^[A-Za-z0-9._\\-\\\\]{1,64}$/.test(arg2)) {\n    out.invalid = true; out.error = 'Target invalido';\n  }\n}\n\nif (verb === 'rustdesk') {\n  const ttl = parseInt(arg1 || '30', 10);\n  if (!Number.isInteger(ttl) || ttl < 1 || ttl > 240) {\n    out.invalid = true; out.error = 'TTL fuera de rango (1-240)';\n  } else out.ttl_minutes = ttl;\n}\n\n// KVM (Fase 8): concede una ventana de 15 min a un usuario de rttys.\n// Uso: !ir kvm <devid> <cmd|web> <usuario_rttys>\n// 'connect' no se solicita: se autoriza sin aprobación (F8-D5).\nif (verb === 'kvm') {\n  if (!/^[A-Za-z0-9_-]{1,64}$/.test(arg1)) {\n    out.invalid = true; out.error = 'devid invalido';\n  } else if (!['cmd','web'].includes(arg2)) {\n    out.invalid = true; out.error = 'Accion invalida (cmd|web)';\n  } else if (!/^[a-zA-Z0-9]{1,32}$/.test(arg3)) {\n    out.invalid = true; out.error = 'Falta el usuario de rttys al que se concede';\n  }\n}\n\nif ((verb === 'approve' || verb === 'deny') && !/^REQ-[a-f0-9]{8}$/.test(arg1)) {\n  out.invalid = true; out.error = 'Identificador de solicitud invalido';\n}\n\nreturn [{ json: out }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -624,
-        -624
+        -1312,
+        -1376
       ],
       "id": "62ceaa57-6b82-4c7b-bbe1-4038f8d96246",
       "name": "Parse Command"
@@ -77,8 +77,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -416,
-        -624
+        -1104,
+        -1376
       ],
       "id": "90f29b47-b10e-4537-a6ea-e9d64b7b0a89",
       "name": "Verify Message Authorship"
@@ -90,8 +90,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -208,
-        -624
+        -896,
+        -1376
       ],
       "id": "0c36d2ec-6f27-4d13-80a6-049225f8c17a",
       "name": "Authorize"
@@ -100,6 +100,31 @@
       "parameters": {
         "rules": {
           "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4f309ef8-4737-4796-a6e4-c7116fedec8b",
+                    "leftValue": "={{ $json.verb === 'timeline' && !$json.invalid }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "timeline"
+            },
             {
               "conditions": {
                 "options": {
@@ -207,47 +232,47 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        -1024,
-        -384
+        -1712,
+        -1136
       ],
       "id": "c02bf054-fb7f-49e6-b03e-7b85242d2869",
       "name": "Route Command"
     },
     {
       "parameters": {
-        "jsCode": "const d = $input.first().json;\nlet msg;\n\nif (!d.authorized) {\n  msg = `🚫 @${d.user_name}: no estás autorizado para operar el canal break-glass.`;\n} else if (d.invalid) {\n  msg = `⚠️ ${d.error || 'Comando no reconocido'}`;\n} else if (d.verb === 'help') {\n  msg = `**Comandos break-glass**\\n` +\n        `\\`!ir run <script.ps1> <target>\\` — solicitar ejecución\\n` +\n        `\\`!ir rustdesk <minutos>\\` — solicitar acceso remoto\\n` +\n        `\\`!ir kvm <devid> <cmd|web> <usuario_rttys>\\` — conceder ventana de 15 min en el KVM\\n` +\n        `\\`!ir approve REQ-xxxxxxxx\\` — aprobar (requiere segundo responsable)\\n` +\n        `\\`!ir deny REQ-xxxxxxxx\\` — denegar\\n` +\n        `\\`!ir status\\` — solicitudes pendientes`;\n} else {\n  msg = 'ℹ️ Sin solicitudes pendientes.';\n}\n\nreturn [{ json: { channel_id: d.channel_id, mensaje: msg } }];"
+        "jsCode": "const d = $input.first().json;\nlet msg;\n\nif (!d.authorized) {\n  msg = `🚫 @${d.user_name}: no estás autorizado para operar el canal break-glass.`;\n} else if (d.invalid) {\n  msg = `⚠️ ${d.error || 'Comando no reconocido'}`;\n} else if (d.verb === 'help') {\n  msg = `**Comandos break-glass**\\n` +\n        `\\`!ir run <script.ps1> <target>\\` — solicitar ejecución\\n` +\n        `\\`!ir rustdesk <minutos>\\` — solicitar acceso remoto\\n` +\n        `\\`!ir kvm <devid> <cmd|web> <usuario_rttys>\\` — conceder ventana de 15 min en el KVM\\n` +\n        `\\`!ir approve REQ-xxxxxxxx\\` — aprobar (requiere segundo responsable)\\n` +\n        `\\`!ir deny REQ-xxxxxxxx\\` — denegar\\n` +\n        `\\`!ir timeline <texto>\\` — registrar una anotación en la cronología del caso\\n` +\n        `\\`!ir status\\` — solicitudes pendientes`;\n} else {\n  msg = 'ℹ️ Sin solicitudes pendientes.';\n}\n\nreturn [{ json: { channel_id: d.channel_id, mensaje: msg } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -416,
-        -400
+        -1328,
+        -976
       ],
       "id": "5cbbe3a0-cf4a-4c36-8e12-63c8d04ac393",
       "name": "Build Reply"
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\nconst cmd = $input.first().json;\nconst store = $getWorkflowStaticData('global');\n\nif (!store.requests) store.requests = {};\n\nconst AHORA  = Date.now();\nconst TTL_MS = 15 * 60 * 1000;\n\n// Purga de solicitudes caducadas.\n// Una solicitud de KVM aprobada se conserva mientras su ventana siga viva:\n// a diferencia de run/rustdesk, la aprobación no ejecuta nada, abre un plazo.\nfor (const [k, v] of Object.entries(store.requests)) {\n  const ventanaViva = v.verb === 'kvm' && v.status === 'approved' &&\n                      v.approved_at && (AHORA - v.approved_at) <= TTL_MS;\n  if (!ventanaViva && AHORA - v.created_at > TTL_MS) delete store.requests[k];\n}\n\nconst requestId = 'REQ-' + crypto.randomBytes(4).toString('hex');\n\nstore.requests[requestId] = {\n  request_id:   requestId,\n  verb:         cmd.verb,\n  script:       cmd.verb === 'run' ? cmd.arg1 : (cmd.verb === 'kvm' ? '' : 'rustdesk_enable.ps1'),\n  target:       cmd.verb === 'run' ? cmd.arg2 : '',\n  devid:        cmd.verb === 'kvm' ? cmd.arg1 : '',\n  kvm_accion:   cmd.verb === 'kvm' ? cmd.arg2 : '',\n  kvm_usuario:  cmd.verb === 'kvm' ? cmd.arg3 : '',\n  ttl_minutes:  cmd.ttl_minutes || 30,\n  requester_id: cmd.rc_user_id,\n  requester:    cmd.rc_username,\n  channel_id:   cmd.channel_id,\n  created_at:   AHORA,\n  status:       'pending',\n};\n\nconst accion = cmd.verb === 'run'\n  ? `Ejecutar \\`${cmd.arg1}\\` sobre \\`${cmd.arg2}\\``\n  : cmd.verb === 'kvm'\n  ? `KVM: conceder \\`${cmd.arg2}\\` sobre \\`${cmd.arg1}\\` a \\`${cmd.arg3}\\``\n  : `Activar acceso remoto RustDesk (TTL ${cmd.ttl_minutes} min)`;\n\nconst nota = cmd.verb === 'kvm'\n  ? `\\n_Al aprobar se abre una ventana de 15 minutos durante la cual \\`${cmd.arg3}\\` puede ejecutar \\`${cmd.arg2}\\` sobre \\`${cmd.arg1}\\`. La aprobación no ejecuta nada por sí misma._`\n  : '';\n\nconst mensaje =\n  `⏳ **Solicitud \\`${requestId}\\` pendiente de aprobación**\\n` +\n  `**Acción:** ${accion}\\n` +\n  `**Solicitante:** @${cmd.rc_username}\\n` +\n  `**Caduca:** en 15 minutos\\n\\n` +\n  `Un segundo responsable debe aprobar con \\`!ir approve ${requestId}\\`.\\n` +\n  `_El solicitante no puede aprobar su propia petición._` + nota;\n\nreturn [{ json: { request_id: requestId, channel_id: cmd.channel_id, mensaje } }];"
+        "jsCode": "const crypto = require('crypto');\nconst cmd = $input.first().json;\nconst store = $getWorkflowStaticData('global');\n\nif (!store.requests) store.requests = {};\n\nconst AHORA  = Date.now();\nconst TTL_MS = 15 * 60 * 1000;\n\n// Purga de solicitudes caducadas.\n// Una solicitud de KVM aprobada se conserva mientras su ventana siga viva:\n// a diferencia de run/rustdesk, la aprobación no ejecuta nada, abre un plazo.\nfor (const [k, v] of Object.entries(store.requests)) {\n  const ventanaViva = v.verb === 'kvm' && v.status === 'approved' &&\n                      v.approved_at && (AHORA - v.approved_at) <= TTL_MS;\n  if (!ventanaViva && AHORA - v.created_at > TTL_MS) delete store.requests[k];\n}\n\nconst requestId = 'REQ-' + crypto.randomBytes(4).toString('hex');\n\nstore.requests[requestId] = {\n  request_id:   requestId,\n  verb:         cmd.verb,\n  script:       cmd.verb === 'run' ? cmd.arg1 : (cmd.verb === 'kvm' ? '' : 'rustdesk_enable.ps1'),\n  target:       cmd.verb === 'run' ? cmd.arg2 : '',\n  devid:        cmd.verb === 'kvm' ? cmd.arg1 : '',\n  kvm_accion:   cmd.verb === 'kvm' ? cmd.arg2 : '',\n  kvm_usuario:  cmd.verb === 'kvm' ? cmd.arg3 : '',\n  ttl_minutes:  cmd.ttl_minutes || 30,\n  requester_id: cmd.rc_user_id,\n  requester:    cmd.rc_username,\n  channel_id:   cmd.channel_id,\n  channel_name: cmd.channel_name,\n  created_at:   AHORA,\n  status:       'pending',\n};\n\nconst accion = cmd.verb === 'run'\n  ? `Ejecutar \\`${cmd.arg1}\\` sobre \\`${cmd.arg2}\\``\n  : cmd.verb === 'kvm'\n  ? `KVM: conceder \\`${cmd.arg2}\\` sobre \\`${cmd.arg1}\\` a \\`${cmd.arg3}\\``\n  : `Activar acceso remoto RustDesk (TTL ${cmd.ttl_minutes} min)`;\n\nconst nota = cmd.verb === 'kvm'\n  ? `\\n_Al aprobar se abre una ventana de 15 minutos durante la cual \\`${cmd.arg3}\\` puede ejecutar \\`${cmd.arg2}\\` sobre \\`${cmd.arg1}\\`. La aprobación no ejecuta nada por sí misma._`\n  : '';\n\nconst mensaje =\n  `⏳ **Solicitud \\`${requestId}\\` pendiente de aprobación**\\n` +\n  `**Acción:** ${accion}\\n` +\n  `**Solicitante:** @${cmd.rc_username}\\n` +\n  `**Caduca:** en 15 minutos\\n\\n` +\n  `Un segundo responsable debe aprobar con \\`!ir approve ${requestId}\\`.\\n` +\n  `_El solicitante no puede aprobar su propia petición._` + nota;\n\nreturn [{ json: { request_id: requestId, channel_id: cmd.channel_id, mensaje } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -416,
-        -224
+        -1328,
+        -800
       ],
       "id": "1d2c67ec-e45d-4fe9-ad19-53df37d65b9a",
       "name": "Create Request"
     },
     {
       "parameters": {
-        "jsCode": "const cmd = $input.first().json;\nconst store = $getWorkflowStaticData('global');\nconst requestId = cmd.arg1;\nconst req = (store.requests || {})[requestId];\n\nif (!req) {\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` no encontrada o caducada.` } }];\n}\n\nif (req.status !== 'pending') {\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` ya resuelta (${req.status}).` } }];\n}\n\nif (Date.now() - req.created_at > 15 * 60 * 1000) {\n  req.status = 'expired';\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` caducada.` } }];\n}\n\n// REGLA DE DOS PERSONAS\nif (req.requester_id === cmd.rc_user_id) {\n  return [{ json: { ok: false, channel_id: cmd.channel_id, autoaprobacion: true,\n    mensaje: `🚫 **Rechazado:** el solicitante no puede aprobar su propia petición.\\n` +\n             `La solicitud \\`${requestId}\\` requiere un segundo responsable.` } }];\n}\n\nif (cmd.verb === 'deny') {\n  req.status = 'denied';\n  req.approver = cmd.rc_username;\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `🛑 Solicitud \\`${requestId}\\` denegada por @${cmd.rc_username}.` } }];\n}\n\nreq.status      = 'approved';\nreq.approver    = cmd.rc_username;\nreq.approver_id = cmd.rc_user_id;\nreq.approved_at = Date.now();\n\nreturn [{\n  json: {\n    ok: true,\n    request_id:  requestId,\n    script:      req.script,\n    target:      req.target,\n    ttl_minutes: req.ttl_minutes,\n    verb:        req.verb,\n    requester:   req.requester,\n    approver:    cmd.rc_username,\n    channel_id:  req.channel_id,\n    devid:       req.devid,\n    kvm_accion:  req.kvm_accion,\n    kvm_usuario: req.kvm_usuario,\n  }\n}];"
+        "jsCode": "const cmd = $input.first().json;\nconst store = $getWorkflowStaticData('global');\nconst requestId = cmd.arg1;\nconst req = (store.requests || {})[requestId];\n\nif (!req) {\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` no encontrada o caducada.` } }];\n}\n\nif (req.status !== 'pending') {\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` ya resuelta (${req.status}).` } }];\n}\n\nif (Date.now() - req.created_at > 15 * 60 * 1000) {\n  req.status = 'expired';\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `❌ Solicitud \\`${requestId}\\` caducada.` } }];\n}\n\n// REGLA DE DOS PERSONAS\nif (req.requester_id === cmd.rc_user_id) {\n  return [{ json: { ok: false, channel_id: cmd.channel_id, autoaprobacion: true,\n    mensaje: `🚫 **Rechazado:** el solicitante no puede aprobar su propia petición.\\n` +\n             `La solicitud \\`${requestId}\\` requiere un segundo responsable.` } }];\n}\n\nif (cmd.verb === 'deny') {\n  req.status = 'denied';\n  req.approver = cmd.rc_username;\n  return [{ json: { ok: false, channel_id: cmd.channel_id,\n    mensaje: `🛑 Solicitud \\`${requestId}\\` denegada por @${cmd.rc_username}.` } }];\n}\n\nreq.status      = 'approved';\nreq.approver    = cmd.rc_username;\nreq.approver_id = cmd.rc_user_id;\nreq.approved_at = Date.now();\n\nreturn [{\n  json: {\n    ok: true,\n    request_id:  requestId,\n    script:      req.script,\n    target:      req.target,\n    ttl_minutes: req.ttl_minutes,\n    verb:        req.verb,\n    requester:   req.requester,\n    approver:    cmd.rc_username,\n    channel_id:  req.channel_id,\n    channel_name: req.channel_name,\n    devid:       req.devid,\n    kvm_accion:  req.kvm_accion,\n    kvm_usuario: req.kvm_usuario,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -416,
-        -48
+        -1328,
+        -624
       ],
       "id": "1b9b008b-018b-417c-8827-a68e8a7922e6",
       "name": "Validate Approval"
@@ -280,8 +305,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -208,
-        -48
+        -1120,
+        -624
       ],
       "id": "454d1d5f-473c-4415-9786-9ffa34ef6fd5",
       "name": "Approved?"
@@ -311,7 +336,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        144,
+        -800,
         -256
       ],
       "id": "1fc71ffd-d624-4a5a-bd22-aa4118f844cf",
@@ -324,8 +349,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1024,
-        176
+        -544,
+        -32
       ],
       "id": "af063c5b-e095-46a9-afcb-7b53a1214989",
       "name": "Code in JavaScript"
@@ -370,8 +395,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -816,
-        176
+        -336,
+        -32
       ],
       "id": "9469b7d0-55bf-4bf0-9a9c-78e06361d6d0",
       "name": "Call DC Agent",
@@ -384,8 +409,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -320,
-        176
+        160,
+        -32
       ],
       "id": "bf24fbfc-a48a-4cce-b7f5-0f27ce4cefc2",
       "name": "Build Agent Reply"
@@ -425,8 +450,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -96,
-        176
+        384,
+        -32
       ],
       "id": "ce355d25-a00a-4f00-82a6-a4204ef6f4cb",
       "name": "Post Agent Result"
@@ -456,8 +481,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -208,
-        -400
+        -1120,
+        -976
       ],
       "id": "bfbeaf9c-7ae3-4c33-8270-96d33f9ef50e",
       "name": "Post Reply Consulta"
@@ -487,8 +512,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -208,
-        -224
+        -1120,
+        -800
       ],
       "id": "c50f3487-863a-48bb-b7a0-c7661ad71c11",
       "name": "Post Pending Solicitud"
@@ -502,8 +527,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1024,
-        480
+        -1744,
+        -256
       ],
       "id": "50122d19-9eb1-4d21-89a6-4460fe7e37e0",
       "name": "Webhook de recuperación"
@@ -515,8 +540,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -816,
-        480
+        -1536,
+        -256
       ],
       "id": "1c36e622-dd2f-4639-b98c-6f6ce54307ff",
       "name": "Retrieve And Burn"
@@ -539,8 +564,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -608,
-        480
+        -1328,
+        -256
       ],
       "id": "33fcecc4-c815-464c-a861-1f11005bbdc4",
       "name": "Respond to Webhook"
@@ -552,8 +577,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -544,
-        176
+        -64,
+        -32
       ],
       "id": "24647aea-c86a-4178-acd2-b6ee6dff7fe2",
       "name": "Resolve RustDesk ID"
@@ -567,8 +592,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -96,
-        480
+        -1744,
+        -48
       ],
       "id": "7d7ae74e-12c2-407d-bc24-33b07afab36f",
       "name": "Webhook Consulta KVM"
@@ -580,8 +605,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        112,
-        480
+        -1536,
+        -48
       ],
       "id": "836e7dc4-2c19-484b-836d-460357f34b22",
       "name": "Consultar Aprobacion KVM"
@@ -595,8 +620,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        320,
-        480
+        -1328,
+        -48
       ],
       "id": "87de8f74-b1a6-4aa4-b6fd-ce72763b6a55",
       "name": "Respond to Webhook1"
@@ -628,7 +653,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        144,
+        -800,
         -48
       ],
       "id": "1236ee84-4acb-4b84-be90-016594d4dd2f",
@@ -641,11 +666,499 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        464,
+        -544,
         -256
       ],
       "id": "f8f5750d-9d68-482b-991a-59b2d0a9cdac",
       "name": "True-Enlaces acceso KVM"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst canal = String(item.channel_name ?? '');\n\n// Politica: solo se registra en IRIS desde un War Room de incidente.\n// Los canales de incidente se nombran inc-<rule_id>-<alert_id saneado>.\nconst m = canal.match(/^inc-\\d+-(.+)$/);\n\nreturn [{ json: {\n  ...item,\n  es_war_room: Boolean(m),\n  // El nombre del canal sustituye los puntos del alert_id por guiones\n  // (Rocket.Chat no admite puntos). Se compara en esa forma, sin intentar\n  // reconstruir el punto por posicion.\n  soc_id_canal: m ? m[1] : '',\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        -1136
+      ],
+      "id": "54b7fbab-f8c2-48e3-bf14-57ec2042dec3",
+      "name": "Resolver Caso IRIS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aaf9ce03-9dc1-4853-90a8-02732331baae",
+              "leftValue": "={{ $json.es_war_room }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1120,
+        -1136
+      ],
+      "id": "42709512-e51b-43ec-bb23-ab4278102489",
+      "name": "¿Es War Room?"
+    },
+    {
+      "parameters": {
+        "url": "https://iris.oob.local:4833/manage/cases/list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -864,
+        -1152
+      ],
+      "id": "4431b4c0-b25f-4551-9426-c82f4ca3380f",
+      "name": "Listar Casos IRIS",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        },
+        "dfirIrisApi": {
+          "id": "REEMPLAZAR",
+          "name": "DFIR-IRIS account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst prev = $('Resolver Caso IRIS').first().json;\n\n// Con Never Error activo, un 401 o un 500 llegan como dato, no por la rama de\n// error: el body no traeria data y casos quedaria vacio, produciendo el\n// diagnostico falso \"no hay caso con ese SOC ID\". Se distingue aqui.\nconst status = Number(r.statusCode ?? 0);\nif (status < 200 || status >= 300) {\n  return [{ json: { ...prev, case_id: null, case_encontrado: false,\n    motivo: `IRIS respondió HTTP ${status} al listar casos` }}];\n}\n\nconst casos = r.body?.data ?? [];\n\n// Se compara el soc_id saneado, no el literal: el nombre del canal ya\n// convirtio los puntos en guiones.\nconst san = s => String(s ?? '').replace(/\\./g, '-');\n\nconst candidatos = casos\n  .filter(c => san(c.case_soc_id) === prev.soc_id_canal)\n  .filter(c => c.state_name !== 'Closed')\n  .sort((a, b) => b.case_id - a.case_id);\n\nconst caso = candidatos[0] ?? null;\n\nreturn [{ json: {\n  ...prev,\n  case_id: caso?.case_id ?? null,\n  case_encontrado: Boolean(caso),\n  motivo: caso ? '' :\n    `No hay caso abierto con SOC ID ${prev.soc_id_canal} (${casos.length} casos revisados)`,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -1168
+      ],
+      "id": "230351d5-52b5-4b6e-80b6-103601c31592",
+      "name": "Buscar Caso",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1befbe8b-8ee5-431c-909b-faeb438dea0a",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -352,
+        -1168
+      ],
+      "id": "afa4f9e8-7af8-4c33-81a0-5d2cf8238db7",
+      "name": "case_encontrado"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            },
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"roomId\": \"{{ $json.channel_id ?? $('Resolver Caso IRIS').first().json.channel_id }}\",\n  \"text\": {{ JSON.stringify('⚠ La nota no se registró en IRIS.\\n' + ($json.motivo ?? ($json.statusCode ? ('IRIS respondió HTTP ' + $json.statusCode) : ($json.es_war_room === false ? 'Este comando solo funciona desde un canal de incidente (inc-*).' : ('Error: ' + ($json.error?.message ?? 'sin detalle')))))) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -736,
+        -912
+      ],
+      "id": "c6604cb0-575c-4264-ba71-f44bfb32c3aa",
+      "name": "Aviso Nota No Registrada"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\n// Sin case_id, la URL queda con cid= vacio y IRIS no lo rechaza: escribe en el\n// caso 1. Se para aqui antes que escribir en el caso equivocado.\nif (!d.case_id) {\n  throw new Error('case_id ausente: no se crea el evento');\n}\n\n// IRIS interpreta event_date como hora local del event_tz y la normaliza a UTC\n// al guardarla. Verificado 2026-09-16 con dos muestras: se envio 09:00:00.000000\n// con +02:00 y quedo event_date=07:00:00 (UTC), event_date_wtz=09:00:00.\n// Hay que enviar hora local de Madrid, no UTC.\nconst ahora = new Date();\nconst madrid = new Date(ahora.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));\nconst p = n => String(n).padStart(2, '0');\nconst event_date =\n  `${madrid.getFullYear()}-${p(madrid.getMonth()+1)}-${p(madrid.getDate())}` +\n  `T${p(madrid.getHours())}:${p(madrid.getMinutes())}:${p(madrid.getSeconds())}.000000`;\n\n// El desfase se calcula sobre la fecha real, no se fija a +02:00: el literal\n// quedaria mal a partir del cambio de hora de finales de octubre.\nconst utc = new Date(ahora.toLocaleString('en-US', { timeZone: 'UTC' }));\nconst offMin = Math.round((madrid - utc) / 60000);\nconst event_tz = `${offMin >= 0 ? '+' : '-'}` +\n  `${p(Math.floor(Math.abs(offMin)/60))}:${p(Math.abs(offMin)%60)}`;\n\n// IRIS atribuye todo evento al usuario de la API key (administrator), asi que\n// la autoria real del analista solo puede quedar en el texto. Es honesto: dice\n// que la nota entro por el canal y quien la escribio, sin fingir que IRIS\n// autentico a esa persona.\nconst autor = String(d.rc_username || d.user_name || 'desconocido');\nconst texto = String(d.texto ?? '').replace(/\\s+/g, ' ').trim().slice(0, 500);\n\nreturn [{ json: {\n  ...d,\n  event_date,\n  event_tz,\n  iris_event: {\n    event_title: `[chat] ${texto} — @${autor} (Rocket.Chat)`,\n    event_date,\n    event_tz,\n    event_category_id: 1,   // Unspecified: texto libre, no inferimos tactica\n    event_assets: [],\n    event_iocs: [],\n  },\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -928
+      ],
+      "id": "175ae76a-d3cf-4e6c-a8da-1af1c204df47",
+      "name": "Preparar Evento IRIS",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iris.oob.local:4833/case/timeline/events/add?cid={{ $json.case_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.iris_event) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -240,
+        -928
+      ],
+      "id": "718f53a9-22e8-4264-95d8-51485b1c7b60",
+      "name": "Crear Evento IRIS",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        },
+        "dfirIrisApi": {
+          "id": "REEMPLAZAR",
+          "name": "DFIR-IRIS account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "73af7d28-47ea-47b3-b7ae-81e637d13d75",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -48,
+        -928
+      ],
+      "id": "03f49f1a-812b-4dd5-8d3b-95c549a95cff",
+      "name": "¿Evento creado?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            },
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"roomId\": \"{{ $('Resolver Caso IRIS').first().json.channel_id }}\",\n  \"text\": \"📝 Nota registrada en el caso #{{ $('Buscar Caso').first().json.case_id }} — {{ $json.body.data.event_date_wtz.slice(11,19) }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        144,
+        -928
+      ],
+      "id": "7db4de90-2640-4a74-bc66-b9c46298069c",
+      "name": "Confirmar Nota",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const m = $input.first().json;\n\n// El canal de la solicitud es el que se guardo al crearla, no donde se aprueba.\nconst canal = String(m.channel_name ?? '');\n\n// Las solicitudes creadas antes de que Create Request guardara channel_name no\n// lo tienen en el staticData. Sin esta guarda pasarian como \"no es War Room\",\n// que es un diagnostico falso: el canal puede serlo, lo que falta es el dato.\nif (!canal) {\n  return [{ json: { ...m,\n    es_war_room: false,\n    soc_id_canal: '',\n    motivo: 'La solicitud no guardó el canal de origen (creada antes del cambio)',\n  }}];\n}\n\nconst war = canal.match(/^inc-\\d+-(.+)$/);\n\nlet recurso;\nif (m.verb === 'rustdesk') {\n  recurso = `RustDesk sobre el DC · TTL ${m.ttl_minutes} min`;\n} else if (m.verb === 'kvm') {\n  recurso = `KVM ${m.kvm_accion} en ${m.devid} para @${m.kvm_usuario} · ventana 15 min`;\n} else {\n  recurso = `Ejecución de ${m.script} sobre ${m.target}`;\n}\n\nreturn [{ json: { ...m,\n  es_war_room: Boolean(war),\n  soc_id_canal: war ? war[1] : '',\n  titulo: `[break-glass] ${recurso} — solicitado por @${m.requester}, ` +\n          `aprobado por @${m.approver} (${m.request_id})`,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        -688
+      ],
+      "id": "2fbcd6dd-f45d-404a-a4e5-d6e11c683784",
+      "name": "Auditar: resolver caso",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aaf9ce03-9dc1-4853-90a8-02732331baae",
+              "leftValue": "={{ $json.es_war_room }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -592,
+        -688
+      ],
+      "id": "90fb53d6-82ea-499a-ad8d-63ef8f7716af",
+      "name": "¿Es War Room?1"
+    },
+    {
+      "parameters": {
+        "url": "https://iris.oob.local:4833/manage/cases/list",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -368,
+        -688
+      ],
+      "id": "12f3de6e-c6d0-4285-bf40-5988be63a0ba",
+      "name": "Listar Casos IRIS1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        },
+        "dfirIrisApi": {
+          "id": "REEMPLAZAR",
+          "name": "DFIR-IRIS account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const r = $input.first().json;\nconst prev = $('Auditar: resolver caso').first().json;\n\n// Con Never Error activo, un 401 o un 500 llegan como dato, no por la rama de\n// error: el body no traeria data y casos quedaria vacio, produciendo el\n// diagnostico falso \"no hay caso con ese SOC ID\". Se distingue aqui.\nconst status = Number(r.statusCode ?? 0);\nif (status < 200 || status >= 300) {\n  return [{ json: { ...prev, case_id: null, case_encontrado: false,\n    motivo: `IRIS respondió HTTP ${status} al listar casos` }}];\n}\n\nconst casos = r.body?.data ?? [];\n\n// Se compara el soc_id saneado, no el literal: el nombre del canal ya\n// convirtio los puntos en guiones.\nconst san = s => String(s ?? '').replace(/\\./g, '-');\n\nconst candidatos = casos\n  .filter(c => san(c.case_soc_id) === prev.soc_id_canal)\n  .filter(c => c.state_name !== 'Closed')\n  .sort((a, b) => b.case_id - a.case_id);\n\nconst caso = candidatos[0] ?? null;\n\nreturn [{ json: {\n  ...prev,\n  case_id: caso?.case_id ?? null,\n  case_encontrado: Boolean(caso),\n  motivo: caso ? '' :\n    `No hay caso abierto con SOC ID ${prev.soc_id_canal} (${casos.length} casos revisados)`,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -688
+      ],
+      "id": "922f2d3e-c053-408a-ba9f-a663b250a481",
+      "name": "Buscar Caso1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1befbe8b-8ee5-431c-909b-faeb438dea0a",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        112,
+        -688
+      ],
+      "id": "66a019c8-a96a-4592-8adc-f1facd6f8418",
+      "name": "case_encontrado1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\n\nif (!d.case_id) {\n  throw new Error('case_id ausente: no se crea el evento');\n}\n\nconst ahora = new Date();\nconst madrid = new Date(ahora.toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));\nconst p = n => String(n).padStart(2, '0');\nconst event_date =\n  `${madrid.getFullYear()}-${p(madrid.getMonth()+1)}-${p(madrid.getDate())}` +\n  `T${p(madrid.getHours())}:${p(madrid.getMinutes())}:${p(madrid.getSeconds())}.000000`;\n\nconst utc = new Date(ahora.toLocaleString('en-US', { timeZone: 'UTC' }));\nconst offMin = Math.round((madrid - utc) / 60000);\nconst event_tz = `${offMin >= 0 ? '+' : '-'}` +\n  `${p(Math.floor(Math.abs(offMin)/60))}:${p(Math.abs(offMin)%60)}`;\n\nreturn [{ json: {\n  ...d,\n  event_date,\n  event_tz,\n  iris_event: {\n    event_title: d.titulo,          // ya viene armado desde 'Auditar: resolver caso'\n    event_date,\n    event_tz,\n    event_category_id: 3,           // Remediation: acción de respuesta, no técnica del atacante\n    event_assets: [],\n    event_iocs: [],\n  },\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -480
+      ],
+      "id": "27990784-3788-467f-b3d3-77fb3da4966b",
+      "name": "Preparar Evento IRIS1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iris.oob.local:4833/case/timeline/events/add?cid={{ $json.case_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.iris_event) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        -480
+      ],
+      "id": "4cae9086-b3ab-48c8-95e0-6810a19bc68d",
+      "name": "Crear Evento IRIS1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Header Auth account"
+        },
+        "dfirIrisApi": {
+          "id": "REEMPLAZAR",
+          "name": "DFIR-IRIS account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            },
+            {
+              "name": "X-Auth-Token",
+              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"roomId\": \"{{ $json.channel_id ?? $('Auditar: resolver caso').first().json.channel_id }}\",\n  \"text\": {{ JSON.stringify('⚠ El acceso se aprobó pero NO quedó registrado en IRIS.\\n' + ($json.motivo ?? ($json.es_war_room === false ? 'La solicitud no venía de un canal de incidente.' : 'Error al escribir el evento.')) + '\\nRegistrar manualmente en el caso.') }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -480,
+        -480
+      ],
+      "id": "3fa37b61-5828-4eea-b174-c8fa64bb9db5",
+      "name": "Aviso Auditoría No Registrada"
     }
   ],
   "connections": {
@@ -706,6 +1219,13 @@
     },
     "Route Command": {
       "main": [
+        [
+          {
+            "node": "Resolver Caso IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Build Reply",
@@ -772,6 +1292,11 @@
     "Approved?": {
       "main": [
         [
+          {
+            "node": "Auditar: resolver caso",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "Es KVM?",
             "type": "main",
@@ -908,6 +1433,249 @@
           }
         ]
       ]
+    },
+    "Resolver Caso IRIS": {
+      "main": [
+        [
+          {
+            "node": "¿Es War Room?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es War Room?": {
+      "main": [
+        [
+          {
+            "node": "Listar Casos IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Nota No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Casos IRIS": {
+      "main": [
+        [
+          {
+            "node": "Buscar Caso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Nota No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Caso": {
+      "main": [
+        [
+          {
+            "node": "case_encontrado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Nota No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "case_encontrado": {
+      "main": [
+        [
+          {
+            "node": "Preparar Evento IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Nota No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso Nota No Registrada": {
+      "main": [
+        []
+      ]
+    },
+    "Preparar Evento IRIS": {
+      "main": [
+        [
+          {
+            "node": "Crear Evento IRIS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Nota No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Evento IRIS": {
+      "main": [
+        [
+          {
+            "node": "¿Evento creado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Evento creado?": {
+      "main": [
+        [
+          {
+            "node": "Confirmar Nota",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Nota No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auditar: resolver caso": {
+      "main": [
+        [
+          {
+            "node": "¿Es War Room?1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Auditoría No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es War Room?1": {
+      "main": [
+        [
+          {
+            "node": "Listar Casos IRIS1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Auditoría No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Casos IRIS1": {
+      "main": [
+        [
+          {
+            "node": "Buscar Caso1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Auditoría No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Caso1": {
+      "main": [
+        [
+          {
+            "node": "case_encontrado1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Auditoría No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "case_encontrado1": {
+      "main": [
+        [
+          {
+            "node": "Preparar Evento IRIS1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Auditoría No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Evento IRIS1": {
+      "main": [
+        [
+          {
+            "node": "Crear Evento IRIS1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso Auditoría No Registrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -917,103 +1685,73 @@
   "staticData": {
     "global": {
       "requests": {
-        "REQ-355dab3d": {
-          "request_id": "REQ-355dab3d",
+        "REQ-ffebcb51": {
+          "request_id": "REQ-ffebcb51",
           "verb": "rustdesk",
           "script": "rustdesk_enable.ps1",
           "target": "",
           "devid": "",
           "kvm_accion": "",
           "kvm_usuario": "",
-          "ttl_minutes": 15,
+          "ttl_minutes": 10,
           "requester_id": "KSaeE4jFabWrTSQKy",
           "requester": "ir_lead2",
-          "channel_id": "GENERAL",
-          "created_at": 1789250241041,
+          "channel_id": "6aaae7ca903c6205aca9edeb",
+          "channel_name": "inc-5710-1789600000-7001",
+          "created_at": 1789586725313,
           "status": "approved",
           "approver": "ir_lead",
           "approver_id": "QN5wbMxDfzLAf9bjb",
-          "approved_at": 1789250264504
+          "approved_at": 1789586773591
         },
-        "REQ-e30766f8": {
-          "request_id": "REQ-e30766f8",
+        "REQ-2bbfdd03": {
+          "request_id": "REQ-2bbfdd03",
           "verb": "rustdesk",
           "script": "rustdesk_enable.ps1",
           "target": "",
           "devid": "",
           "kvm_accion": "",
           "kvm_usuario": "",
-          "ttl_minutes": 15,
+          "ttl_minutes": 10,
           "requester_id": "QN5wbMxDfzLAf9bjb",
           "requester": "ir_lead",
-          "channel_id": "GENERAL",
-          "created_at": 1789250881089,
+          "channel_id": "6aaae7ca903c6205aca9edeb",
+          "channel_name": "inc-5710-1789600000-7001",
+          "created_at": 1789587014472,
           "status": "approved",
           "approver": "ir_lead2",
           "approver_id": "KSaeE4jFabWrTSQKy",
-          "approved_at": 1789250901142
-        },
-        "REQ-bac3db25": {
-          "request_id": "REQ-bac3db25",
-          "verb": "rustdesk",
-          "script": "rustdesk_enable.ps1",
-          "target": "",
-          "devid": "",
-          "kvm_accion": "",
-          "kvm_usuario": "",
-          "ttl_minutes": 15,
-          "requester_id": "KSaeE4jFabWrTSQKy",
-          "requester": "ir_lead2",
-          "channel_id": "GENERAL",
-          "created_at": 1789250982673,
-          "status": "approved",
-          "approver": "ir_lead",
-          "approver_id": "QN5wbMxDfzLAf9bjb",
-          "approved_at": 1789251004638
+          "approved_at": 1789587060439
         }
       },
       "credentials": {
-        "REQ-355dab3d": {
-          "password": "",
+        "REQ-ffebcb51": {
+          "password": "9JayRtchNzhcAeo91f28",
           "rustdesk_id": "161180321",
-          "expires_at": 1789251182348,
-          "consumed": true,
+          "expires_at": 1789587386416,
+          "consumed": false,
           "requester": "ir_lead2",
-          "approver": "ir_lead",
-          "consumed_by": "jose",
-          "consumed_at": 1789250295485
+          "approver": "ir_lead"
         },
-        "REQ-e30766f8": {
-          "password": "",
+        "REQ-2bbfdd03": {
+          "password": "R67I2uG3H02fc762FJ6a",
           "rustdesk_id": "161180321",
-          "expires_at": 1789251814509,
-          "consumed": true,
+          "expires_at": 1789587672807,
+          "consumed": false,
           "requester": "ir_lead",
-          "approver": "ir_lead2",
-          "consumed_by": "jose",
-          "consumed_at": 1789250918914
-        },
-        "REQ-bac3db25": {
-          "password": "",
-          "rustdesk_id": "161180321",
-          "expires_at": 1789251916761,
-          "consumed": true,
-          "requester": "ir_lead2",
-          "approver": "ir_lead",
-          "consumed_by": "jose",
-          "consumed_at": 1789251019766
+          "approver": "ir_lead2"
         }
       }
     }
   },
   "meta": null,
   "pinData": {},
-  "activeVersionId": "dba64bcd-d879-4943-9651-1863574fdcfb",
-  "versionCounter": 470,
+  "activeVersionId": "6ea98063-6be4-49df-8956-a20bec6c6021",
+  "versionCounter": 853,
   "triggerCount": 3,
   "tags": [],
   "versionMetadata": {
-    "name": "Version dba64bcd",
+    "name": "Version 6ea98063",
     "description": ""
   }
 }
