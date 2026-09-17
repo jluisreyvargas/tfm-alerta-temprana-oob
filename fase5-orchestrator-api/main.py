@@ -15,9 +15,11 @@ import time
 sys.path.append("/app/shared")
 from metrics_client import log_event
 
+import velociraptor_client as vrc
+
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="TFM OOB Orchestrator", version="0.2.0")
+app = FastAPI(title="TFM OOB Orchestrator", version="0.3.0")
 
 MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "minio:9000")
 MINIO_ACCESS_KEY = os.environ["MINIO_ACCESS_KEY"]
@@ -160,30 +162,97 @@ async def collect(request: Request):
         raise HTTPException(status_code=400, detail="Profile not allowed")
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    zip_sha256 = hashlib.sha256(f"{req.incidentid}{req.host}{ts}".encode()).hexdigest()
+
+    # ----------------------------------------------------------------------
+    # Recoleccion real por gRPC contra el cliente Velociraptor del host.
+    #
+    # ALLOWED[req.profile] es la lista blanca aplicada AQUI, en el orchestrator:
+    # es el control de seguridad principal ahora que el orchestrator tiene
+    # credencial para lanzar artefactos en la flota. Nunca se pasa a
+    # Velociraptor un artefacto que no este en esta lista, venga de donde venga
+    # el payload.
+    #
+    # Hasta la Fase 5_4b este bloque no existia: zip_sha256 era el hash de
+    # incidentid+host+ts, el ZIP declarado no existia en ningun bucket y
+    # started_at == ended_at en todos los manifiestos.
+    # ----------------------------------------------------------------------
+    try:
+        result = vrc.collect(req.host, ALLOWED[req.profile])
+    except vrc.NoClientError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No hay cliente Velociraptor para host '{req.host}'")
+    except vrc.CollectionTimeout as e:
+        # La coleccion se lanzo pero no termino dentro del timeout. No se
+        # escribe manifiesto: no hay ZIP que referenciar todavia. Se devuelve
+        # el flow_id para poder recuperarla, en vez de perderla en silencio.
+        raise HTTPException(
+            status_code=504,
+            detail={"status": "timeout", "flow_id": e.flow_id,
+                    "client_id": e.client_id,
+                    "message": "Coleccion lanzada, no terminada en el timeout"})
+    except vrc.CollectionError as e:
+        raise HTTPException(status_code=502, detail=f"Error de coleccion: {e}")
+
+    # Hash sobre los bytes reales del ZIP en el volumen compartido, en
+    # streaming para no cargar en memoria una adquisicion grande.
+    h = hashlib.sha256()
+    zip_size = 0
+    with open(result["zip_local_path"], "rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+            zip_size += len(chunk)
+    zip_sha256 = h.hexdigest()
+
+    started_iso = datetime.fromtimestamp(
+        result["started_at"], timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    ended_iso = datetime.fromtimestamp(
+        result["ended_at"], timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+    zip_object = f"{req.incidentid}/{req.host}/{ts}/velociraptor_collection.zip"
 
     manifest = {
         "incident_id": req.incidentid,
         "host": req.host,
         "collection_profile": req.profile,
         "selected_by": "forensics_agent_v1",
-        "started_at": ts,
-        "ended_at": ts,
+        "started_at": started_iso,
+        "ended_at": ended_iso,
         "artifact_list": ALLOWED[req.profile],
-        "zip_path": f"s3://{MINIO_BUCKET}/{req.incidentid}/{req.host}/{ts}/velociraptor_collection.zip",
+        "velociraptor_client_id": result["client_id"],
+        "velociraptor_client_os": result["client_os"],
+        "velociraptor_flow_id": result["flow_id"],
+        "total_collected_rows": result["total_rows"],
+        "zip_path": f"s3://{MINIO_BUCKET}/{zip_object}",
+        "zip_size_bytes": zip_size,
         "zip_sha256": zip_sha256,
         "operator": "orchestrator_v1",
         "source": req.source,
     }
 
     manifest_bytes = json.dumps(manifest, indent=2).encode("utf-8")
-    sha_bytes = f"{zip_sha256}\n".encode("utf-8")
+    # Formato compatible con `sha256sum -c`: un tercero puede descargar el ZIP
+    # y este fichero a un directorio y verificar la integridad con un comando
+    # estandar, fuera del workflow.
+    sha_bytes = f"{zip_sha256}  velociraptor_collection.zip\n".encode("utf-8")
 
     manifest_object = f"{req.incidentid}/{req.host}/{ts}/manifest.json"
     sha_object = f"{req.incidentid}/{req.host}/{ts}/sha256.txt"
 
     write_start = time.monotonic()
     try:
+        # El ZIP primero: es la evidencia, y el manifiesto la referencia. Si
+        # fallara la subida del ZIP, no debe quedar un manifiesto apuntando a
+        # un objeto inexistente.
+        with open(result["zip_local_path"], "rb") as fh:
+            client.put_object(
+                MINIO_BUCKET,
+                zip_object,
+                data=fh,
+                length=zip_size,
+                content_type="application/zip",
+            )
+
         client.put_object(
             MINIO_BUCKET,
             manifest_object,
@@ -214,7 +283,7 @@ async def collect(request: Request):
             incident_id=req.incidentid,
             host=req.host,
             profile=req.profile,
-            collection_id=f"vr-{ts}",
+            collection_id=result["flow_id"],
             minio_path=f"s3://{MINIO_BUCKET}/{manifest_object}",
             duration_ms=duration_ms,
             source="orchestrator",
@@ -223,10 +292,11 @@ async def collect(request: Request):
         logger.warning("no se pudo registrar la metrica collection_completed: %s", e)
 
     return {
-        "status": "queued",
-        "velociraptorjobid": f"vr-{ts}",
+        "status": "completed",
+        "velociraptorjobid": result["flow_id"],
         "manifest": manifest,
         "stored_objects": {
+            "zip": f"s3://{MINIO_BUCKET}/{zip_object}",
             "manifest": f"s3://{MINIO_BUCKET}/{manifest_object}",
             "sha256": f"s3://{MINIO_BUCKET}/{sha_object}"
         }

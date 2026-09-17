@@ -115,3 +115,5 @@ scripts/hosts-*.txt
 # Credenciales de scripts/dc-signed.sh (P1-4). No cubierto por **/.env: el
 # fichero se llama dc-signed.env, no .env.
 scripts/dc-signed.env
+fase5-velociraptor/velociraptor-config/api_client.yaml
+fase5-velociraptor/velociraptor-config/downloads/

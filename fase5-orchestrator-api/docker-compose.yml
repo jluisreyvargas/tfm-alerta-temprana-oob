@@ -18,6 +18,10 @@ services:
       MINIO_SECURE: "false"
       PYTHONUNBUFFERED: "1"
 
+      # --- Fase 5_4b: recoleccion real por gRPC ---
+      VELOCIRAPTOR_API_CONFIG: /app/api_client.yaml
+      VELOCIRAPTOR_DOWNLOADS: /velociraptor-downloads
+
       # --- Fase 7: Observabilidad / Métricas ---
       OS_URL: https://single-node-wazuh.indexer-1:9200
       OS_USER: admin
@@ -26,6 +30,14 @@ services:
 
     volumes:
       - ../fase7-observabilidad/shared:/app/shared:ro
+      # Credencial gRPC del cliente API. Solo lectura: el orchestrator la usa,
+      # no la gestiona.
+      - ../fase5-velociraptor/velociraptor-config/api_client.yaml:/app/api_client.yaml:ro
+      # Volumen compartido con Velociraptor. En SOLO LECTURA a proposito: el
+      # orchestrator consume los ZIP que Velociraptor produce, y aunque el
+      # contenedor se viera comprometido no podria alterar ni borrar la
+      # evidencia en origen.
+      - ../fase5-velociraptor/velociraptor-config/downloads:/velociraptor-downloads:ro
 
 networks:
   oob-network:
