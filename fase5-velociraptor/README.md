@@ -243,6 +243,121 @@ docker run --rm -v "$PWD:/work" -w /work \
 
 ---
 
+## Habilitación de la API gRPC (Fase 5_4b)
+
+Con el `server.config.yaml` generado según la sección anterior, la API gRPC de
+Velociraptor queda declarada pero no alcanzable desde otro contenedor. Este
+cambio **no está en el repositorio**: `server.config.yaml` está en
+`.gitignore` porque lleva 6 bloques de clave privada, así que hay que
+aplicarlo a mano en cada despliegue.
+
+### Qué hay que cambiar en `server.config.yaml`
+
+```yaml
+API:
+  bind_address: 0.0.0.0     # era 127.0.0.1
+  bind_port: 8888
+  bind_scheme: tcp
+```
+
+**`api_config: {}`, más abajo en el mismo fichero, NO es lo que habilita el
+gRPC.** Es un campo distinto y puede quedarse vacío. Lo que habilita el
+servidor API es el bloque `API:` de arriba, y lo que faltaba no era que
+estuviera deshabilitado sino que escuchara donde el orchestrator pudiera
+llegar — con `127.0.0.1` solo era alcanzable desde dentro del propio
+contenedor de Velociraptor. Una medición anterior del proyecto había
+identificado `api_config: {}` como la causa; era una lectura incorrecta del
+fichero (ver M-16 en el registro de mediciones).
+
+El puerto 8888 **no se publica** en el `docker-compose` de Velociraptor: queda
+alcanzable solo contenedor a contenedor dentro de `oob-network`. El 8001
+(frontend de agentes) sí está publicado y no se toca.
+
+El `bind_address: 127.0.0.1` del bloque `Monitoring:` (más abajo en el mismo
+fichero) **no** debe cambiarse; solo el del bloque `API:`.
+
+### Generación del cliente API
+
+```bash
+docker exec velociraptor /usr/local/bin/velociraptor \
+  --config /velociraptor/server.config.yaml \
+  config api_client \
+  --name orchestrator \
+  --role investigator \
+  /velociraptor/api_client.yaml
+```
+
+- El rol `investigator` es deliberado: puede lanzar colecciones y leer
+  resultados, no reconfigurar el servidor ni gestionar usuarios. Con gRPC
+  habilitado el orchestrator puede lanzar artefactos en la flota, así que el
+  rol acotado y la lista blanca de perfiles son los dos controles que lo
+  limitan.
+- El fichero resultante lleva certificado de cliente y clave privada: está en
+  `.gitignore` y se monta `:ro` en el orchestrator.
+- Verificar el rol con:
+  `velociraptor --config … acl show orchestrator` → `{"roles":["investigator"]}`
+
+### Ajuste del `api_connection_string`
+
+El `api_client.yaml` se genera con `api_connection_string: 127.0.0.1:8888`, que
+solo funcionaría si cliente y servidor estuvieran en el mismo contenedor. Hay
+que cambiarlo al nombre de servicio Docker:
+
+```
+api_connection_string: velociraptor:8888
+```
+
+El certificado del servidor API se firma con el CN fijo `VelociraptorServer`,
+no con el hostname, así que el cliente gRPC debe pasar
+`grpc.ssl_target_name_override = "VelociraptorServer"`. Eso ya lo hace
+`velociraptor_client.py`; se documenta aquí porque explica por qué la
+validación TLS funciona pese a conectar por otro nombre.
+
+### Prueba de verificación
+
+Control negativo→positivo. Antes del cambio, una conexión gRPC desde el
+orchestrator falla; después debe autenticar y devolver filas:
+
+```bash
+docker exec orchestrator python3 -c "
+import grpc, yaml, json
+from pyvelociraptor import api_pb2, api_pb2_grpc
+cfg=yaml.safe_load(open('/app/api_client.yaml'))
+creds=grpc.ssl_channel_credentials(cfg['ca_certificate'].encode(),
+      cfg['client_private_key'].encode(), cfg['client_cert'].encode())
+ch=grpc.secure_channel(cfg['api_connection_string'], creds,
+      (('grpc.ssl_target_name_override','VelociraptorServer'),))
+stub=api_pb2_grpc.APIStub(ch)
+req=api_pb2.VQLCollectorArgs(Query=[api_pb2.VQLRequest(Name='c',
+      VQL='SELECT client_id, os_info.hostname AS host FROM clients()')])
+for r in stub.Query(req):
+    if r.Response: print(json.loads(r.Response))
+"
+```
+
+### Volumen compartido
+
+El orchestrator lee los ZIP de las colecciones directamente del filestore de
+Velociraptor, montado en **solo lectura**:
+
+```yaml
+- ../fase5-velociraptor/velociraptor-config/downloads:/velociraptor-downloads:ro
+```
+
+El `:ro` es un control, no una formalidad: el orchestrator consume evidencia
+que Velociraptor produce, y aunque el contenedor se viera comprometido no
+podría alterarla ni borrarla en origen.
+
+Razón de esta vía frente a leer el ZIP por gRPC: `read_file` sobre el
+accessor `fs` devolvió **0 bytes** en las pruebas (hash `e3b0c442…`, el del
+fichero vacío — ver M-17 en el registro de mediciones). Por esa vía se habría
+subido a MinIO un ZIP vacío acompañado de un hash internamente "válido" —
+consistente consigo mismo y sin relación con la evidencia real. El volumen
+compartido mantiene los bytes intactos y hace el hash reproducible por un
+tercero con `sha256sum`.
+
+---
+
 ## 🧠 Resultado alcanzado
 
 La Fase 5 queda validada funcionalmente en su núcleo: el sistema ya puede recibir una orden de colección, procesar el incidente, construir un manifiesto coherente y persistir evidencia estructurada en MinIO bajo control del enclave OOB.

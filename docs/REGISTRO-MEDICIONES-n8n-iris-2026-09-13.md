@@ -547,3 +547,106 @@ ejercitado todavía**. Una alerta de nivel bajo y sin grupos de
 autenticación produciría BAJA y permitiría confirmar que llega a IRIS como
 Low (3) y no como Medium (4). Hasta entonces el bloqueante 3 está corregido
 con verificación parcial.
+
+## 9. Fase 5_4b — la recolección de Velociraptor deja de ser simulada (2026-09-17)
+
+### Estado de partida (lo que se corrige)
+
+`/velociraptor/collect` no recolectaba nada:
+
+- `zip_sha256` era `sha256(incidentid + host + ts)` — el hash de tres
+  identificadores concatenados, sin relación con ningún fichero.
+- El `zip_path` del manifiesto apuntaba a un objeto que **nunca se subía**:
+  solo había `put_object` para `manifest.json` y `sha256.txt`.
+- `started_at == ended_at` en todos los manifiestos.
+- `sha256.txt` contenía el hash inventado, así que no verificaba nada.
+
+El endpoint tenía ya la envoltura de seguridad completa —HMAC con anti-replay
+ordenado para no filtrar nonces, `ORCH_REQUIRE_HMAC` con default `true`, lista
+blanca de perfiles, identificadores acotados contra traversal— alrededor de
+un hueco donde debía estar la recolección. El diagnóstico correcto no era "el
+endpoint está mal diseñado" sino "los controles están bien y falta lo que
+protegen".
+
+### Mediciones de la sesión (comando → resultado)
+
+```
+acl show orchestrator            → {"roles":["investigator"]}
+VQL SELECT … FROM clients()      → 3 clientes activos: W11, DC01-TFM, ubuntuserver
+collect_client Windows.System.Pslist sobre el DC
+                                 → FINISHED, 138 filas, 12.0 s
+create_flow_download(wait=TRUE)  → fs:/downloads/C.…/F.…/DC01-TFM-….zip
+read_file(accessor='fs') por gRPC → 0 bytes, sha256 e3b0c442… (fichero vacío)
+sha256sum del ZIP en el filestore → 08d6dee6…61583 (hash de referencia)
+```
+
+Prueba end to end del endpoint ya reescrito, con petición firmada:
+
+```
+POST /velociraptor/collect  {"incidentid":"INC-TEST-5B","host":"DC01-TFM",
+                             "profile":"ransomware_triage"}
+→ HTTP 200, status "completed"
+  flow_id F.DALTALD2Q52JO, client_os windows, 131 filas
+  started_at 20260917T115605Z  /  ended_at 20260917T115614Z   (9 s, distintos)
+  zip_size_bytes 29374
+  zip_sha256 967541d6cb0e6a1d2f9363ff3d997006545a0b53412f7c6f1063f3fcc1bea235
+```
+
+Verificación de la cadena de custodia — **el mismo hash en tres puntos
+independientes**:
+
+```
+filestore de Velociraptor (sha256sum)  → 967541d6…bea235
+manifest.json en MinIO                 → 967541d6…bea235
+objeto descargado de MinIO (29374 B)   → 967541d6…bea235
+sha256.txt                             → "967541d6…bea235  velociraptor_collection.zip"
+```
+
+El `sha256.txt` pasa a formato compatible con `sha256sum -c`: un tercero
+puede descargar el ZIP y ese fichero a un directorio y verificar la
+integridad con un comando estándar, fuera del workflow. Era el criterio
+fijado al abrir la fase.
+
+### Hallazgos nuevos
+
+**M-16 · `api_config: {}` no era la causa.**
+Una medición anterior identificó ese campo como el motivo de que la API gRPC
+estuviera deshabilitada. Es un campo distinto: el servidor API lo define el
+bloque `API:`, que ya existía con `bind_address: 127.0.0.1`. No estaba
+deshabilitado, estaba escuchando donde ningún otro contenedor podía
+alcanzarlo.
+
+**M-17 · Leer el ZIP por gRPC devuelve 0 bytes sin error.**
+`read_file` con accessor `fs` sobre la ruta del filestore no falló: devolvió
+una respuesta vacía, y el hash resultante fue `e3b0c442…`, el del fichero
+vacío. De no haberse comparado contra un `sha256sum` de referencia, se habría
+subido a MinIO un ZIP vacío con un hash consistente consigo mismo. Mismo
+patrón que M-1 y M-14: la ausencia de señal es indistinguible de la señal
+cero si no se contrasta con una referencia externa.
+
+**M-18 · `COPY main.py .` en el Dockerfile.**
+El módulo nuevo `velociraptor_client.py` no entraba en la imagen porque el
+Dockerfile copiaba un solo fichero por nombre. Aquí falló ruidosamente (el
+import es obligatorio y el contenedor reiniciaba en bucle), pero un módulo
+opcional habría dejado la imagen corriendo con código desincronizado del
+repositorio sin aviso.
+
+**M-19 · El orchestrator corre como root** (`uid=0`), y va a manejar
+evidencia forense. No se cambia en esta fase; queda anotado como superficie
+mayor de la necesaria.
+
+**M-20 · Los artefactos de `ALLOWED` son todos de Windows**
+(`Windows.System.Pslist`, `Windows.Network.Netstat`,
+`Windows.Memory.Acquisition`) y hay un cliente Linux registrado
+(`ubuntuserver`). Una petición con ese host lanzaría artefactos Windows
+contra un agente Linux. El manifiesto registra ahora
+`velociraptor_client_os`, de modo que la incoherencia quedaría documentada
+si ocurriera, pero no se impide.
+
+### Pendiente tras esta fase
+
+- **Etapa D**: enlazar la evidencia al caso IRIS vía `/case/evidences/add`.
+  Ya no está bloqueada — el `file_hash` corresponde a un fichero que existe.
+- Usuario no-root para el orchestrator (M-19).
+- Validar el SO del cliente contra el perfil pedido (M-20).
+- `COPY . .` con `.dockerignore` en vez de copiar ficheros por nombre (M-18).
