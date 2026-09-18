@@ -171,6 +171,19 @@ def tool_generate_response_flags(
     severity = str(decision.get("severity_real", "BAJA")).upper()
     escalated = severity in {"ALTA", "CRITICA"}
 
+    # Una vulnerabilidad pendiente no es un incidente: no hay atacante, no hay
+    # explotacion y no hay nada que contener. El detector de vulnerabilidades
+    # emite nivel 10 por cada CVE del inventario, asi que escalarlas abre un
+    # War Room y un caso IRIS por parche pendiente. Eso degrada los dos
+    # registros: IRIS deja de ser el inventario de incidentes y pasa a ser un
+    # listado de parches, y los canales se vuelven ruido que nadie mira.
+    # La severidad se conserva (un CVE critico ES grave y debe verse); lo que
+    # se suprime es la escalada a incidente.
+    grupos = {str(g).lower() for g in (wazuh.get("rule_groups") or [])}
+    es_vulnerabilidad = "vulnerability-detector" in grupos
+    if es_vulnerabilidad:
+        escalated = False
+
     src_ip = str(wazuh.get("src_ip") or "").strip()
     ip_actionable = bool(src_ip) and not cti.get("src_ip_is_private", False)
 
@@ -181,12 +194,15 @@ def tool_generate_response_flags(
         recommendation = f"Bloquear {src_ip} en perimetro y abrir War Room del incidente."
     elif escalated:
         recommendation = "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
+    elif es_vulnerabilidad:
+        recommendation = "Vulnerabilidad pendiente de remediacion: planificar parcheo, no requiere respuesta a incidente."
     else:
         recommendation = "Monitorizar y correlacionar con contexto adicional."
 
     return {
         "requires_block": requires_block,
         "create_war_room": create_war_room,
+        "is_vulnerability": es_vulnerabilidad,
         "recommendation": recommendation,
     }
 

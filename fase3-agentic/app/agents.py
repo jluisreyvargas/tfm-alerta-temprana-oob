@@ -110,6 +110,7 @@ def remediation_agent(state: dict[str, Any]) -> dict[str, Any]:
         **decision,
         "requires_block": flags["requires_block"],
         "create_war_room": flags["create_war_room"],
+        "is_vulnerability": flags["is_vulnerability"],
         "recommendation": recommendation,
     }
     _note(state, "remediation_agent", "Flags de respuesta generados.")

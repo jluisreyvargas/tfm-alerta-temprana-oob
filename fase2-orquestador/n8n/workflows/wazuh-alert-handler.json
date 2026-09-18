@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-13T23:26:37.064Z",
+  "updatedAt": "2026-09-18T09:16:27.012Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -80,7 +80,7 @@
       "typeVersion": 1,
       "position": [
         -1040,
-        -1136
+        -944
       ],
       "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
       "name": "Post a message",
@@ -223,7 +223,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"wazuh\": {\n    \"rule_id\":    \"{{$json.wazuh.rule_id}}\",\n    \"rule_desc\":  \"{{$json.wazuh.rule_desc}}\",\n    \"rule_level\": {{$json.wazuh.rule_level}},\n    \"agent_name\": \"{{$json.wazuh.agent_name}}\",\n    \"timestamp\":  \"{{$json.wazuh.timestamp}}\",\n    \"src_ip\":     \"{{$json.wazuh.src_ip}}\"\n  },\n  \"cti\": {\n    \"abuse_confidence\":    {{$json.cti.abuse_confidence}},\n    \"abuse_total_reports\": {{$json.cti.abuse_total_reports}},\n    \"abuse_country\":       \"{{$json.cti.abuse_country}}\",\n    \"abuse_isp\":           \"{{$json.cti.abuse_isp}}\",\n    \"abuse_is_tor\":        {{$json.cti.abuse_is_tor}},\n    \"vt_malicious\":        {{$json.cti.vt_malicious}},\n    \"vt_harmless\":         {{$json.cti.vt_harmless}},\n    \"vt_asn\":              \"{{$json.cti.vt_asn}}\",\n    \"vt_as_owner\":         \"{{$json.cti.vt_as_owner}}\",\n    \"vt_network\":          \"{{$json.cti.vt_network}}\",\n    \"misp_total\":          {{$json.cti.misp_total}},\n    \"misp_threat_level\":   \"{{$json.cti.misp_threat_level}}\",\n    \"misp_attributes_summary\": \"{{$json.cti.misp_attributes_summary}}\"\n  }\n}",
+        "jsonBody": "={\n  \"wazuh\": {\n    \"rule_id\":    \"{{$json.wazuh.rule_id}}\",\n    \"rule_desc\":  \"{{$json.wazuh.rule_desc}}\",\n    \"rule_level\": {{$json.wazuh.rule_level}},\n    \"rule_groups\": {{ JSON.stringify($json.wazuh.rule_groups ?? []) }},\n    \"agent_name\": \"{{$json.wazuh.agent_name}}\",\n    \"timestamp\":  \"{{$json.wazuh.event_timestamp}}\",\n    \"src_ip\":     \"{{$json.wazuh.src_ip}}\"\n  },\n  \"cti\": {\n    \"abuse_confidence\":    {{$json.cti.abuse_confidence}},\n    \"abuse_total_reports\": {{$json.cti.abuse_total_reports}},\n    \"abuse_country\":       \"{{$json.cti.abuse_country}}\",\n    \"abuse_isp\":           \"{{$json.cti.abuse_isp}}\",\n    \"abuse_is_tor\":        {{$json.cti.abuse_is_tor}},\n    \"vt_malicious\":        {{$json.cti.vt_malicious}},\n    \"vt_harmless\":         {{$json.cti.vt_harmless}},\n    \"vt_asn\":              \"{{$json.cti.vt_asn}}\",\n    \"vt_as_owner\":         \"{{$json.cti.vt_as_owner}}\",\n    \"vt_network\":          \"{{$json.cti.vt_network}}\",\n    \"misp_total\":          {{$json.cti.misp_total}},\n    \"misp_threat_level\":   \"{{$json.cti.misp_threat_level}}\",\n    \"misp_attributes_summary\": \"{{$json.cti.misp_attributes_summary}}\"\n  }\n}",
         "options": {
           "timeout": 150000
         }
@@ -395,7 +395,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"channel\": \"#general\",\n  \"text\": \"🚨 Incidente {{ $('Code Merge Final').first().json.decision.severity_real }} — {{ $('Code Merge Final').first().json.wazuh.rule_desc }} desde {{ $('Code Merge Final').first().json.wazuh.src_ip }}. War Room abierto: #{{ $('Code Merge Final').first().json.war_room_name }}\"\n}",
+        "jsonBody": "={\n  \"channel\": \"#general\",\n  \"text\": \"🚨 Incidente {{ $('Code Merge Final').first().json.decision.severity_real }} — {{ $('Code Merge Final').first().json.wazuh.rule_desc }} {{ ['', 'null', 'undefined', 'N/D'].includes(String($('Code Merge Final').first().json.wazuh.src_ip ?? '').trim()) ? 'sin IP de origen' : 'desde ' + $('Code Merge Final').first().json.wazuh.src_ip }}. War Room abierto: #{{ $('Code Merge Final').first().json.war_room_name }}\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -430,7 +430,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"name\": \"{{ $json.war_room_name }}\",\n  \"members\": [\"ir_lead\", \"ir_tech\"],\n  \"readOnly\": false\n}",
+        "jsonBody": "={\n  \"name\": \"{{ $json.war_room_name }}\",\n  \"members\": [\"ir_lead\", \"ir_lead2\", \"ir_tech\"],\n  \"readOnly\": false\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -641,7 +641,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const d = $('Code Merge Final').first().json;\nconst w = d.wazuh ?? {};\nconst c = d.cti ?? {};\nconst dec = d.decision ?? {};\n\nconst norm = s => String(s ?? '').trim().toUpperCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\n// $('Nodo').first() lanza excepcion si el nodo no llego a ejecutarse. El\n// encadenamiento opcional no protege: el error se produce antes de evaluarlo.\n// Misma convencion que Code Merge Final.\nfunction salidaDe(nombre) {\n  try {\n    return $(nombre).first()?.json ?? {};\n  } catch (e) {\n    return {};\n  }\n}\n\n// El roomId se resuelve aqui, una sola vez, y viaja en el item. Si se\n// referenciara desde las plantillas de los nodos de Rocket.Chat, una\n// ejecucion en la que 'Crear War Room' no haya corrido todavia rompe el\n// nodo de aviso — justamente el que debe avisar de los fallos.\nconst war = salidaDe('Crear War Room');\nconst room_id = war.group?._id ?? war.channel?._id ?? '';\n\n// Vocabulario cerrado en origen: fase3-agentic/app/llm.py:173 rechaza\n// severidades fuera de SEVERITY_VALUES y agents.py:81-86 cae al motor\n// determinista si el guardrail se dispara. Todos los caminos de triage_agent\n// producen severity_real. El defecto es red de seguridad, no camino esperado.\n// Tabla real de IRIS (fase6-iris/source/app/post_init.py:694-707):\n// 1=Unspecified, 2=Informational, 3=Low, 4=Medium, 5=High, 6=Critical\nconst SEV = { CRITICA: 6, ALTA: 5, MEDIA: 4, BAJA: 3 };\nconst sevLabel = norm(dec.severity_real);\nconst severity_id = SEV[sevLabel] ?? 1;\nconst sev_no_reconocida = !(sevLabel in SEV);\n\n// F14-bis: estos IDs vienen del orden de carga de una taxonomia MISP de\n// terceros en el primer arranque de IRIS (post_init.py:638-660), no son\n// constantes declaradas. Verificar contra la instancia antes de produccion\n// real: GET /manage/case-classifications/list\nconst grupos = (w.rule_groups ?? []).map(g => String(g).toLowerCase());\nlet classification_id = 14; // intrusion-attempts:exploit-known-vuln\nif (grupos.some(g => ['authentication_failed', 'authentication_failures',\n                      'sshd', 'win_authentication_failed'].includes(g))) {\n  classification_id = 15; // intrusion-attempts:login-attempts\n} else if (grupos.some(g => ['rootcheck', 'rootkit', 'malware'].includes(g))) {\n  classification_id = 10; // malicious-code:rootkit\n}\n\n// El texto del LLM viaja influido por rule_desc/full_log, que un atacante\n// controla parcialmente. Se neutraliza lo que rompe el Markdown de IRIS.\nconst md = (s, max = 600) => String(s ?? '')\n  .replace(/[`*_~<>[\\]|#]/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, max) || 'N/D';\n\nconst corto = md(w.rule_desc, 80);\nconst case_name = `[${sevLabel}] ${w.rule_id} — ${corto} · ${w.agent_name}`;\n\nconst lineas = [\n  `## Incidente ${sevLabel}`,\n  '',\n  `| Campo | Valor |`,\n  `| --- | --- |`,\n  `| Regla | ${w.rule_id} (nivel Wazuh ${w.rule_level}) |`,\n  `| Descripción | ${md(w.rule_desc, 200)} |`,\n  `| Agente | ${md(w.agent_name, 60)} (${md(w.agent_ip, 40)}) |`,\n  `| IP origen | ${md(w.src_ip, 40)} |`,\n  `| Evento | ${md(w.event_timestamp, 40)} |`,\n  `| Ingesta en el enclave | ${md(w.ingest_timestamp, 40)} |`,\n  `| Alerta Wazuh | ${md(w.alert_id, 60)} |`,\n  '',\n  `## Triaje — motor ${md(dec.analysis_mode, 60)}`,\n  '',\n  `- Severidad: **${sevLabel}** (score ${dec.score ?? 'N/D'})`,\n  `- ATT&CK: ${md(dec.mitre_technique, 80)} / ${md(dec.mitre_tactic, 80)}`,\n  `  (fuente: ${md(dec.mitre_source, 40)})`,\n  `- Resumen: ${md(dec.summary)}`,\n  `- Recomendación: ${md(dec.recommendation)}`,\n  '',\n  `## Inteligencia`,\n  '',\n  `- AbuseIPDB: ${c.abuse_confidence ?? 0}% de confianza, ` +\n    `${c.abuse_total_reports ?? 0} reportes, país ${md(c.abuse_country, 10)}` +\n    `${c.abuse_is_tor ? ', **nodo Tor**' : ''}`,\n  `- VirusTotal: ${c.vt_malicious ?? 0} motores maliciosos, ` +\n    `${c.vt_suspicious ?? 0} sospechosos, ${c.vt_harmless ?? 0} inocuos ` +\n    `(ASN ${md(c.vt_asn, 20)}, ${md(c.vt_as_owner, 60)})`,\n  `- MISP: ${c.misp_total ?? 0} atributos coincidentes`,\n];\n\nif (c.enrichment_skipped) {\n  lineas.push(`- ⚠ Enriquecimiento omitido: ${md(c.enrichment_skipped, 120)}`);\n}\n\n// Solo se escribe la seccion cuando hay algo que contar: una linea fija de\n// \"guardrail: false\" en cada caso se vuelve invisible en una semana.\nconst avisos = [];\nif (dec.guardrail_triggered) {\n  avisos.push(`- 🛡 **Guardarraíl activado:** ${md(dec.guardrail_reason, 300)}`);\n}\nif (dec.llm_proposed_severity &&\n    norm(dec.llm_proposed_severity) !== sevLabel) {\n  avisos.push(`- El modelo propuso **${md(dec.llm_proposed_severity, 20)}**; ` +\n              `prevalece la del motor determinista.`);\n}\nif (dec.degraded_reason) {\n  avisos.push(`- ⚠ Triaje degradado: ${md(dec.degraded_reason, 300)}`);\n}\nif (sev_no_reconocida) {\n  avisos.push(`- ⚠ **Severidad no reconocida:** ` +\n              `\\`${md(dec.severity_real, 40)}\\` → Unspecified. ` +\n              `Revisar el vocabulario del triaje.`);\n}\n\nif (avisos.length) {\n  lineas.push('', '## Contención y anomalías', '', ...avisos);\n}\n\nlineas.push('', '---', '',\n  `War Room: #${md(d.war_room_name, 60)}`,\n  `Caso creado automáticamente por n8n desde el enclave OOB.`);\n\nreturn [{ json: {\n  ...d,\n  sev_no_reconocida,\n  room_id,\n  iris_payload: {\n    case_name,\n    case_description: lineas.join('\\n'),\n    case_customer: 1,          // IrisInitialClient, verificado 2026-09-13\n    case_soc_id: String(w.alert_id ?? ''),\n    classification_id,\n    severity_id,\n  },\n}}];"
+        "jsCode": "const d = $('Code Merge Final').first().json;\nconst w = d.wazuh ?? {};\nconst c = d.cti ?? {};\nconst dec = d.decision ?? {};\n\nconst norm = s => String(s ?? '').trim().toUpperCase()\n  .normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');\n\n// $('Nodo').first() lanza excepcion si el nodo no llego a ejecutarse. El\n// encadenamiento opcional no protege: el error se produce antes de evaluarlo.\n// Misma convencion que Code Merge Final.\nfunction salidaDe(nombre) {\n  try {\n    return $(nombre).first()?.json ?? {};\n  } catch (e) {\n    return {};\n  }\n}\n\n// El roomId se resuelve aqui, una sola vez, y viaja en el item. Si se\n// referenciara desde las plantillas de los nodos de Rocket.Chat, una\n// ejecucion en la que 'Crear War Room' no haya corrido todavia rompe el\n// nodo de aviso — justamente el que debe avisar de los fallos.\nconst war = salidaDe('Crear War Room');\nconst room_id = war.group?._id ?? war.channel?._id ?? '';\n\n// Vocabulario cerrado en origen: fase3-agentic/app/llm.py:173 rechaza\n// severidades fuera de SEVERITY_VALUES y agents.py:81-86 cae al motor\n// determinista si el guardrail se dispara. Todos los caminos de triage_agent\n// producen severity_real. El defecto es red de seguridad, no camino esperado.\n// Tabla real de IRIS (fase6-iris/source/app/post_init.py:694-707):\n// 1=Unspecified, 2=Informational, 3=Low, 4=Medium, 5=High, 6=Critical\nconst SEV = { CRITICA: 6, ALTA: 5, MEDIA: 4, BAJA: 3 };\nconst sevLabel = norm(dec.severity_real);\nconst severity_id = SEV[sevLabel] ?? 1;\nconst sev_no_reconocida = !(sevLabel in SEV);\n\n// F14-bis: estos IDs vienen del orden de carga de una taxonomia MISP de\n// terceros en el primer arranque de IRIS (post_init.py:638-660), no son\n// constantes declaradas. Verificar contra la instancia antes de produccion\n// real: GET /manage/case-classifications/list\nconst grupos = (w.rule_groups ?? []).map(g => String(g).toLowerCase());\nlet classification_id = 36; // other:other — defecto honesto: sin clasificar.\n// Un ID especifico aqui afirma una clasificacion que no se ha determinado.\n// Ampliar las ramas segun el censo de grupos; no cambiar este defecto.\nif (grupos.some(g => ['authentication_failed', 'authentication_failures',\n                      'sshd', 'win_authentication_failed'].includes(g))) {\n  classification_id = 15; // intrusion-attempts:login-attempts\n} else if (grupos.some(g => ['rootcheck', 'rootkit', 'malware'].includes(g))) {\n  classification_id = 10; // malicious-code:rootkit\n}\n\n// El texto del LLM viaja influido por rule_desc/full_log, que un atacante\n// controla parcialmente. Se neutraliza lo que rompe el Markdown de IRIS.\nconst md = (s, max = 600) => String(s ?? '')\n  .replace(/[`*_~<>[\\]|#]/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim()\n  .slice(0, max) || 'N/D';\n\nconst corto = md(w.rule_desc, 80);\nconst case_name = `[${sevLabel}] ${w.rule_id} — ${corto} · ${w.agent_name}`;\n\nconst lineas = [\n  `## Incidente ${sevLabel}`,\n  '',\n  `| Campo | Valor |`,\n  `| --- | --- |`,\n  `| Regla | ${w.rule_id} (nivel Wazuh ${w.rule_level}) |`,\n  `| Descripción | ${md(w.rule_desc, 200)} |`,\n  `| Agente | ${md(w.agent_name, 60)} (${md(w.agent_ip, 40)}) |`,\n  `| IP origen | ${md(w.src_ip, 40)} |`,\n  `| Evento | ${md(w.event_timestamp, 40)} |`,\n  `| Ingesta en el enclave | ${md(w.ingest_timestamp, 40)} |`,\n  `| Alerta Wazuh | ${md(w.alert_id, 60)} |`,\n  '',\n  `## Triaje — motor ${md(dec.analysis_mode, 60)}`,\n  '',\n  `- Severidad: **${sevLabel}** (score ${dec.score ?? 'N/D'})`,\n  `- ATT&CK: ${md(dec.mitre_technique, 80)} / ${md(dec.mitre_tactic, 80)}`,\n  `  (fuente: ${md(dec.mitre_source, 40)})`,\n  `- Resumen: ${md(dec.summary)}`,\n  `- Recomendación: ${md(dec.recommendation)}`,\n  '',\n  `## Inteligencia`,\n  '',\n  `- AbuseIPDB: ${c.abuse_confidence ?? 0}% de confianza, ` +\n    `${c.abuse_total_reports ?? 0} reportes, país ${md(c.abuse_country, 10)}` +\n    `${c.abuse_is_tor ? ', **nodo Tor**' : ''}`,\n  `- VirusTotal: ${c.vt_malicious ?? 0} motores maliciosos, ` +\n    `${c.vt_suspicious ?? 0} sospechosos, ${c.vt_harmless ?? 0} inocuos ` +\n    `(ASN ${md(c.vt_asn, 20)}, ${md(c.vt_as_owner, 60)})`,\n  `- MISP: ${c.misp_total ?? 0} atributos coincidentes`,\n];\n\nif (c.enrichment_skipped) {\n  lineas.push(`- ⚠ Enriquecimiento omitido: ${md(c.enrichment_skipped, 120)}`);\n}\n\n// Solo se escribe la seccion cuando hay algo que contar: una linea fija de\n// \"guardrail: false\" en cada caso se vuelve invisible en una semana.\nconst avisos = [];\nif (dec.guardrail_triggered) {\n  avisos.push(`- 🛡 **Guardarraíl activado:** ${md(dec.guardrail_reason, 300)}`);\n}\nif (dec.llm_proposed_severity &&\n    norm(dec.llm_proposed_severity) !== sevLabel) {\n  avisos.push(`- El modelo propuso **${md(dec.llm_proposed_severity, 20)}**; ` +\n              `prevalece la del motor determinista.`);\n}\nif (dec.degraded_reason) {\n  avisos.push(`- ⚠ Triaje degradado: ${md(dec.degraded_reason, 300)}`);\n}\nif (sev_no_reconocida) {\n  avisos.push(`- ⚠ **Severidad no reconocida:** ` +\n              `\\`${md(dec.severity_real, 40)}\\` → Unspecified. ` +\n              `Revisar el vocabulario del triaje.`);\n}\n\nif (avisos.length) {\n  lineas.push('', '## Contención y anomalías', '', ...avisos);\n}\n\nlineas.push('', '---', '',\n  `War Room: #${md(d.war_room_name, 60)}`,\n  `Caso creado automáticamente por n8n desde el enclave OOB.`);\n\nreturn [{ json: {\n  ...d,\n  sev_no_reconocida,\n  room_id,\n  iris_payload: {\n    case_name,\n    case_description: lineas.join('\\n'),\n    case_customer: 1,          // IrisInitialClient, verificado 2026-09-13\n    case_soc_id: String(w.alert_id ?? ''),\n    classification_id,\n    severity_id,\n  },\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -652,6 +652,61 @@
       "id": "05ac2d06-93f3-4f32-b23a-6e5be3839828",
       "name": "Preparar Caso IRIS",
       "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38d05232-571d-48ab-878d-3a1a507828ca",
+              "leftValue": "={{ $json.decision.is_vulnerability }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1312,
+        -1024
+      ],
+      "id": "81c48ce5-f7cf-4a9d-8b1e-6c641c321d4b",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "channel": "alertas-cve",
+        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Motores inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ ATT&CK: {{ $json.decision.mitre_technique }} / {{ $json.decision.mitre_tactic }}\n├ Fuente ATT&CK: {{ $json.decision.mitre_source }}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
+        "options": {},
+        "attachments": []
+      },
+      "type": "n8n-nodes-base.rocketchat",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        -1104
+      ],
+      "id": "b5a76f4b-2040-4369-8694-e69e87739aa2",
+      "name": "Post a message1",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     }
   ],
   "connections": {
@@ -819,7 +874,7 @@
         ],
         [
           {
-            "node": "Post a message",
+            "node": "If1",
             "type": "main",
             "index": 0
           }
@@ -958,6 +1013,24 @@
           }
         ]
       ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Post a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -967,25 +1040,19 @@
   },
   "staticData": {
     "global": {
-      "seen": {
-        "550|ubuntuserver|/etc/cups/subscriptions.conf.O": 1789339398591,
-        "550|ubuntuserver|/etc/velociraptor.writeback.yaml.bak": 1789339399133,
-        "553|ubuntuserver|/etc/systemd/system/multi-user.target.wants/snap-thunderbird-1201.mount": 1789339404558,
-        "553|ubuntuserver|/etc/systemd/system/snap-thunderbird-1201.mount": 1789339405011,
-        "553|ubuntuserver|/etc/systemd/system/snapd.mounts.target.wants/snap-thunderbird-1201.mount": 1789339405426
-      }
+      "seen": {}
     }
   },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "5b07385e-c21e-4f71-be83-31c807556e76",
-  "versionCounter": 1867,
+  "activeVersionId": "5dd27be7-4603-49a6-83a5-de54d3e23f3a",
+  "versionCounter": 2184,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 5b07385e",
+    "name": "Version 5dd27be7",
     "description": ""
   }
 }
