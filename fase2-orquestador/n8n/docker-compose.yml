@@ -25,6 +25,8 @@ services:
       - AGENT_TOKEN=${AGENT_TOKEN}
       - AGENT_HMAC_SECRET=${AGENT_HMAC_SECRET}
       - CREDENTIAL_BASE_URL=https://n8n.oob.local/webhook/bg-credential
+      #Added for Fase5_5
+      - ORCH_HMAC_SECRET=${ORCH_HMAC_SECRET:?falta ORCH_HMAC_SECRET}
     volumes:
       - n8n_data:/home/node/.n8n
       - ./certs/oob-rootCA.crt:/usr/local/share/ca-certificates/oob-rootCA.crt:ro
