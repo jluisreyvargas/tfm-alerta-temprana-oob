@@ -650,3 +650,308 @@ si ocurriera, pero no se impide.
 - Usuario no-root para el orchestrator (M-19).
 - Validar el SO del cliente contra el perfil pedido (M-20).
 - `COPY . .` con `.dockerignore` en vez de copiar ficheros por nombre (M-18).
+
+## 10. Sesión 2026-09-18
+
+### M-21 · El rechazo de firma HMAC no deja rastro observable
+
+Cuando el nodo de verificación HMAC del Workflow 1 rechazó una firma
+inválida, el flujo murió sin ejecución visible en n8n, sin mensaje en ningún
+canal de Rocket.Chat y sin entrada en los logs del contenedor. El control
+funcionó —rechazó lo que debía rechazar—, pero desde fuera el resultado es
+indistinguible de «el webhook no recibió nada». Con una alerta real de
+Wazuh sería una alerta perdida en silencio.
+
+Encuadrado frente al hallazgo de *fail-open* de n8n ya registrado en el
+proyecto (un error interno cerraba la petición con HTTP 200 y rttys lo leía
+como aprobación): allí el control falla abierto, aquí falla cerrado —que es
+lo correcto— pero sin dejar constancia. Son las dos caras del mismo
+defecto: el resultado del control no se distingue del no-evento. Lo que
+pide no es cambiar el control, sino un observable donde el rechazo quede
+registrado. Nótese que el instrumento de verificación está por definir: un
+rechazo que solo se apunte en el log de n8n no sería verificable, porque en
+esta ocasión no dejó rastro ni ahí.
+
+### M-22 · El defecto de la cadena de clasificación era específico, no genérico
+
+La entrada original de esta sesión afirmaba que el nodo `Preparar Caso
+IRIS` fija `classification_id: 15` en todos los casos, y que el caso #44 lo
+llevaba. Ninguna de las dos cosas era cierta. La medición posterior
+estableció lo que sigue, y esta entrada la sustituye por completo.
+
+**Lo que hay realmente en el nodo.** `Preparar Caso IRIS` (tipo Code)
+contiene una cadena de mapeo de tres ramas sobre `rule_groups`, no un valor
+fijo:
+
+- valor inicial `14` (`intrusion-attempts:exploit-known-vuln`);
+- si los grupos incluyen `authentication_failed`, `authentication_failures`,
+  `sshd` o `win_authentication_failed` → `15`
+  (`intrusion-attempts:login-attempts`);
+- si incluyen `rootcheck`, `rootkit` o `malware` → `10`
+  (`malicious-code:rootkit`).
+
+**El defecto.** El valor inicial de la cadena es una clasificación
+específica. Todo lo que no casa con las dos ramas conocidas —es decir, todo
+lo que el código no ha clasificado— queda registrado en IRIS como
+«explotación de vulnerabilidad conocida». El caso #44 (alerta SCA real,
+`rule.groups` medido como `['sca']`) no está mal clasificado por un error
+de mapeo: está mal clasificado porque el «no sé» del código afirma un hecho
+concreto. Verificado que IRIS guarda exactamente lo que recibe
+(`classification_id: 14`, `classification:
+intrusion-attempts:exploit-known-vuln` en `/manage/cases/list`), de modo
+que no hay desajuste entre lo enviado y lo almacenado.
+
+**Encuadre.** Es la misma familia que el resto del documento: la ausencia
+de señal produce una señal positiva indistinguible de una medición real.
+Un analista que abra el caso no ve «sin clasificar», ve una clasificación
+concreta y falsa. A diferencia del ruido de canales de Rocket.Chat, esto no
+se limpia borrando: queda en el histórico de casos de IRIS, que es el
+artefacto que el proyecto presenta como cadena de custodia.
+
+**La corrección aplicada** (commit `cb9a8dd`): el valor inicial pasa a `36`
+(`other:other`), con un comentario en el código que explica por qué el
+defecto debe seguir siendo genérico. Las dos ramas `15` y `10` no se
+tocan: son mapeos correctos y medidos.
+
+**La taxonomía, medida.** El comentario del propio nodo advertía que estos
+IDs vienen del orden de carga de una taxonomía MISP de terceros en el
+primer arranque de IRIS (`post_init.py:638-660`) y no son constantes
+declaradas, y pedía verificarlos contra la instancia. Esa verificación se
+hizo con `GET /manage/case-classifications/list`: la instancia devuelve 36
+clasificaciones, y los tres IDs que el nodo usa son correctos en ella.
+Quedan registrados, como mínimo, los relevantes para el enclave:
+
+| id | nombre | uso |
+| --- | --- | --- |
+| 10 | `malicious-code:rootkit` | rama `rootcheck`/`rootkit`/`malware` |
+| 14 | `intrusion-attempts:exploit-known-vuln` | antiguo defecto, retirado |
+| 15 | `intrusion-attempts:login-attempts` | rama de autenticación |
+| 31 | `vulnerable:vulnerable-service` | candidato para CVE, sin implementar |
+| 33 | `conformity:standard` | candidato para hallazgos SCA, sin implementar |
+| 36 | `other:other` | defecto actual |
+
+31 y 33 son candidatos para una ampliación futura del mapeo, no decisiones
+tomadas: la ampliación depende del censo de grupos, y el genérico 36 es el
+paso honesto mientras tanto, no el destino.
+
+**Error de diagnóstico que merece quedar escrito.** La afirmación falsa de
+partida («`classification_id: 15` fijo para todos los casos») salió de leer
+el valor esperado que documenta `PROCEDIMIENTO-prueba-manual-webhook.md`
+para una alerta de SSH —donde 15 es correcto— y generalizarlo al
+comportamiento del nodo sin abrirlo. Es la misma clase de error que este
+documento atribuye a la revisión de la mañana del 2026-09-13: una lectura
+correcta de un artefacto, falsa sobre el sistema.
+
+Anotar también, como defecto menor del mismo origen: la recomendación que
+el triaje emitió para el caso #44 fue «Abrir War Room y determinar el
+vector: sin IP publica sobre la que actuar» — una plantilla redactada para
+incidentes con IP de origen, aplicada a una alerta que no puede tener
+vector.
+
+### M-23 · La supresión de escalada está atada a un grupo, no a una categoría
+
+El filtro añadido el 2026-09-17 en `tool_generate_response_flags` suprime
+la escalada cuando `rule_groups` contiene `vulnerability-detector`. Medido
+en la alerta del caso #44: `rule.groups` es `['sca']`, un único grupo sin
+ningún token en común con el anterior, por lo que el filtro no podía
+alcanzarla.
+
+**Decisión tomada (Jose, 2026-09-18): el filtro no se amplía a `sca`.** Un
+hallazgo con severidad que no sea un CVE del inventario sigue escalando
+como incidente para que se investigue. La duda que queda abierta no es de
+criterio sino de volumen: se desconoce cuántos tipos distintos de alerta
+generan los endpoints, y por tanto si alguna otra familia puede desbordar
+como lo hizo el detector de vulnerabilidades. Esa pregunta se responde con
+el censo de `scripts/censo-grupos-alertas.py` (tarea 1 de este mismo
+prompt), no estimándola.
+
+Criterio de diseño que se fija para cualquier ampliación futura del
+filtro: **lista de supresión, nunca lista de escalada**. Si el criterio
+fuese «escalan solo estos grupos», un grupo nuevo correspondiente a una
+regla de ataque real dejaría de escalar sin que nada lo señalara. Con lista
+de supresión, un grupo de postura no contemplado se cuela como incidente:
+ruido visible y corregible. Es el mismo criterio que `ORCH_REQUIRE_HMAC`
+con valor por defecto `true` en el orchestrator — el defecto no desactiva
+el control.
+
+### M-24 · Censo de la población real de alertas
+
+Medido con `scripts/censo-grupos-alertas.py` sobre `alerts.json` y los 52
+rotados de `/var/ossec/logs/alerts/2026/`: **52.513 alertas parseadas, 53
+ficheros, cero líneas ilegibles**, ventana del 2026-05-16 al 2026-09-18.
+
+Reparto por agente: `ubuntuserver` 41.163, `DC01-TFM` 6.052, `W11` 5.025,
+`wazuh.manager` 273.
+
+Hallazgos:
+
+1. **El 71% del volumen es el enclave vigilándose a sí mismo.** Las cuatro
+   reglas más frecuentes son eventos de Docker en `ubuntuserver` —volúmenes
+   montados y desmontados, redes conectadas y desconectadas—, más de 37.000
+   eventos del grupo `docker`, una de ellas nombrando literalmente el
+   volumen de n8n. Nivel bajo, así que no escalan, pero inundan el índice y
+   las métricas. No es hallazgo de seguridad; sí lo es sobre la relación
+   señal/ruido de un SIEM que monitoriza su propia infraestructura.
+2. **`vulnerability-detector` no era el único candidato a desbordar.** Son
+   1.843 alertas con nivel máximo 13, y por eso se filtró. Pero por encima o
+   cerca del umbral de escalada hay más: `ossec` 5.419 (nivel máx. 11,
+   eventos del propio Wazuh), `windows` 2.999 (máx. 10), `sca` 1.962 (máx.
+   9), `windows_system` 636 (máx. 10), `windows_application` 2.140 y
+   `system_error` 228 (máx. 9). El nivel máximo no dice cuántas alertas de
+   cada grupo lo alcanzan, así que esto acota candidatos, no decide nada.
+3. **El camino más ejercitado es el más raro en la población real.**
+   `authentication_failed` son 25 alertas en cuatro meses y `sshd` aparece
+   **una sola vez** — con toda probabilidad la inyección manual de hoy. El
+   laboratorio no recibe ataques reales, lo cual es esperable, pero debe
+   quedar escrito al interpretar cualquier métrica de detección del TFM.
+
+Limitación de lectura que hay que dejar explícita: el laboratorio no está
+encendido de forma continua, así que los recuentos son «cuántas veces
+apareció cada tipo mientras el laboratorio estuvo vivo», no una tasa
+diaria, y no se extrapolan. Misma limitación que el proyecto ya aplica a
+las métricas de disponibilidad.
+
+### M-25 · La representación de «no aplica» está resuelta por separado en cada plantilla
+
+Una alerta sin IP de origen (SCA, y cualquier otra sin `src_ip`) se
+representa de forma distinta en cada sitio que la escribe, porque cada
+plantilla resuelve el caso por su cuenta:
+
+- `Preparar Caso IRIS` — correcto: el helper `md()` rinde `N/D`.
+- `Anuncio en General` — producía `desde .`, con la IP vacía y el punto
+  suelto. Corregido en `cb9a8dd` con un ternario local.
+- `Contexto en War Room` — sigue emitiendo `🌐 IP origen:` con el valor
+  vacío. Sin corregir.
+- Plantilla de `#alertas-cve` — mismo `🌐 IP Fuente:` vacío, y además repite
+  MITRE tres veces (táctica, técnica y combinado) con los tres «no
+  determinado». Sin corregir.
+
+A esto se suma el motor determinista de `fase3-agentic`, que emite
+«determinar el vector: sin IP publica sobre la que actuar» para alertas que
+no pueden tener vector — una plantilla escrita para el caso con IP aplicada
+al caso sin ella.
+
+El defecto no es cosmético en su origen: son cinco consumidores repitiendo
+una lógica que debería estar resuelta una sola vez en `Code Merge Final`,
+donde ya existe el helper. Registrado como deuda; no bloquea, porque un
+campo vacío no afirma nada falso —a diferencia del `classification_id` de
+M-22, que sí lo hacía—. Esa es la razón por la que uno se corrigió de
+inmediato y el otro no.
+
+### Nota sobre M-14 · el 0 de AbuseIPDB ya es persistente, no incidental
+
+M-14 (sección 8) registró que AbuseIPDB devolvió `0` para
+`185.220.101.5` el 2026-09-13, sin medir la causa. El 2026-09-18, la misma
+IP en el caso #46 vuelve a dar `abuse_confidence: 0`, `abuse_total_reports:
+0`, país `N/A`, mientras VirusTotal marca 13 motores maliciosos y 3
+sospechosos y MISP aporta 5 atributos.
+
+Ya no es un resultado aislado, sino un estado persistente a lo largo de
+cinco días. La causa concreta sigue sin medir (clave agotada, error de la
+API, formato de respuesta inesperado). Los `?? 0` de `Code CTI Context`
+siguen haciendo indistinguible «sin reputación registrada» de «no se pudo
+consultar la fuente» — el mismo patrón que M-1 y M-17. El score consolidado
+absorbió la pérdida de esta fuente en las dos ocasiones, así que el
+veredicto final fue correcto por robustez del cálculo, no porque la fuente
+funcionara.
+
+### Correcciones a entradas previas de este registro
+
+Subsección aparte, sin tocar el texto original de las entradas corregidas.
+Tres entradas quedan refutadas, las tres por el mismo mecanismo: una
+lectura correcta que nunca se cruzó con otra medición del propio
+documento.
+
+- **M-4** concluyó que el fichero con `={{ $env.RC_BOT_USER_ID }}` y la
+  instancia viva con el literal eran «funcionalmente idénticos», apoyándose
+  en que `printenv RC_BOT_USER_ID` devuelve el valor dentro del contenedor.
+  Eso es una medición sobre la variable, no sobre la expresión. Medido el
+  2026-09-18: los cuatro nodos que llevan ese valor (`Contexto en War
+  Room`, `Anuncio en General`, `Crear War Room`, `Referencia en War Room`)
+  son todos de tipo `n8n-nodes-base.httpRequest`, que es el ámbito exacto
+  donde M-12 midió que `$env` no resuelve y termina enviando la cabecera
+  vacía. Consecuencia: entre `22ed2f5` y `7d20797` **el fichero versionado
+  era el estado roto**; quien lo hubiera reimportado tendría los cuatro
+  nodos enviando `X-User-Id` vacío. La instancia viva nunca estuvo mal.
+  `7d20797` no deshizo un endurecimiento: puso la única forma que funciona.
+  El endurecimiento de `22ed2f5` existió solo en el artefacto, nunca en el
+  sistema.
+- **M-5** dio por hecho que el valor `kScBxrDSCtRDxZmnm` coincide con el ID
+  de credencial de `rocketchatApi` en `fase2-orquestador/n8n/w.json:130`.
+  La cadena sí está en esa línea, pero medido el inventario completo de IDs
+  de credencial del repositorio: todos los demás tienen 16 caracteres, sin
+  una excepción, y este tiene 17. Es decir, ese campo
+  `credentials.rocketchatApi.id` de `w.json` no contiene un ID de
+  credencial de n8n: contiene el user ID del bot de Rocket.Chat colocado en
+  un hueco etiquetado como ID de credencial. No hay dos almacenes que
+  generaran la misma cadena. Consecuencia: la preocupación de exposición de
+  M-5 se reduce a que el literal publicado es el user ID público del bot,
+  que no es secreto. El hueco de saneado de `export-workflow.sh` sobre
+  `parameters` sigue en pie como deuda de limpieza, no como riesgo.
+- **La adenda que cerraba M-5** atribuía la coincidencia a que ambos
+  valores son `ObjectId` de Mongo, «de la misma forma pero de dos
+  almacenes distintos». Un `ObjectId` son 24 caracteres hexadecimales; este
+  valor son 17 alfanuméricos de caja mixta. La conclusión de la adenda (el
+  valor es correcto como user ID del bot) es acertada; el mecanismo que
+  propone para explicarla, no.
+
+Cerrar la subsección con el patrón de segundo orden, que es la aportación
+de esta sesión: **el propio registro acumula entradas que se contradicen
+entre sí sin que nada lo señale**, porque cada una se verificó contra el
+sistema y ninguna contra las demás. Es la misma familia de defecto que el
+documento documenta en el sistema —una afirmación correcta sobre su objeto
+y falsa sobre el conjunto— aplicada al instrumento de verificación. Tres de
+veintitrés entradas, encontradas por accidente al preparar un `grep` para
+otra cosa.
+
+### Verificación adicional que queda registrada como no hecha
+
+Estado tras la sesión del 2026-09-18: lo que cerró por comportamiento y lo
+que sigue abierto.
+
+**Cerrado por comportamiento el 2026-09-18:**
+
+- Defecto de clasificación: caso #45 (`sca`) → 36, caso #46
+  (`sshd`/`authentication_failed`) → 15, caso #47 (`sca` sin IP) → 36,
+  frente a los casos #43 y #44 con 14 como estado previo. La prueba de
+  no-regresión (#46 sigue dando 15) es la que da valor a la otra: sin ella,
+  un cambio que rompiera el mapeo sería indistinguible de uno que
+  corrigiera el defecto.
+- CRÍTICA con IP pública escala: caso #46, score 14, War Room
+  `#inc-5710-1789721608-1660` y caso creado.
+- `Fuente ATT&CK` deja de ser `unmapped`: el caso #46 da
+  `T1110 - Brute Force / TA0006 - Credential Access`, fuente `heuristic`.
+  El `unmapped` del caso #44 no lo contradice: la regla 19005 es un resumen
+  SCA y su grupo no está en la tabla de mapeo, así que ahí `unmapped` es el
+  resultado correcto.
+- Supresión de CVE, **las dos ramas**: la rama falsa con tres alertas (#45,
+  #46, #47) y la rama verdadera con una inyección de grupo
+  `vulnerability-detector`, que produjo aviso en `#alertas-cve`,
+  `create_war_room: false`, `requires_block: false`, severidad ALTA
+  conservada y la recomendación de parcheo — sin War Room y sin caso IRIS.
+  Hasta esa inyección, la rama verdadera del `If` nunca se había ejecutado:
+  los veinte canales de ayer se crearon antes del arreglo.
+- `CRITICA → 6` reconfirmada; primer tercio de M-15 cerrado (el
+  `timestamp` corregido llega al triaje, verificado en el campo Evento del
+  caso #46).
+
+**Sigue abierto:**
+
+- `MEDIA` y `BAJA` de la tabla `SEV`, que eran los dos valores mal
+  mapeados. `ALTA → 5` quedó sin confirmar: se creó el caso #45 con
+  severidad ALTA pero no se consultó su `severity_id`.
+- Los otros dos tercios de M-15: `misp_threat_level` y
+  `misp_attributes_summary` siguen sin producirse en `Code CTI Context` y
+  viajan vacíos al triaje.
+- **El síntoma que abrió la sesión quedó sin causa identificada.** Se
+  partía de que tres alertas «acabaron en `#general`», y se sospechó del
+  nodo de CVE recién añadido. La sesión demuestra que el enrutado funciona
+  y que el aviso en `#general` es un nodo por diseño que publica el enlace
+  al War Room, no un destino final. No se ha determinado si aquellas tres
+  alertas crearon o no su War Room; si el comportamiento reaparece no
+  habrá pista previa. Anotarlo como no explicado, no como resuelto.
+- `rule_desc` se interpola cruda dentro de la cadena JSON del cuerpo de
+  `Anuncio en General`. Una descripción de regla con una comilla doble
+  rompería el cuerpo y el nodo fallaría. Es el mismo texto que `Preparar
+  Caso IRIS` sí neutraliza con `md()` antes de mandarlo a IRIS, y viene
+  parcialmente de datos que un atacante influye.
