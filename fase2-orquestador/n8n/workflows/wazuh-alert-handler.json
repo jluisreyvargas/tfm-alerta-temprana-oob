@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-18T15:57:27.984Z",
+  "updatedAt": "2026-09-18T19:45:23.397Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -68,28 +68,6 @@
       ],
       "id": "be927338-a61c-4a95-a22f-20cde7e8bb22",
       "name": "If"
-    },
-    {
-      "parameters": {
-        "channel": "general",
-        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Motores inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ ATT&CK: {{ $json.decision.mitre_technique }} / {{ $json.decision.mitre_tactic }}\n├ Fuente ATT&CK: {{ $json.decision.mitre_source }}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
-        "options": {},
-        "attachments": []
-      },
-      "type": "n8n-nodes-base.rocketchat",
-      "typeVersion": 1,
-      "position": [
-        -1232,
-        -1136
-      ],
-      "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
-      "name": "Post a message",
-      "credentials": {
-        "rocketchatApi": {
-          "id": "REEMPLAZAR",
-          "name": "Rocket account"
-        }
-      }
     },
     {
       "parameters": {
@@ -382,8 +360,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://rocketchat:3000/api/v1/chat.postMessage",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -410,6 +388,10 @@
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Header Auth account"
+        },
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
         }
       }
     },
@@ -665,7 +647,7 @@
           "conditions": [
             {
               "id": "38d05232-571d-48ab-878d-3a1a507828ca",
-              "leftValue": "={{ $json.decision.is_vulnerability }}",
+              "leftValue": "={{ $json.decision.is_posture_finding }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -685,28 +667,6 @@
       ],
       "id": "81c48ce5-f7cf-4a9d-8b1e-6c641c321d4b",
       "name": "If1"
-    },
-    {
-      "parameters": {
-        "channel": "alertas-cve",
-        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Motores inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ ATT&CK: {{ $json.decision.mitre_technique }} / {{ $json.decision.mitre_tactic }}\n├ Fuente ATT&CK: {{ $json.decision.mitre_source }}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
-        "options": {},
-        "attachments": []
-      },
-      "type": "n8n-nodes-base.rocketchat",
-      "typeVersion": 1,
-      "position": [
-        -1232,
-        -1296
-      ],
-      "id": "b5a76f4b-2040-4369-8694-e69e87739aa2",
-      "name": "Post a message1",
-      "credentials": {
-        "rocketchatApi": {
-          "id": "REEMPLAZAR",
-          "name": "Rocket account"
-        }
-      }
     },
     {
       "parameters": {
@@ -801,7 +761,9 @@
     },
     {
       "parameters": {
-        "url": "=https://iris.oob.local:4833/case/evidences/list?cid={{ $('Preparar Evidencia').first().json.case_id }}",
+        "url": "https://iris.oob.local:4833/case/evidences/list?cid={{ $('Preparar Evidencia').first().json.case_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -811,7 +773,13 @@
         -912
       ],
       "id": "46eecb92-10a5-4947-aef2-c9ea4a50f2ce",
-      "name": "Verificar Evidencia"
+      "name": "Verificar Evidencia",
+      "credentials": {
+        "dfirIrisApi": {
+          "id": "REEMPLAZAR",
+          "name": "DFIR-IRIS account"
+        }
+      }
     },
     {
       "parameters": {
@@ -825,6 +793,50 @@
       ],
       "id": "9bd0745b-8a8d-448e-b078-96b9ec767948",
       "name": "Comparar Hash"
+    },
+    {
+      "parameters": {
+        "channel": "alertas-cve",
+        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Motores inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ ATT&CK: {{ $json.decision.mitre_technique }} / {{ $json.decision.mitre_tactic }}\n├ Fuente ATT&CK: {{ $json.decision.mitre_source }}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
+        "options": {},
+        "attachments": []
+      },
+      "type": "n8n-nodes-base.rocketchat",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -1296
+      ],
+      "id": "b5a76f4b-2040-4369-8694-e69e87739aa2",
+      "name": "Alertas-CVE",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "channel": "general",
+        "text": "=🚨 Alerta de seguridad — enclave OOB\n🤖 Triage — motor: {{$json.decision.analysis_mode}}\n📋 Regla: {{$json.wazuh.rule_id}} — {{$json.wazuh.rule_desc}}\n⚠ Severidad Wazuh: {{$json.wazuh.rule_level}}\n🖥 Agente: {{$json.wazuh.agent_name}}\n🌐 IP Fuente: {{$json.wazuh.src_ip}}\n🕐 *Evento:* {{$json.wazuh.event_timestamp}}\n📥 *Ingesta:* {{$json.wazuh.ingest_timestamp}}\n\n🔍 CTI — AbuseIPDB\n├ Confidence Score: {{$json.cti.abuse_confidence}}%\n├ Total Reportes: {{$json.cti.abuse_total_reports}}\n└ País: {{$json.cti.abuse_country}}\n\n🦠 CTI — VirusTotal\n├ Motores maliciosos: {{$json.cti.vt_malicious}}\n├ Motores inocuos: {{$json.cti.vt_harmless}}\n└ ASN: {{$json.cti.vt_asn}} ({{$json.cti.vt_as_owner}})\n\n🤖 *Triage*\n├ Severidad Real: {{$json.severity}}\n├ MITRE Táctica: {{$json.mitre_tactic}}\n├ MITRE Técnica: {{$json.mitre_technique}}\n├ ATT&CK: {{ $json.decision.mitre_technique }} / {{ $json.decision.mitre_tactic }}\n├ Fuente ATT&CK: {{ $json.decision.mitre_source }}\n├ Resumen: {{$json.summary}}\n├ Recomendación: {{$json.recommendation}}\n├ Requiere Bloqueo: {{$json.requires_block}}\n└ Abrir War Room: {{$json.create_war_room}}",
+        "options": {},
+        "attachments": []
+      },
+      "type": "n8n-nodes-base.rocketchat",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -1136
+      ],
+      "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
+      "name": "Alertas General",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     }
   ],
   "connections": {
@@ -919,11 +931,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Post a message": {
-      "main": [
-        []
       ]
     },
     "HTTP Request": {
@@ -1136,14 +1143,14 @@
       "main": [
         [
           {
-            "node": "Post a message1",
+            "node": "Alertas-CVE",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Post a message",
+            "node": "Alertas General",
             "type": "main",
             "index": 0
           }
@@ -1215,6 +1222,11 @@
           }
         ]
       ]
+    },
+    "Alertas General": {
+      "main": [
+        []
+      ]
     }
   },
   "settings": {
@@ -1224,19 +1236,23 @@
   },
   "staticData": {
     "global": {
-      "seen": {}
+      "seen": {
+        "5799|DC01-TFM|185.220.101.5": 1789760148169,
+        "5798|DC01-TFM|185.220.101.5": 1789760310986,
+        "5797|DC01-TFM|185.220.101.5": 1789760770655
+      }
     }
   },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "4511cf58-c279-4817-a568-daf0c2a681f6",
-  "versionCounter": 2298,
+  "activeVersionId": "051399af-6b55-4b7f-aa30-dec411dad530",
+  "versionCounter": 2340,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 4511cf58",
+    "name": "Version 051399af",
     "description": ""
   }
 }

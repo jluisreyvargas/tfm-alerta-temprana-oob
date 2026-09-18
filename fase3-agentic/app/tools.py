@@ -171,17 +171,34 @@ def tool_generate_response_flags(
     severity = str(decision.get("severity_real", "BAJA")).upper()
     escalated = severity in {"ALTA", "CRITICA"}
 
-    # Una vulnerabilidad pendiente no es un incidente: no hay atacante, no hay
-    # explotacion y no hay nada que contener. El detector de vulnerabilidades
-    # emite nivel 10 por cada CVE del inventario, asi que escalarlas abre un
-    # War Room y un caso IRIS por parche pendiente. Eso degrada los dos
-    # registros: IRIS deja de ser el inventario de incidentes y pasa a ser un
-    # listado de parches, y los canales se vuelven ruido que nadie mira.
-    # La severidad se conserva (un CVE critico ES grave y debe verse); lo que
-    # se suprime es la escalada a incidente.
+    # Un hallazgo de postura describe el ESTADO del equipo, no actividad de un
+    # adversario: no hay atacante, no hay vector y no hay nada que contener.
+    # Escalarlos abre un War Room y un caso IRIS por cada parche pendiente o
+    # control incumplido del benchmark: veinte en una tarde con CVE, nueve en
+    # un minuto con SCA. Eso degrada los dos registros: IRIS deja de ser el
+    # inventario de incidentes y pasa a ser un listado de parches, y los
+    # canales se vuelven ruido que nadie mira.
+    #
+    # Medido sobre 4 meses de alertas (scripts/censo-grupos-alertas.py,
+    # 2026-09-18): por encima del umbral de escalada hay 396 alertas de
+    # vulnerability-detector (nivel 10) y ~290 de sca (nivel 9, reglas 19005,
+    # 19011 y 19014). La severidad se conserva —un hallazgo grave DEBE verse—;
+    # lo que se suprime es la escalada a incidente.
+    #
+    # Lista de supresion, NUNCA lista de escalada: si el criterio fuera
+    # "escalan solo estos grupos", un grupo nuevo correspondiente a una regla
+    # de ataque real dejaria de escalar sin que nada lo señalara. Por ese mismo
+    # motivo NO se incluye rootcheck pese a parecer de la misma familia: la
+    # regla 521 (Possible kernel level rootkit, nivel 11) vive en ese grupo y
+    # si describe actividad.
+    GRUPOS_POSTURA = {"vulnerability-detector", "sca"}
+
     grupos = {str(g).lower() for g in (wazuh.get("rule_groups") or [])}
-    es_vulnerabilidad = "vulnerability-detector" in grupos
-    if es_vulnerabilidad:
+    es_postura = bool(grupos & GRUPOS_POSTURA)
+    if es_postura:
+        escalated = False
+
+    if es_postura:
         escalated = False
 
     src_ip = str(wazuh.get("src_ip") or "").strip()
@@ -190,19 +207,19 @@ def tool_generate_response_flags(
     requires_block = escalated and ip_actionable
     create_war_room = escalated
 
-    if requires_block:
+    if requires_block:        
         recommendation = f"Bloquear {src_ip} en perimetro y abrir War Room del incidente."
     elif escalated:
         recommendation = "Abrir War Room y determinar el vector: sin IP publica sobre la que actuar."
-    elif es_vulnerabilidad:
-        recommendation = "Vulnerabilidad pendiente de remediacion: planificar parcheo, no requiere respuesta a incidente."
+    elif es_postura:
+        recommendation = "Hallazgo de postura pendiente de remediacion: planificar correccion, no requiere respuesta a incidente."
     else:
         recommendation = "Monitorizar y correlacionar con contexto adicional."
 
     return {
         "requires_block": requires_block,
         "create_war_room": create_war_room,
-        "is_vulnerability": es_vulnerabilidad,
+        "is_posture_finding": es_postura,
         "recommendation": recommendation,
     }
 
