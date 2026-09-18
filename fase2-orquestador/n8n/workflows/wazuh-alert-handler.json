@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-18T09:16:27.012Z",
+  "updatedAt": "2026-09-18T15:57:27.984Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -17,8 +17,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -1760,
-        -1872
+        -1952,
+        -1952
       ],
       "id": "45f31686-d997-46bc-8b6a-283cf4bc072e",
       "name": "Webhook"
@@ -30,8 +30,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1360,
-        -1872
+        -1552,
+        -1952
       ],
       "id": "e2047e33-1686-45e8-acbc-2123d087bd00",
       "name": "Normalize Alert"
@@ -63,8 +63,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1200,
-        -1872
+        -1392,
+        -1952
       ],
       "id": "be927338-a61c-4a95-a22f-20cde7e8bb22",
       "name": "If"
@@ -79,8 +79,8 @@
       "type": "n8n-nodes-base.rocketchat",
       "typeVersion": 1,
       "position": [
-        -1040,
-        -944
+        -1232,
+        -1136
       ],
       "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
       "name": "Post a message",
@@ -101,8 +101,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -80,
-        -2000
+        -272,
+        -2080
       ],
       "id": "af430703-2616-44da-974f-f0d1056ff22e",
       "name": "Merge",
@@ -115,8 +115,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        144,
-        -1856
+        -48,
+        -1936
       ],
       "id": "d8f4f830-bee1-4e14-8e9f-8563cca7285e",
       "name": "Code CTI Context"
@@ -148,8 +148,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -448,
-        -2368
+        -640,
+        -2448
       ],
       "id": "decce2a4-2e35-406f-9439-d7bd2efc95b4",
       "name": "AbuseIPDB",
@@ -175,8 +175,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -448,
-        -2192
+        -640,
+        -2272
       ],
       "id": "efcab7cb-c20b-434f-a60e-afdc1601ab95",
       "name": "VirusTotal",
@@ -201,8 +201,8 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        -1680,
-        -1504
+        -1872,
+        -1696
       ],
       "id": "0915b25c-6ce4-4aca-a58b-d2c51da06a47",
       "name": "Merge1",
@@ -231,8 +231,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1920,
-        -1488
+        -2112,
+        -1680
       ],
       "id": "7910d63e-d5c5-4b0f-9b8f-34cc94eeecf3",
       "name": "HTTP Request"
@@ -244,8 +244,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1472,
-        -1504
+        -1664,
+        -1696
       ],
       "id": "71356f00-f2b5-4240-ab78-5d80b61a4cd7",
       "name": "Code Merge Final"
@@ -266,8 +266,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -448,
-        -2032
+        -640,
+        -2112
       ],
       "id": "67f4fff8-9c3a-4226-ad7e-831d32b58176",
       "name": "MISP",
@@ -290,8 +290,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1552,
-        -1872
+        -1744,
+        -1952
       ],
       "id": "39a292c2-c4c0-4a3f-990c-b57d1693e195",
       "name": "Code in JavaScript"
@@ -303,8 +303,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -976,
-        -1872
+        -1168,
+        -1952
       ],
       "id": "642df071-dd5b-4b47-9a5f-3893ab6027dc",
       "name": "Dedup"
@@ -337,8 +337,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1264,
-        -1504
+        -1456,
+        -1696
       ],
       "id": "5fa80c64-d894-49e6-aa5d-a5e362adb682",
       "name": "Abrir War Room"
@@ -366,8 +366,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -816,
-        -1296
+        -1008,
+        -1488
       ],
       "id": "7d3ea1e0-2e5d-4750-9abc-5d04853ae23d",
       "name": "Contexto en War Room",
@@ -401,8 +401,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -576,
-        -1056
+        -768,
+        -1248
       ],
       "id": "410ac306-cad7-49f1-bf46-ddad0b617840",
       "name": "Anuncio en General",
@@ -436,8 +436,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -1040,
-        -1296
+        -1232,
+        -1488
       ],
       "id": "4134429c-bfec-4210-b463-64774bc47570",
       "name": "Crear War Room",
@@ -478,8 +478,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -768,
-        -1872
+        -960,
+        -1952
       ],
       "id": "f1c0c3ae-b94b-4549-967c-975f978d9533",
       "name": "CTI Aplicable"
@@ -491,8 +491,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -48,
-        -1536
+        -240,
+        -1728
       ],
       "id": "a1679f9b-b63e-4dfb-976e-2521cd0e3791",
       "name": "Evaluar Respuesta IRIS",
@@ -526,8 +526,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        224,
-        -1552
+        32,
+        -1744
       ],
       "id": "72d10689-006f-4c8d-8cae-e0bdcd73f9af",
       "name": "¿Caso IRIS creado?",
@@ -556,8 +556,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        448,
-        -1568
+        304,
+        -1760
       ],
       "id": "ed6f36fa-fb11-4b1e-915f-8d3723f754aa",
       "name": "Referencia en War Room",
@@ -591,8 +591,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        400,
-        -1024
+        16,
+        -1280
       ],
       "id": "f74baf44-3a37-4607-a18c-94e21985972e",
       "name": "Aviso Fallo IRIS",
@@ -625,8 +625,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -320,
-        -1376
+        -496,
+        -1568
       ],
       "id": "4b1c0ad7-e628-436a-bfb9-c392027d8e73",
       "name": "Crear Caso IRIS",
@@ -646,8 +646,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -576,
-        -1296
+        -768,
+        -1488
       ],
       "id": "05ac2d06-93f3-4f32-b23a-6e5be3839828",
       "name": "Preparar Caso IRIS",
@@ -680,8 +680,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -1312,
-        -1024
+        -1504,
+        -1216
       ],
       "id": "81c48ce5-f7cf-4a9d-8b1e-6c641c321d4b",
       "name": "If1"
@@ -696,8 +696,8 @@
       "type": "n8n-nodes-base.rocketchat",
       "typeVersion": 1,
       "position": [
-        -1040,
-        -1104
+        -1232,
+        -1296
       ],
       "id": "b5a76f4b-2040-4369-8694-e69e87739aa2",
       "name": "Post a message1",
@@ -707,6 +707,124 @@
           "name": "Rocket account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst d = $('Evaluar Respuesta IRIS').first().json;\n\nconst case_id = d.iris_case_id;\nconst host = String(d.wazuh.agent_name || '').trim();\n\n// incidentid construye la clave del objeto en MinIO y el orchestrator lo\n// valida contra ^[A-Za-z0-9._-]{1,64}$. Atarlo al caso IRIS hace que la\n// evidencia en MinIO y el caso sean rastreables el uno desde el otro.\nconst incidentid = `INC-${case_id}`;\nconst profile = 'generic_high_signal_collection';\n\nconst body = JSON.stringify({ incidentid, host, profile, source: 'n8n' });\nconst ts = Math.floor(Date.now() / 1000).toString();\nconst nonce = crypto.randomUUID();\nconst sig = crypto.createHmac('sha256', $env.ORCH_HMAC_SECRET)\n  .update(`${ts}.${nonce}.` + body)\n  .digest('hex');\n\nreturn [{ json: { ...d, case_id, incidentid, body, ts, nonce, sig } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -1552
+      ],
+      "id": "ae05015f-3197-4d80-bb93-3d4f7a26db3c",
+      "name": "Firmar Recolección"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://orchestrator:8000/velociraptor/collect",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-timestamp",
+              "value": "={{ $json.ts }}"
+            },
+            {
+              "name": "x-nonce",
+              "value": "={{ $json.nonce }}"
+            },
+            {
+              "name": "x-signature",
+              "value": "={{ $json.sig }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.body }}",
+        "options": {
+          "timeout": 360000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        -1392
+      ],
+      "id": "7b2a9326-1900-4062-aeae-7829879e1e49",
+      "name": "Lanzar Recolección",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const col = $('Lanzar Recolección').first().json;\nconst m = col.manifest;\nconst prev = $('Firmar Recolección').first().json;\n\nconst iso = s => `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}T` +\n                 `${s.slice(9,11)}:${s.slice(11,13)}:${s.slice(13,15)}`;\n\nreturn [{ json: {\n  case_id: prev.case_id,\n  zip_sha256: m.zip_sha256,\n  evidencia: {\n    filename: 'velociraptor_collection.zip',\n    file_hash: m.zip_sha256,\n    file_size: m.zip_size_bytes,\n    type_id: 39,\n    acquisition_date: iso(m.ended_at),\n    start_date: iso(m.started_at),\n    end_date: iso(m.ended_at),\n    file_description:\n      `Coleccion Velociraptor — flow ${m.velociraptor_flow_id}, cliente ` +\n      `${m.velociraptor_client_id} (${m.velociraptor_client_os}), perfil ` +\n      `${m.collection_profile}, ${m.total_collected_rows} filas. ` +\n      `Objeto en ${m.zip_path}. Manifiesto y sha256.txt junto al objeto.`,\n  },\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -1216
+      ],
+      "id": "83de962c-a83b-4485-ac3e-b11147ada604",
+      "name": "Preparar Evidencia"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://iris.oob.local:4833/case/evidences/add?cid={{ $('Preparar Evidencia').first().json.case_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.evidencia) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        -1072
+      ],
+      "id": "17729fd0-9464-4508-8196-388f4dd4359b",
+      "name": "Registrar Evidencia",
+      "credentials": {
+        "dfirIrisApi": {
+          "id": "REEMPLAZAR",
+          "name": "DFIR-IRIS account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://iris.oob.local:4833/case/evidences/list?cid={{ $('Preparar Evidencia').first().json.case_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        320,
+        -912
+      ],
+      "id": "46eecb92-10a5-4947-aef2-c9ea4a50f2ce",
+      "name": "Verificar Evidencia"
+    },
+    {
+      "parameters": {
+        "jsCode": "const esperado = $('Preparar Evidencia').first().json.zip_sha256;\nconst case_id  = $('Preparar Evidencia').first().json.case_id;\nconst m        = $('Lanzar Recolección').first().json.manifest;\nconst lista    = $('Verificar Evidencia').first().json;\n\n// /case/evidences/list devuelve { data: { evidences: [...], state: {...} } }.\n// El nodo HTTP de n8n entrega el cuerpo completo, asi que se navega desde\n// data. Si IRIS cambiara la forma, ev queda undefined y se detecta abajo.\nconst evidencias = lista?.data?.evidences ?? [];\n\n// Un caso puede tener varias evidencias (recolecciones sucesivas del mismo\n// incidente). Se busca por hash, no se toma la ultima: coger la ultima daria\n// por buena una evidencia distinta si el alta hubiera fallado.\nconst ev = evidencias.find(e => e.file_hash === esperado);\n\nconst ok = Boolean(ev);\n\nlet motivo = '';\nif (!ok) {\n  if (evidencias.length === 0) {\n    motivo = 'IRIS no devuelve ninguna evidencia para el caso';\n  } else {\n    const hashes = evidencias.map(e => e.file_hash ?? '(sin hash)');\n    motivo = `ninguna de las ${evidencias.length} evidencias del caso ` +\n             `casa con el hash del manifiesto. Presentes: ${hashes.join(', ')}`;\n  }\n}\n\nreturn [{ json: {\n  case_id,\n  custodia_ok: ok,\n  esperado,\n  motivo,\n  evidence_id: ev?.id ?? null,\n  flow_id: m.velociraptor_flow_id,\n  zip_path: m.zip_path,\n  total_rows: m.total_collected_rows,\n  mensaje: ok\n    ? `🔗 Evidencia enlazada al caso #${case_id}\\n` +\n      `📦 ${m.zip_path}\\n` +\n      `🔑 sha256 ${esperado}\\n` +\n      `🦖 flow ${m.velociraptor_flow_id} · ${m.total_collected_rows} filas\\n` +\n      `✅ Hash verificado contra el registro de IRIS.`\n    : `⚠️ **La evidencia del caso #${case_id} no acredita integridad**\\n` +\n      `Motivo: ${motivo}\\n` +\n      `🔑 Esperado: ${esperado}\\n` +\n      `📦 El ZIP existe en ${m.zip_path}; lo que falla es su registro en IRIS.`,\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        -704
+      ],
+      "id": "9bd0745b-8a8d-448e-b078-96b9ec767948",
+      "name": "Comparar Hash"
     }
   ],
   "connections": {
@@ -1031,6 +1149,72 @@
           }
         ]
       ]
+    },
+    "Referencia en War Room": {
+      "main": [
+        [
+          {
+            "node": "Firmar Recolección",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firmar Recolección": {
+      "main": [
+        [
+          {
+            "node": "Lanzar Recolección",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lanzar Recolección": {
+      "main": [
+        [
+          {
+            "node": "Preparar Evidencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Evidencia": {
+      "main": [
+        [
+          {
+            "node": "Registrar Evidencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Evidencia": {
+      "main": [
+        [
+          {
+            "node": "Verificar Evidencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Evidencia": {
+      "main": [
+        [
+          {
+            "node": "Comparar Hash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1040,19 +1224,21 @@
   },
   "staticData": {
     "global": {
-      "seen": {}
+      "seen": {
+        "5719|DC01-TFM|185.220.101.5": 1789747105388
+      }
     }
   },
   "meta": {
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "5dd27be7-4603-49a6-83a5-de54d3e23f3a",
-  "versionCounter": 2184,
+  "activeVersionId": "4511cf58-c279-4817-a568-daf0c2a681f6",
+  "versionCounter": 2298,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 5dd27be7",
+    "name": "Version 4511cf58",
     "description": ""
   }
 }
