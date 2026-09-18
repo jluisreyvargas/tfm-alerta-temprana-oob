@@ -117,3 +117,4 @@ scripts/hosts-*.txt
 scripts/dc-signed.env
 fase5-velociraptor/velociraptor-config/api_client.yaml
 fase5-velociraptor/velociraptor-config/downloads/
+__pycache__/
