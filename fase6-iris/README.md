@@ -7,12 +7,27 @@
 > cierre— es registrable con trazabilidad íntegra.
 
 > [!IMPORTANT]
-> **Alcance real de esta fase.** El despliegue está operativo y el ciclo de vida
-> del caso ha sido **validado manualmente** (ver
-> [`docs/README-Fase6b.md`](../docs/README-Fase6b.md)). La automatización de la
-> integración con el orquestador **no está implementada**: la API key está
-> aprovisionada y el procedimiento documentado, pero ningún componente del
-> proyecto consume la API de IRIS. Ver [Trabajo futuro](#-trabajo-futuro).
+> **Alcance real de esta fase (histórico, ver corrección debajo).** El
+> despliegue está operativo y el ciclo de vida del caso ha sido **validado
+> manualmente** (ver [`docs/README-Fase6b.md`](../docs/README-Fase6b.md)).
+> La automatización de la integración con el orquestador **no está
+> implementada**: la API key está aprovisionada y el procedimiento
+> documentado, pero ningún componente del proyecto consume la API de IRIS.
+> Ver [Trabajo futuro](#-trabajo-futuro).
+
+> [!IMPORTANT]
+> **Corrección (vigente desde 2026-09-13).** El párrafo de arriba describe
+> el estado anterior a la Fase 5_4a y ya no es cierto: es falso desde el
+> 13 de septiembre de 2026. El workflow de n8n **sí consume la API de
+> IRIS**, sin intervención manual: crea el caso al abrir el incidente, lo
+> enlaza a la War Room de Rocket.Chat, y —desde la Etapa D (2026-09-18,
+> caso IRIS #62)— también enlaza automáticamente la evidencia de
+> Velociraptor. Detalle medido en
+> `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`, secciones 8 a 11. Lo
+> que sigue sin implementar es específicamente lo que enumera la lista "No
+> implementado" de más abajo (sincronización bidireccional por webhooks,
+> evidencias de RustDesk/KVM, cierre automático de caso) — no "ningún
+> componente".
 
 > [!WARNING]
 > Esta fase fue auditada el 3 de septiembre de 2026: cinco hallazgos P0, once P1
@@ -40,9 +55,10 @@
 
 ### No implementado
 
-- [ ] 🔗 Creación automática de caso desde el orquestador
+- [x] 🔗 Creación automática de caso — implementada desde la Fase 5_4a (2026-09-13), pero por el workflow de n8n, no por el microservicio orquestador (`fase5-orchestrator-api`), que no interviene en esta llamada. Ver `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`, secciones 8 a 11
 - [ ] 🔄 Sincronización bidireccional por webhooks
-- [ ] 📦 Adición automática de evidencias (Velociraptor, RustDesk, KVM)
+- [x] 📦 Adición automática de evidencias de Velociraptor — cerrado en la Etapa D (2026-09-18), caso IRIS #62, ver [`docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`](../docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md) sección 11 (M-26 a M-31)
+- [ ] 📦 Adición automática de evidencias de RustDesk y KVM
 - [ ] ✅ Cierre de caso con revocación automática de accesos
 - [ ] 📈 Dashboard de métricas operacionales (Fase 7)
 
@@ -367,7 +383,7 @@ orquestador (Fase 2):
 
 1. Creación de caso al abrir incidente, enlazado al War Room de Rocket.Chat
 2. Volcado del campo `agent_reasoning` del agente de triaje (Fase 3)
-3. Adición de artefactos de Velociraptor (Fase 5) como evidencias
+3. ~~Adición de artefactos de Velociraptor (Fase 5) como evidencias~~ — ✅ cerrado en la Etapa D (2026-09-18), caso IRIS #62 (ver sección 11 del registro de mediciones)
 4. Registro de sesiones de acceso remoto en la línea temporal (Fases 4 y 8)
 5. Cierre de caso con revocación de accesos
 

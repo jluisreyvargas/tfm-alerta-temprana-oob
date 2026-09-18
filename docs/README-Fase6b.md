@@ -99,3 +99,18 @@ La Fase 6b puede darse por validada en su parte funcional básica con los siguie
 El siguiente paso lógico consiste en conectar **n8n** con IRIS para que el orquestador pueda registrar automáticamente la referencia del caso, la evidencia y el estado del incidente, incluso si algunas operaciones avanzadas deben mantenerse inicialmente en modo manual por compatibilidad de endpoints entre versiones.
 
 A nivel de arquitectura del TFM, esta continuación permite cerrar el flujo completo: **alerta → orquestación → evidencia en MinIO → caso en IRIS → trazabilidad del incidente**.
+
+---
+
+## ✅ Cierre (Etapa D, 2026-09-18)
+
+El paso siguiente descrito arriba está implementado: el enlace manual por
+nota operativa que valida esta fase ha sido sustituido por un enlace
+automático vía `POST /case/evidences/add`, sin intervención humana. Caso
+IRIS **#62**, con el sha256 de la evidencia coincidiendo en cuatro puntos
+independientes (registro de evidencia en IRIS, `sha256.txt`, `manifest.json`
+y el objeto recalculado desde MinIO). Detalle medido en
+`docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`, sección 11 (M-26 a
+M-31). El flujo completo que este documento proyectaba como continuación
+—alerta → orquestación → evidencia en MinIO → caso en IRIS→ trazabilidad
+del incidente— queda así verificado de extremo a extremo.

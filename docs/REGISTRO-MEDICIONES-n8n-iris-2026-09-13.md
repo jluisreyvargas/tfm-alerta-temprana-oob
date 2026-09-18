@@ -955,3 +955,132 @@ que sigue abierto.
   rompería el cuerpo y el nodo fallaría. Es el mismo texto que `Preparar
   Caso IRIS` sí neutraliza con `md()` antes de mandarlo a IRIS, y viene
   parcialmente de datos que un atacante influye.
+
+## 11. Sesión 2026-09-18 (tarde) — Etapa D
+
+### M-26 · Esquema de `/case/evidences/add`, medido
+
+`CaseEvidenceSchema` declara **un único campo obligatorio**: `filename`
+(`Length(min=2)`). Todo lo demás lo hereda del modelo `CaseReceivedFile` por
+`SQLAlchemyAutoSchema`, y en ese modelo **ninguna columna es
+`nullable=False`** salvo `file_uuid`, que se autogenera.
+
+Nombres reales de campo: `filename`, `file_hash`, `file_size`, `type_id`,
+`file_description`, `acquisition_date`, `start_date`, `end_date`. `case_id`
+y `user_id` los pone IRIS: el primero desde el query string `?cid=N`, el
+segundo desde el usuario de la API key.
+
+Tipo de evidencia **39 = «Collection - Velociraptor»**, que IRIS trae de
+serie.
+
+Fechas: se acepta `YYYY-MM-DDTHH:MM:SS` **sin zona horaria** y se devuelve
+intacto. Distinto de `EventSchema` del timeline, que exige microsegundos y
+`event_tz`.
+
+`chain_of_custody` queda `null`: IRIS **no escribe nada ahí por su cuenta**.
+Si el proyecto presenta cadena de custodia, la sostienen el manifiesto y el
+`sha256.txt` de MinIO, no ese campo.
+
+### M-27 · Un nombre de campo erróneo produce una evidencia sin hash, con HTTP 200
+
+Prueba negativa medida: `POST /case/evidences/add?cid=56` con el hash bajo
+la clave `file_sha256` en lugar de `file_hash` devuelve `status: success` y
+crea una evidencia con `file_hash: null`.
+
+Causa: `unknown = EXCLUDE` en el esquema sobre una columna nullable. El
+campo desconocido se descarta en silencio y nada en la cadena lo detiene.
+
+Es la instancia más grave del patrón que documenta este registro. En
+`AlertSchema` el resultado era una alerta vacía; aquí es **una evidencia
+forense registrada en el caso, visible en el listado, que no acredita
+integridad alguna**. Un perito que la viera daría por hecho que hay hash
+verificado.
+
+Consecuencia de diseño, aplicada en el workflow: `Comparar Hash` lee la
+evidencia de vuelta y **busca por hash** en el listado —no toma la última—,
+y publica un aviso explícito si no la encuentra. El 200 del alta no
+acredita el efecto.
+
+### M-28 · `cid` vacío en IRIS devuelve 401, no 400
+
+Un `GET /case/evidences/list?cid=` (parámetro presente pero vacío) devuelve
+`401 {"status":"error","message":"Authentication required"}`. La
+credencial era correcta; el defecto estaba en la petición. Diagnóstico
+desviado hacia las credenciales durante el cableado.
+
+### M-29 · Un `case_id` inexistente devuelve 500, no 404
+
+`GET /case/evidences/list?cid=<caso borrado>` devuelve `500 Internal
+Server Error`. En el log de `iriswebapp_app`: `KeyError: 'permissions'` en
+`ac_current_user_has_permission`
+(`app/iris_engine/access_control/utils.py:1142`), que lee
+`session['permissions']` donde una petición por API key no tiene sesión de
+navegador.
+
+Desde fuera, «este caso no existe» y «el servidor está roto» son
+indistinguibles. Costó un diagnóstico equivocado el 2026-09-18: se atribuyó
+a falta de acceso efectivo del usuario de API a los casos creados por la
+automatización, hipótesis que se construyó sobre casos que estaban siendo
+borrados en paralelo. La refutó un `200` sobre un caso vivo (#56).
+
+Es código vendorizado de IRIS: se registra, no se parchea.
+
+### M-30 · La dirección del orchestrator tiene semántica doble
+
+El orchestrator arranca con `uvicorn --host 0.0.0.0 --port 8000` y el
+contenedor publica `8000/tcp -> 127.0.0.1:8020`. Comprobado desde dentro
+del contenedor: el 8000 está abierto y el 8020 cerrado.
+
+Por tanto `http://127.0.0.1:8020`, que es lo que figura en la tabla de
+datos de entorno, es **la vista del host**. Desde n8n —mismo
+`oob-network`, alias `orchestrator`— la URL es `http://orchestrator:8000`.
+Usar el puerto del host desde un contenedor produce `ECONNREFUSED`.
+
+Misma familia que M-2: una dirección correcta para un sujeto y engañosa
+para otro, sin que ningún fichero lo declare.
+
+### M-31 · Etapa D verificada de extremo a extremo
+
+Caso IRIS **#62**, 2026-09-18. Alerta inyectada (regla 5714, `sshd` /
+`authentication_failed`, IP 185.220.101.5, agente DC01-TFM) → triaje
+CRITICA score 14 → caso IRIS con `severity_id` 6 y `classification_id` 15
+→ War Room → recolección real por gRPC → ZIP en MinIO → evidencia
+enlazada al caso.
+
+Colección: flow `F.DAMLV9PKLOBUU`, cliente `C.c7302a34a17948ec`
+(DC01-TFM, windows), perfil `generic_high_signal_collection`, 127 filas,
+29025 bytes. Objeto en
+`s3://evidence/INC-62/DC01-TFM/20260918T155828Z/velociraptor_collection.zip`.
+
+**sha256 `04a4fe554a2b707c4ba9125c65571d8d6f12b2a5875fb684670a00942ad657dc`
+idéntico en cuatro puntos independientes:** el registro de evidencia de
+IRIS, el `sha256.txt` del bucket, el `manifest.json`, y el recálculo sobre
+los bytes del objeto descargado de MinIO. `file_size` 29025 coincide en
+IRIS y en el objeto.
+
+Registrar como **no verificado todavía**: la prueba negativa de `Comparar
+Hash` —forzar un nombre de campo erróneo en `Preparar Evidencia` y
+comprobar que el aviso sale como fallo— está pendiente. El nodo está
+ejercitado solo en el camino correcto.
+
+### Incidencias de cableado, para no repetirlas
+
+Los cuatro fallos que costaron una inyección cada uno durante el montaje
+de los seis nodos:
+
+1. Marcador `<nombre-medido>` pegado literalmente en la URL del nodo →
+   `ERR_INVALID_URL`.
+2. `case_id` leído de `Crear Caso IRIS`, cuya salida es
+   `{statusCode, body:{...}}` por estar configurado con full response. El
+   valor ya normalizado vive en `Evaluar Respuesta IRIS` como
+   `iris_case_id`.
+3. `{{ $json.case_id }}` en un nodo cuya entrada es la respuesta de IRIS y
+   no el objeto propio → `cid` vacío. Se resuelve referenciando el nodo por
+   nombre: `{{ $('Preparar Evidencia').first().json.case_id }}`.
+4. Un nodo HTTP nuevo **no hereda la credencial**: `Verificar Evidencia`
+   salió sin `Authorization` y devolvió 401.
+
+Nota positiva que merece constar: la salida de error de `Lanzar
+Recolección` estaba cableada a un aviso, y por eso el primer fallo se vio
+de inmediato en lugar de morir en silencio. Es el remedio directo del
+patrón de M-21.

@@ -16,6 +16,16 @@
 > [!TIP]
 > Este servicio NO ejecuta colecciones reales contra Velociraptor Server, pero implementa el **pipeline de control y evidencia** previsto en la Fase 5 del TFM.
 
+> [!IMPORTANT]
+> **Corrección (Fase 5_4b, commit `456fbf9`, y Etapa D, 2026-09-18).** El
+> aviso de arriba describe el estado de la primera validación de esta fase
+> (2026-06-25) y ya no es cierto. Desde `456fbf9` este servicio **sí ejecuta
+> colecciones reales** contra Velociraptor Server por gRPC, con hash real
+> del ZIP subido a MinIO. Desde la Etapa D, la evidencia se enlaza además
+> automáticamente al caso DFIR-IRIS. Ver la sección de cierre más abajo y
+> `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md` (sección 9, M-16 a M-20;
+> sección 11, M-26 a M-31).
+
 ---
 
 ## 📋 Estado
@@ -27,8 +37,8 @@
 - [x] 📄 Generacion de `manifest.json` con metadatos estructurados
 - [x] 🔐 Generacion de `sha256.txt` para integridad
 - [x] 🗂️ Escritura en bucket `evidence` con estructura por incidente/host/timestamp
-- [ ] 🟡 ZIP real de coleccion desde Velociraptor (pendiente)
-- [ ] 🟡 Integracion automatica con DFIR-IRIS (pendiente)
+- [x] ✅ ZIP real de coleccion desde Velociraptor — cerrado en Fase 5_4b (commit `456fbf9`)
+- [x] ✅ Integracion automatica con DFIR-IRIS — cerrado en la Etapa D (2026-09-18), caso IRIS #62
 
 ---
 
@@ -126,6 +136,22 @@ Recibe una peticion de coleccion forense, valida el perfil y genera la estructur
 
 > [!WARNING]
 > El campo `zip_sha256` actualmente contiene un valor simulado en la respuesta de prueba, ya que el servicio todavia no genera el ZIP real de coleccion desde Velociraptor.
+
+> [!IMPORTANT]
+> **Corrección (Fase 5_4b, commit `456fbf9`).** Este manifiesto y su
+> `sha256.txt` son el ejemplo de la primera validación (2026-06-25), con
+> `started_at == ended_at` y `zip_sha256` calculado sobre
+> `incident_id + host + timestamp`, no sobre ningún fichero — el defecto que
+> describe la sección 9 (M-16, M-17) del registro de mediciones. Desde
+> `456fbf9` el ZIP se descarga por gRPC del filestore de Velociraptor,
+> `started_at`/`ended_at` reflejan la duración real, y `zip_sha256` es el
+> hash del fichero efectivamente subido — verificado idéntico en el
+> filestore, `manifest.json` y el objeto descargado de MinIO. Ejemplo real
+> (Etapa D, caso IRIS #62): flow `F.DAMLV9PKLOBUU`, 127 filas, 29025 bytes,
+> `zip_sha256`
+> `04a4fe554a2b707c4ba9125c65571d8d6f12b2a5875fb684670a00942ad657dc`,
+> coincidente en cuatro puntos independientes (IRIS, `sha256.txt`,
+> `manifest.json` y el objeto descargado).
 
 ---
 
@@ -265,6 +291,9 @@ evidence/
 
 Esto deja preparada la base para el siguiente paso del proyecto: añadir el ZIP real de coleccion y registrar la evidencia automaticamente en DFIR-IRIS.
 
+> **Cierre.** Ambos pasos están hechos — ver la sección de cierre al final
+> de este documento.
+
 ---
 
 ## 🧪 Validacion funcional
@@ -316,9 +345,9 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 
 | Limitacion | Impacto | Estado |
 |---|---|---|
-| ZIP real de coleccion | El servicio no genera el ZIP real desde Velociraptor | 🟡 Pendiente |
-| Hash real del ZIP | El campo `zip_sha256` contiene valor simulado | 🟡 Pendiente |
-| Integracion con DFIR-IRIS | No se registra la evidencia automaticamente en IRIS | 🟡 Pendiente |
+| ZIP real de coleccion | El servicio no genera el ZIP real desde Velociraptor | ✅ Cerrado (Fase 5_4b, `456fbf9`) |
+| Hash real del ZIP | El campo `zip_sha256` contiene valor simulado | ✅ Cerrado (Fase 5_4b, `456fbf9`) |
+| Integracion con DFIR-IRIS | No se registra la evidencia automaticamente en IRIS | ✅ Cerrado (Etapa D, caso IRIS #62) |
 | Bucket sin versionado | Quitar `s3:DeleteObject` no impide la sobrescritura de un manifiesto | 🔴 Pendiente (P0-3) |
 | `incidentid` / `host` sin validar | Se usan sin sanear para construir la clave del objeto en MinIO | 🔴 Pendiente (P0-3) |
 
@@ -326,9 +355,9 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 
 ## 🚀 Prximos pasos
 
-1. 🟡 Añadir generacion real del ZIP de coleccion desde Velociraptor Server
-2. 🟡 Calcular hash SHA-256 real del ZIP generado
-3. 🟡 Integrar con DFIR-IRIS para registro automatico de evidencias (Fase 6)
+1. ~~🟡 Añadir generacion real del ZIP de coleccion desde Velociraptor Server~~ — ✅ cerrado en Fase 5_4b (`456fbf9`)
+2. ~~🟡 Calcular hash SHA-256 real del ZIP generado~~ — ✅ cerrado en Fase 5_4b (`456fbf9`)
+3. ~~🟡 Integrar con DFIR-IRIS para registro automatico de evidencias (Fase 6)~~ — ✅ cerrado en la Etapa D (2026-09-18), caso IRIS #62
 4. 🔴 Activar versionado / bloqueo de objetos en el bucket `evidence` (P0-3)
 5. 🔴 Validar `incidentid` y `host` antes de construir la clave del objeto (P0-3)
 6. 🟡 Añadir validacion de integridad de evidencias (verificar hash)
@@ -352,8 +381,48 @@ Este componente ya cumple el papel de **orquestador tcnico de evidencia** dentro
 | Generacion de `manifest.json` | ✅ |
 | Generacion de `sha256.txt` | ✅ |
 | Escritura en bucket `evidence` | ✅ |
-| ZIP real de Velociraptor | 🟡 Pendiente |
-| Integracion automatica con DFIR-IRIS | 🟡 Pendiente |
+| ZIP real de Velociraptor | ✅ Cerrado (Fase 5_4b, `456fbf9`) |
+| Integracion automatica con DFIR-IRIS | ✅ Cerrado (Etapa D, caso IRIS #62) |
+
+---
+
+## ✅ Cierre — recolección real y enlace a IRIS
+
+Este documento describe, en varias secciones, el estado de la primera
+validación de la Fase 5 (2026-06-25): ZIP simulado, `zip_sha256` calculado
+sobre identificadores en vez de sobre un fichero, `started_at == ended_at`,
+y sin integración con DFIR-IRIS. Se conserva tal cual se redactó porque
+documenta la evolución del proyecto, no el comportamiento actual — los
+avisos y tablas de arriba llevan ahora una corrección puntual señalando
+dónde dejaron de ser ciertos.
+
+**Fase 5_4b (2026-09-17, commit `456fbf9`)** sustituyó la simulación por una
+recolección real vía gRPC contra Velociraptor: el ZIP se descarga del
+filestore, `started_at`/`ended_at` reflejan la duración real de la
+colección, y `zip_sha256` es el hash del fichero efectivamente subido a
+MinIO — verificado idéntico en el filestore de Velociraptor, `manifest.json`
+y el objeto descargado de MinIO.
+
+**Etapa D (2026-09-18)** añadió el enlace automático al caso IRIS mediante
+`POST /case/evidences/add`, sin nota manual ni intervención humana. Prueba
+de extremo a extremo, caso IRIS **#62**: alerta real → triaje CRITICA →
+caso → War Room → recolección por gRPC → ZIP en
+`s3://evidence/INC-62/DC01-TFM/20260918T155828Z/velociraptor_collection.zip`
+→ evidencia enlazada al caso. El sha256
+`04a4fe554a2b707c4ba9125c65571d8d6f12b2a5875fb684670a00942ad657dc` coincide
+en cuatro puntos independientes: el registro de evidencia de IRIS, el
+`sha256.txt` del bucket, el `manifest.json` y el recálculo sobre los bytes
+del objeto descargado de MinIO. Detalle medido en
+`docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`, sección 9 (M-16 a M-20)
+y sección 11 (M-26 a M-31).
+
+Las dos filas de "Bucket sin versionado" e "`incidentid`/`host` sin validar"
+de la tabla de limitaciones conocidas (P0-3) **no están cerradas** por esta
+sesión y siguen `🔴 Pendiente`.
+
+Pendiente todavía, sin medir: la prueba negativa de `Comparar Hash` (forzar
+un nombre de campo erróneo en `Preparar Evidencia` y comprobar que el aviso
+sale como fallo) — el nodo está ejercitado solo en el camino correcto.
 
 ---
 

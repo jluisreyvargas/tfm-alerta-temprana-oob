@@ -125,6 +125,6 @@ verificación por captura de tráfico de que el canal break-glass discurre por
 
 ## 🚀 Próximos pasos
 
-1. 🗂️ Integrar DFIR-IRIS para el registro del caso (Fase 6).
-2. 🦎 Colección forense con Velociraptor (Fase 5).
-3. 📈 Cuadros de mando en OpenSearch (Fase 7).
+1. ~~🗂️ Integrar DFIR-IRIS para el registro del caso (Fase 6).~~ — ✅ completada, ver [Fase 6](../fase6-iris).
+2. ~~🦎 Colección forense con Velociraptor (Fase 5).~~ — ✅ completada, ver [Fase 5B](../fase5-velociraptor).
+3. ~~📈 Cuadros de mando en OpenSearch (Fase 7).~~ — ✅ completada, ver [Fase 7](../fase7-observabilidad).
