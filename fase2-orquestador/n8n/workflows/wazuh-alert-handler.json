@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-20T10:18:50.841Z",
+  "updatedAt": "2026-09-20T12:27:04.842Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -88,7 +88,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const norm = $('Normalize Alert').first().json;\n\n// $('Nodo').first() lanza excepcion si el nodo no llego a ejecutarse, cosa que\n// ocurre cuando la rama CTI se salta por no haber IP publica que consultar.\n// El encadenamiento opcional no protege: el error se produce antes de evaluarlo.\nfunction salidaDe(nombre) {\n  try {\n    return $(nombre).first()?.json ?? {};\n  } catch (e) {\n    return {};\n  }\n}\n\nconst abuse = salidaDe('AbuseIPDB').data ?? {};\nconst vt    = salidaDe('VirusTotal').data?.attributes ?? {};\n\nlet mispCount = 0;\ntry {\n  const resp = salidaDe('MISP').response ?? {};\n  mispCount = Array.isArray(resp.Attribute) ? resp.Attribute.length : 0;\n} catch (e) {\n  mispCount = 0;\n}\n\nreturn [{ json: {\n  wazuh: norm.wazuh,\n  cti: {\n    abuse_confidence:    Number(abuse.abuseConfidenceScore ?? 0),\n    abuse_total_reports: Number(abuse.totalReports ?? 0),\n    abuse_country:       String(abuse.countryCode ?? 'N/A'),\n    abuse_isp:           String(abuse.isp ?? 'N/A'),\n    abuse_is_tor:        Boolean(abuse.isTor ?? false),\n\n    // last_analysis_stats son detecciones de motores; total_votes son votos de\n    // la comunidad. Son cosas distintas: aqui se usan motores.\n    vt_malicious:  Number(vt.last_analysis_stats?.malicious  ?? 0),\n    vt_suspicious: Number(vt.last_analysis_stats?.suspicious ?? 0),\n    vt_harmless:   Number(vt.last_analysis_stats?.harmless   ?? 0),\n    vt_asn:        String(vt.asn ?? 'N/A'),\n    vt_as_owner:   String(vt.as_owner ?? 'N/A'),\n    vt_network:    String(vt.network ?? 'N/A'),\n\n    misp_total: mispCount,\n\n    src_ip_is_private:  !norm.enrichable && Boolean(norm.wazuh.src_ip),\n    enrichment_skipped: norm.enrichment_skipped ?? '',\n  }\n}}];"
+        "jsCode": "const norm = $('Normalize Alert').first().json;\n\n// $('Nodo').first() lanza excepcion si el nodo no llego a ejecutarse, cosa que\n// ocurre cuando la rama CTI se salta por no haber IP publica que consultar.\n// El encadenamiento opcional no protege: el error se produce antes de evaluarlo.\nfunction salidaDe(nombre) {\n  try {\n    return $(nombre).first()?.json ?? {};\n  } catch (e) {\n    return {};\n  }\n}\nconst abuse = salidaDe('AbuseIPDB').data ?? {};\n// El nodo AbuseIPDB tiene onError: continueRegularOutput y alwaysOutputData,\n// asi que un 401, una cuota agotada o un corte de red llegan como item vacio\n// por la salida normal. Sin esta distincion, el ?? 0 de cada campo produce un\n// cero identico al de una IP sin reportes: \"la fuente dice que no hay nada\" y\n// \"la fuente no contesto\" se vuelven indistinguibles. Medido el 2026-09-20:\n// la credencial equivocada (la de Rocket.Chat) llevaba semanas produciendo\n// ceros, y el score de triaje perdia los 2 puntos de abuseipdb sin señal.\nconst abuse_ok = Object.keys(abuse).length > 0;\nconst vt    = salidaDe('VirusTotal').data?.attributes ?? {};\n\nlet mispCount = 0;\ntry {\n  const resp = salidaDe('MISP').response ?? {};\n  mispCount = Array.isArray(resp.Attribute) ? resp.Attribute.length : 0;\n} catch (e) {\n  mispCount = 0;\n}\n\nreturn [{ json: {\n  wazuh: norm.wazuh,\n  cti: {\n    abuse_confidence:    Number(abuse.abuseConfidenceScore ?? 0),\n    abuse_total_reports: Number(abuse.totalReports ?? 0),\n    abuse_country:       String(abuse.countryCode ?? 'N/A'),\n    abuse_isp:           String(abuse.isp ?? 'N/A'),\n    abuse_is_tor:        Boolean(abuse.isTor ?? false),\n    abuse_disponible: abuse_ok,\n\n    // last_analysis_stats son detecciones de motores; total_votes son votos de\n    // la comunidad. Son cosas distintas: aqui se usan motores.\n    vt_malicious:  Number(vt.last_analysis_stats?.malicious  ?? 0),\n    vt_suspicious: Number(vt.last_analysis_stats?.suspicious ?? 0),\n    vt_harmless:   Number(vt.last_analysis_stats?.harmless   ?? 0),\n    vt_asn:        String(vt.asn ?? 'N/A'),\n    vt_as_owner:   String(vt.as_owner ?? 'N/A'),\n    vt_network:    String(vt.network ?? 'N/A'),\n\n    misp_total: mispCount,\n\n    src_ip_is_private:  !norm.enrichable && Boolean(norm.wazuh.src_ip),\n    enrichment_skipped: norm.enrichment_skipped ?? '',\n  }\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -138,7 +138,11 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
-          "name": "Header Auth account"
+          "name": "AbuseIPDB"
+        },
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
         }
       },
       "onError": "continueRegularOutput"
@@ -325,8 +329,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://rocketchat:3000/api/v1/chat.postMessage",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -338,7 +342,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"roomId\": \"{{ $json.group?._id ?? $json.channel?._id ?? '' }}\",\n  \"text\": \"🚨 *War Room — {{ $('Code Merge Final').first().json.wazuh.rule_desc }}*\\n\\n📋 Regla: {{ $('Code Merge Final').first().json.wazuh.rule_id }}\\n🖥 Agente: {{ $('Code Merge Final').first().json.wazuh.agent_name }}\\n🌐 IP origen: {{ $('Code Merge Final').first().json.wazuh.src_ip }}\\n🕐 Evento: {{ $('Code Merge Final').first().json.wazuh.event_timestamp }}\\n📥 Ingesta: {{ $('Code Merge Final').first().json.wazuh.ingest_timestamp }}\\n\\n🔍 AbuseIPDB {{ $('Code Merge Final').first().json.cti.abuse_confidence }}% · VirusTotal {{ $('Code Merge Final').first().json.cti.vt_malicious }} motores maliciosos / {{ $('Code Merge Final').first().json.cti.vt_harmless }} inocuos · MISP {{ $('Code Merge Final').first().json.cti.misp_total }}\\n\\n🤖 Triage ({{ $('Code Merge Final').first().json.decision.analysis_mode }})\\n├ Severidad: {{ $('Code Merge Final').first().json.decision.severity_real }}\\n├ ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_technique }} / {{ $('Code Merge Final').first().json.decision.mitre_tactic }}\\n├ Fuente ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_source }}\\n├ Score: {{ $('Code Merge Final').first().json.decision.score }}\\n└ Recomendación: {{ $('Code Merge Final').first().json.decision.recommendation }}\"\n}",
+        "jsonBody": "={\n  \"roomId\": \"{{ $json.group?._id ?? $json.channel?._id ?? '' }}\",\n  \"text\": \"🚨 *War Room — {{ $('Code Merge Final').first().json.wazuh.rule_desc }}*\\n\\n📋 Regla: {{ $('Code Merge Final').first().json.wazuh.rule_id }}\\n🖥 Agente: {{ $('Code Merge Final').first().json.wazuh.agent_name }}\\n🌐 IP origen: {{ $('Code Merge Final').first().json.wazuh.src_ip }}\\n🕐 Evento: {{ $('Code Merge Final').first().json.wazuh.event_timestamp }}\\n📥 Ingesta: {{ $('Code Merge Final').first().json.wazuh.ingest_timestamp }}\\n\\n🔍 {{ $('Code Merge Final').first().json.cti.abuse_disponible === false ? 'AbuseIPDB no disponible' : 'AbuseIPDB ' + $('Code Merge Final').first().json.cti.abuse_confidence + '%' }} · VirusTotal {{ $('Code Merge Final').first().json.cti.vt_malicious }} motores maliciosos / {{ $('Code Merge Final').first().json.cti.vt_harmless }} inocuos · MISP {{ $('Code Merge Final').first().json.cti.misp_total }}\\n\\n🤖 Triage ({{ $('Code Merge Final').first().json.decision.analysis_mode }})\\n├ Severidad: {{ $('Code Merge Final').first().json.decision.severity_real }}\\n├ ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_technique }} / {{ $('Code Merge Final').first().json.decision.mitre_tactic }}\\n├ Fuente ATT&CK: {{ $('Code Merge Final').first().json.decision.mitre_source }}\\n├ Score: {{ $('Code Merge Final').first().json.decision.score }}\\n└ Recomendación: {{ $('Code Merge Final').first().json.decision.recommendation }}\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -353,6 +357,10 @@
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Header Auth account"
+        },
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
         }
       }
     },
@@ -399,8 +407,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://rocketchat:3000/api/v1/groups.create",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -428,6 +436,10 @@
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Header Auth account"
+        },
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
         }
       },
       "onError": "continueRegularOutput"
@@ -519,8 +531,8 @@
       "parameters": {
         "method": "POST",
         "url": "http://rocketchat:3000/api/v1/chat.postMessage",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -547,6 +559,10 @@
         "httpHeaderAuth": {
           "id": "REEMPLAZAR",
           "name": "Header Auth account"
+        },
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
         }
       }
     },
@@ -1332,12 +1348,12 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "2480c83d-166f-42b9-94a9-002ad6b2d2f2",
-  "versionCounter": 2461,
+  "activeVersionId": "7db02ec0-c472-45b1-b562-34d736e890c7",
+  "versionCounter": 2529,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 2480c83d",
+    "name": "Version 7db02ec0",
     "description": ""
   }
 }
