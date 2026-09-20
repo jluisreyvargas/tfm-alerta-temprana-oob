@@ -1382,3 +1382,126 @@ Eso importa porque el saneado de `credentials.*.id` a `REEMPLAZAR` solo ocurre
 por esa vía: una exportación cruda dejaría los IDs reales en el fichero
 versionado. Conviene documentarlo en el README de Fase 4 para que no haya que
 redescubrirlo, y para que nadie exporte ese workflow por otro camino.
+
+## 14. Sesión 2026-09-20 (tarde) — Saneado del export y cierre de M-14
+
+### M-43 · El `staticData` del break-glass guardaba credenciales de acceso, no solo estado
+
+`export-workflow.sh` se amplió para vaciar `staticData` automáticamente, porque
+el vaciado manual se había olvidado en tres commits de una semana (M-36). El
+argumento era de higiene. Al ejecutarlo por primera vez sobre el workflow de
+break-glass, el diff mostró qué contenía realmente ese bloque:
+
+- `staticData.global.requests` — las solicitudes de acceso, con solicitante,
+  aprobador, canal de origen y marcas de tiempo.
+- `staticData.global.credentials` — **la contraseña temporal de RustDesk en
+  claro**, junto con el `rustdesk_id`, su `expires_at` y el flag `consumed`.
+
+Medido sobre la historia del fichero: cuatro commits contienen bloques de
+credenciales, y dos de ellos (`39c186f` y `d244e09`, tres entradas en total)
+con `password` presente y `consumed: false`. Las contraseñas son efímeras,
+únicas por solicitud y con TTL, y todos esos TTL habían expirado, así que no
+hubo credencial viva publicada.
+
+**Pero la ventana existía.** Entre que una solicitud se aprueba y su TTL
+caduca median minutos. Un export hecho dentro de esa ventana habría publicado
+en los dos remotos una contraseña **válida** de acceso de emergencia al
+controlador de dominio. El vaciado automático deja de ser higiene y pasa a ser
+una medida de seguridad con nombre propio.
+
+Registrar también la asimetría que esto revela: el detector de secretos del
+propio script **no lo habría visto**. Solo inspecciona `parameters` y solo
+cadenas de 32 caracteres o más; la contraseña de RustDesk vive en `staticData`
+y tiene 20. Lo que la atrapó fue el vaciado, no la detección. Ese punto ciego
+no es un fallo del detector construido a raíz de M-41: es el límite propio de
+un control con umbral, y conviene saberlo antes de apoyarse en él para lo que
+no cubre.
+
+### M-44 · Sanear por patrón sin excepción para expresiones borra lógica legítima
+
+El saneado nuevo sustituye por `REEMPLAZAR` el valor de las cabeceras de
+autenticación conocidas dentro de `parameters` (lista de supresión:
+`x-auth-token`, `authorization`, `x-api-key`, `apikey`, `key`, `token`,
+`x-token`). En su primera versión se llevó por delante un valor que no era un
+secreto: `Authorization: =Bearer {{ $env.AGENT_TOKEN }}`, la llamada al agente
+del DC.
+
+Eso no es un secreto: es una expresión de n8n que lee una variable de entorno
+en tiempo de ejecución. Sustituirla deja el fichero versionado sin servir para
+restaurar —el mismo defecto de M-4, un artefacto endurecido que no corresponde
+al sistema, pero esta vez provocado a propósito por la herramienta. Es el
+mismo defecto reproducido por la vía contraria: la herramienta que existe
+para proteger fue, en su primera versión, la que lo causó.
+
+Corregido con una excepción por forma, no por lista: **no se sanean los valores
+que empiezan por `=`**, porque un secreto literal nunca empieza así y toda
+expresión de n8n sí. Verificado: tras el arreglo, `AGENT_TOKEN` vuelve a
+aparecer en el fichero exportado y el diff queda reducido a `staticData`.
+
+Lo que el episodio enseña: un filtro de saneado tiene dos formas de fallar, y
+la segunda es menos visible. Dejar pasar un secreto se descubre tarde y duele;
+borrar lógica legítima no duele hasta que alguien intenta restaurar desde el
+fichero, probablemente meses después. Por eso la prueba del filtro se hizo en
+los dos sentidos: que atrape el token sobre el fichero que lo contenía, y que
+el `X-User-Id` y las expresiones sobrevivan intactos.
+
+### M-45 · Cierre de M-14 — AbuseIPDB usaba la credencial de Rocket.Chat
+
+M-14 registró el 2026-09-13 que AbuseIPDB devolvía `0` para una IP que
+VirusTotal y MISP sí marcaban, sin medir la causa. El 2026-09-18 se comprobó
+que el mismo resultado persistía con la misma IP, cinco días después, y se
+elevó de incidente a estado persistente. Ahora tiene causa.
+
+**Medición.** Consulta directa a la API con `curl`, con la clave cargada en la
+shell: `HTTP 200` con `abuseConfidenceScore: 100`, `totalReports: 301`,
+`isTor: true`, nodo de salida Tor en Berlín. La API funciona y la clave es
+válida, así que el cero no era «sin reputación».
+
+**Causa.** El nodo `AbuseIPDB` tenía asignada la credencial `Header Auth
+account`, que es la de Rocket.Chat y envía la cabecera `X-Auth-Token`. La API
+de AbuseIPDB exige la cabecera `Key`. Le llegaba una cabecera que no entiende y
+ninguna de las que necesita, así que respondía 401. Esa credencial la comparten
+cinco nodos más, todos de Rocket.Chat, donde sí es la correcta: una sola
+credencial genérica no puede servir a APIs que esperan cabeceras con nombres
+distintos.
+
+**Por qué no se vio antes.** El nodo tiene `onError: continueRegularOutput` y
+`alwaysOutputData: true`, así que el 401 salía por la salida normal como item
+vacío. En `Code CTI Context`, cada `?? 0` convertía la ausencia en un cero
+idéntico al de una IP sin reportes. Es el mismo patrón que este registro
+documenta en otros sitios: la ausencia de señal produce una señal positiva
+indistinguible de una medición real.
+
+**No era cosmético.** `tool_score_incident` suma 2 puntos si
+`abuse_confidence > 50`. Todos los casos anteriores se puntuaron con una fuente
+caída y perdieron esos 2 puntos. Esto se verificó por predicción: antes de
+tocar nada se anunció que, corregida la credencial, el mismo payload pasaría de
+score 14 a 16. Tras asignar una credencial propia con la cabecera `Key`, el
+mismo payload dio **score 16**. Las alertas de prueba acababan en CRITICA de
+todos modos gracias a VirusTotal y MISP, pero una alerta con score 9 podría
+haber salido ALTA en lugar de CRITICA.
+
+**Corrección.** Credencial propia para AbuseIPDB con la cabecera `Key`;
+`Code CTI Context` expone `abuse_disponible` para distinguir «la fuente dice
+cero» de «la fuente no contestó»; y las plantillas publican «AbuseIPDB no
+disponible» en ese caso, en lugar de «0%».
+
+Verificado en los dos caminos, según la regla que fija M-38: con la credencial
+errónea el mensaje dice «AbuseIPDB no disponible»; con la correcta, «AbuseIPDB
+100%» y score 16. Dos entradas distintas, dos salidas distintas.
+
+**Queda abierto:** el payload que n8n envía al triaje reconstruye el objeto
+`cti` campo a campo, y `abuse_disponible` no está entre ellos. El motor
+determinista sigue sin saber si una fuente estaba caída al calcular el score, y
+el resumen que publica no lo refleja. El síntoma está resuelto; el mecanismo
+que lo hacía invisible al veredicto, no.
+
+**Asimetría de diagnóstico, no señalada en su momento.** M-14 y su
+seguimiento del 18 atribuyeron el cero a la fuente externa —clave agotada,
+cuota, formato de respuesta— sin considerar la hipótesis más barata y más
+próxima: la configuración local del nodo. Cinco días de estado persistente
+que se resolvieron mirando a qué credencial apuntaba el nodo, algo
+comprobable en segundos. Es la imagen especular de M-28, donde un fallo de la
+petición se leyó como problema de credencial. En ambos casos el diagnóstico
+se fue hacia el componente lejano antes de agotar el cercano, y hasta ahora
+el registro no había cruzado las dos entradas.
