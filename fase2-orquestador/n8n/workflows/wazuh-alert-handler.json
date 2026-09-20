@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-18T19:45:23.397Z",
+  "updatedAt": "2026-09-20T09:51:10.737Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -761,7 +761,7 @@
     },
     {
       "parameters": {
-        "url": "https://iris.oob.local:4833/case/evidences/list?cid={{ $('Preparar Evidencia').first().json.case_id }}",
+        "url": "=https://iris.oob.local:4833/case/evidences/list?cid={{ $('Preparar Evidencia').first().json.case_id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "dfirIrisApi",
         "options": {}
@@ -783,7 +783,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const esperado = $('Preparar Evidencia').first().json.zip_sha256;\nconst case_id  = $('Preparar Evidencia').first().json.case_id;\nconst m        = $('Lanzar Recolección').first().json.manifest;\nconst lista    = $('Verificar Evidencia').first().json;\n\n// /case/evidences/list devuelve { data: { evidences: [...], state: {...} } }.\n// El nodo HTTP de n8n entrega el cuerpo completo, asi que se navega desde\n// data. Si IRIS cambiara la forma, ev queda undefined y se detecta abajo.\nconst evidencias = lista?.data?.evidences ?? [];\n\n// Un caso puede tener varias evidencias (recolecciones sucesivas del mismo\n// incidente). Se busca por hash, no se toma la ultima: coger la ultima daria\n// por buena una evidencia distinta si el alta hubiera fallado.\nconst ev = evidencias.find(e => e.file_hash === esperado);\n\nconst ok = Boolean(ev);\n\nlet motivo = '';\nif (!ok) {\n  if (evidencias.length === 0) {\n    motivo = 'IRIS no devuelve ninguna evidencia para el caso';\n  } else {\n    const hashes = evidencias.map(e => e.file_hash ?? '(sin hash)');\n    motivo = `ninguna de las ${evidencias.length} evidencias del caso ` +\n             `casa con el hash del manifiesto. Presentes: ${hashes.join(', ')}`;\n  }\n}\n\nreturn [{ json: {\n  case_id,\n  custodia_ok: ok,\n  esperado,\n  motivo,\n  evidence_id: ev?.id ?? null,\n  flow_id: m.velociraptor_flow_id,\n  zip_path: m.zip_path,\n  total_rows: m.total_collected_rows,\n  mensaje: ok\n    ? `🔗 Evidencia enlazada al caso #${case_id}\\n` +\n      `📦 ${m.zip_path}\\n` +\n      `🔑 sha256 ${esperado}\\n` +\n      `🦖 flow ${m.velociraptor_flow_id} · ${m.total_collected_rows} filas\\n` +\n      `✅ Hash verificado contra el registro de IRIS.`\n    : `⚠️ **La evidencia del caso #${case_id} no acredita integridad**\\n` +\n      `Motivo: ${motivo}\\n` +\n      `🔑 Esperado: ${esperado}\\n` +\n      `📦 El ZIP existe en ${m.zip_path}; lo que falla es su registro en IRIS.`,\n}}];"
+        "jsCode": "const esperado = $('Preparar Evidencia').first().json.zip_sha256;\nconst case_id  = $('Preparar Evidencia').first().json.case_id;\nconst m        = $('Lanzar Recolección').first().json.manifest;\nconst lista    = $('Verificar Evidencia').first().json;\n\n// /case/evidences/list devuelve { status, message, data: { evidences, state } }.\n// Pero si el nodo HTTP esta configurado con \"full response\", lo que llega es\n// { statusCode, body: {...} }. Medido el 2026-09-18: la navegacion desde data\n// devolvia array vacio y el nodo informaba \"IRIS no devuelve ninguna\n// evidencia\" cuando la evidencia SI estaba registrada con su hash correcto.\n// Ese fallo produjo un falso positivo en la prueba negativa: el aviso de\n// custodia no acreditada salio por el motivo equivocado.\nconst cuerpo = lista?.body ?? lista;\nconst bruto  = cuerpo?.data?.evidences;\nconst ilegible = !Array.isArray(bruto);\nconst evidencias = ilegible ? [] : bruto;\n\n// Un caso puede tener varias evidencias (recolecciones sucesivas del mismo\n// incidente). Se busca por hash, no se toma la ultima: coger la ultima daria\n// por buena una evidencia distinta si el alta hubiera fallado.\nconst ev = evidencias.find(e => e.file_hash === esperado);\n\nconst ok = Boolean(ev);\n\nlet motivo = '';\nif (!ok) {\n  if (ilegible) {\n    // \"No supe leer la respuesta\" y \"no hay evidencia\" NO son lo mismo: el\n    // primero es un fallo del control, el segundo un fallo del registro.\n    // Confundirlos es lo que convirtio un control roto en un control que\n    // parecia funcionar.\n    motivo = 'no se pudo interpretar la respuesta de IRIS al listar ' +\n             'evidencias (fallo del control, no del registro): ' +\n             JSON.stringify(lista).slice(0, 200);\n  } else if (evidencias.length === 0) {\n    motivo = 'IRIS no devuelve ninguna evidencia para el caso';\n  } else {\n    const hashes = evidencias.map(e => e.file_hash ?? '(sin hash)');\n    motivo = `ninguna de las ${evidencias.length} evidencias del caso ` +\n             `casa con el hash del manifiesto. Presentes: ${hashes.join(', ')}`;\n  }\n}\n\nreturn [{ json: {\n  case_id,\n  custodia_ok: ok,\n  esperado,\n  motivo,\n  evidence_id: ev?.id ?? null,\n  flow_id: m.velociraptor_flow_id,\n  zip_path: m.zip_path,\n  total_rows: m.total_collected_rows,\n  mensaje: ok\n    ? `🔗 Evidencia enlazada al caso #${case_id}\\n` +\n      `📦 ${m.zip_path}\\n` +\n      `🔑 sha256 ${esperado}\\n` +\n      `🦖 flow ${m.velociraptor_flow_id} · ${m.total_collected_rows} filas\\n` +\n      `✅ Hash verificado contra el registro de IRIS.`\n    : `⚠️ **La evidencia del caso #${case_id} no acredita integridad**\\n` +\n      `Motivo: ${motivo}\\n` +\n      `🔑 Esperado: ${esperado}\\n` +\n      `📦 El ZIP existe en ${m.zip_path}; lo que falla es su registro en IRIS.`,\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -831,6 +831,41 @@
       ],
       "id": "cced5a4e-52e8-499a-a162-43b3f2ff2d36",
       "name": "Alertas General",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-User-Id",
+              "value": "kScBxrDSCtRDxZmnm"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"roomId\": {{ JSON.stringify($('Preparar Caso IRIS').first().json.room_id) }},\n  \"text\": {{ JSON.stringify($json.mensaje) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        544,
+        -704
+      ],
+      "id": "8daaecd4-92ad-4ee5-849c-fea7ce8389a7",
+      "name": "Post Mensaje",
       "credentials": {
         "rocketchatApi": {
           "id": "REEMPLAZAR",
@@ -1227,6 +1262,17 @@
       "main": [
         []
       ]
+    },
+    "Comparar Hash": {
+      "main": [
+        [
+          {
+            "node": "Post Mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -1237,9 +1283,9 @@
   "staticData": {
     "global": {
       "seen": {
-        "5799|DC01-TFM|185.220.101.5": 1789760148169,
-        "5798|DC01-TFM|185.220.101.5": 1789760310986,
-        "5797|DC01-TFM|185.220.101.5": 1789760770655
+        "5705|DC01-TFM|185.220.101.5": 1789897596231,
+        "5704|DC01-TFM|185.220.101.5": 1789897703871,
+        "5703|DC01-TFM|185.220.101.5": 1789897793456
       }
     }
   },
@@ -1247,12 +1293,12 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "051399af-6b55-4b7f-aa30-dec411dad530",
-  "versionCounter": 2340,
+  "activeVersionId": "abcb1607-1503-4deb-87cb-2a573d03cd17",
+  "versionCounter": 2412,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 051399af",
+    "name": "Version abcb1607",
     "description": ""
   }
 }
