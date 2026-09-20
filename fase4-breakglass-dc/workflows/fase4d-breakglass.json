@@ -1546,41 +1546,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "staticData": {
-    "global": {
-      "requests": {
-        "REQ-8745a769": {
-          "request_id": "REQ-8745a769",
-          "verb": "rustdesk",
-          "script": "rustdesk_enable.ps1",
-          "target": "",
-          "devid": "",
-          "kvm_accion": "",
-          "kvm_usuario": "",
-          "ttl_minutes": 10,
-          "requester_id": "QN5wbMxDfzLAf9bjb",
-          "requester": "ir_lead",
-          "channel_id": "6aafb359368ca9a7c63b7cc6",
-          "channel_name": "inc-78-5703-1789899607-6039",
-          "created_at": 1789901232160,
-          "status": "approved",
-          "approver": "ir_lead2",
-          "approver_id": "KSaeE4jFabWrTSQKy",
-          "approved_at": 1789901254791
-        }
-      },
-      "credentials": {
-        "REQ-8745a769": {
-          "password": "9VYJOuGOxGeTXzY41zNg",
-          "rustdesk_id": "161180321",
-          "expires_at": 1789901875452,
-          "consumed": false,
-          "requester": "ir_lead",
-          "approver": "ir_lead2"
-        }
-      }
-    }
-  },
+  "staticData": null,
   "meta": null,
   "pinData": {},
   "activeVersionId": "68945072-6c0e-41df-bc78-7db66ae2a8ea",

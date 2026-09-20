@@ -1327,13 +1327,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "staticData": {
-    "global": {
-      "seen": {
-        "5703|DC01-TFM|185.220.101.5": 1789899607513
-      }
-    }
-  },
+  "staticData": null,
   "meta": {
     "templateCredsSetupCompleted": true
   },
