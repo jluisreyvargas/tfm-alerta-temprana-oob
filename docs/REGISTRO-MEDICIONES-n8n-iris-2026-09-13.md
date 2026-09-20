@@ -1271,3 +1271,114 @@ canal donde se trabaja ese caso.
 
 La revisión de cableado de la sección 11 recorrió los nodos uno a uno sin
 detectar que `Comparar Hash` carecía de conexión de salida.
+
+## 13. Sesión 2026-09-20 — Renombrado del canal con el case_id
+
+### M-40 · El `case_id` en el nombre del canal elimina la resolución por consulta
+
+El War Room se crea **antes** que el caso IRIS, así que el `case_id` no puede
+incluirse al crear el canal. Se resuelve renombrando con `groups.rename` en la
+rama de éxito, justo después de publicar la referencia al caso.
+
+Formato: `inc-<case_id>-<rule_id>-<alert_id saneado>`. Verificado:
+`inc-78-5703-1789899607-6039`.
+
+Medido antes de implementarlo, contra un canal de prueba: `groups.rename`
+devuelve `200` con el bot como propietario del canal, y el nombre objetivo se
+acepta tal cual. Rocket.Chat además deja constancia del cambio dentro del propio
+canal («changed room name to …»), lo que da trazabilidad sin coste.
+
+El nombre nuevo se compone recortando el prefijo del nombre actual
+(`replace(/^inc-\d+-/, '')`) en lugar de volver a sanear el `alert_id`: así no
+hay dos implementaciones del saneado que puedan divergir.
+
+**Lo que esto elimina.** El Workflow 2 resolvía canal → caso consultando
+`/manage/cases/list` y comparando `case_soc_id` saneado, filtrando cerrados y
+quedándose con el más reciente. Esa lógica estaba **duplicada**: una cadena para
+el comando de timeline (`Resolver Caso IRIS` → `Listar Casos IRIS` →
+`Buscar Caso`) y otra idéntica para la auditoría de accesos (`Auditar: resolver
+caso` → `Listar Casos IRIS1` → `Buscar Caso1`), con los dos nodos `Buscar Caso`
+byte a byte iguales salvo el nodo del que leían. El sufijo `1` delataba el
+duplicado por copia.
+
+Resultado: cuatro nodos eliminados, dos consultas HTTP menos por ejecución, y
+una sola lógica de resolución donde había dos copias que podían divergir —el
+mismo defecto ya anotado para los miembros del War Room frente a
+`IR_APPROVER_IDS`. El commit tiene 220 inserciones frente a 334 borrados: menos
+código con más funcionalidad.
+
+**Lo que se pierde a conciencia.** La resolución directa ya no filtra casos
+cerrados. Si el caso se cerrara con el War Room aún activo, el Workflow 2
+escribiría en un caso cerrado. Se acepta: un War Room activo con su caso cerrado
+es en sí una anomalía, y reintroducir la consulta para cubrir ese supuesto
+devolvería la complejidad que este cambio elimina.
+
+Verificado por comportamiento en los tres caminos: el comando de timeline
+registra en el caso 78; la auditoría de una aprobación de break-glass registra
+en el mismo caso (eventos 13, 14 y 15 en `cases_events`, comprobados
+directamente en la base de datos); y desde un canal que no es War Room el bot
+responde que el canal no tiene formato de War Room, en vez de callar.
+
+### M-41 · El hueco de saneado de `parameters` contenía un secreto real
+
+M-5 describió que `export-workflow.sh` sanea `credentials.*.id` pero no
+`parameters`, y evaluó el riesgo con el único caso conocido entonces: el
+`X-User-Id` del bot, que es un identificador público. Esa evaluación resultó
+incompleta.
+
+El workflow de break-glass (`fase4d-breakglass.json`) construía sus llamadas a
+Rocket.Chat con las dos cabeceras a mano —`X-User-Id` y **`X-Auth-Token`**— en
+lugar de usar la credencial Header Auth. Medido el 2026-09-20: **ocho nodos**
+con el token del bot en claro dentro de `parameters`, y el fichero commiteado y
+publicado en los dos remotos.
+
+No era un nodo despistado de una prueba: era el patrón por defecto con el que se
+construyó ese workflow. Los nodos afectados cubrían casi toda su interacción
+(verificación de autoría de mensajes, publicación de respuestas, avisos de
+solicitud pendiente, resultado del agente, confirmaciones y avisos de fallo).
+
+**Gravedad.** El token gobierna el bot que concede accesos de emergencia al
+controlador de dominio. Un identificador público expuesto es deuda de limpieza;
+un token operativo expuesto es un incidente, aunque los repositorios sean
+privados y los servicios solo se alcancen por la tailnet.
+
+**Cómo se llegó a la decisión correcta.** Una primera lectura concluyó que el
+token no estaba commiteado (`git grep` sobre HEAD no devolvió nada) y se acordó
+aplazar la rotación. La comprobación posterior con `git show HEAD:<fichero>`
+mostró ocho apariciones con el valor real. La premisa sobre la que se había
+aplazado era falsa, y al caer, la decisión cambió.
+
+Se descartó reescribir la historia: borrar el commit exige force-push a los dos
+remotos, el objeto sigue siendo accesible por su hash durante un tiempo y
+persiste en cualquier clon, y el token seguiría siendo válido. **Limpiar el
+fichero no invalida un secreto; rotarlo sí.**
+
+**Resuelto:** los ocho nodos migrados a la credencial Header Auth, el token
+rotado en Rocket.Chat y actualizada la credencial en n8n. El export posterior
+devuelve cero apariciones de `X-Auth-Token`. El orden importó: se rotó primero,
+de modo que los nodos que aún llevaran la cabecera vieja fallaran de forma
+visible en lugar de seguir funcionando con un secreto publicado.
+
+**Consecuencia para M-5:** el hueco de `parameters` deja de ser deuda de
+limpieza y pasa a ser riesgo de fuga de secretos. Refuerza la ampliación
+pendiente de `export-workflow.sh`, que debe cubrir `parameters` y `staticData`.
+
+**Relación con entradas previas.** M-5 y su adenda cerraron este hueco como
+deuda de limpieza tras comprobar que el único valor conocido en `parameters`
+era público. La medición era correcta; la conclusión excedió su alcance: «no
+he visto un secreto ahí» no equivale a «no puede haberlo». M-36 planteaba la
+ampliación de `export-workflow.sh` como argumento de higiene, y esta entrada
+le cambia el peso retroactivamente: es una medida de seguridad. Y el push a
+los dos remotos (M-10) propagó el secreto a ambos automáticamente — la misma
+configuración que protege el trabajo multiplicó el alcance de la fuga.
+
+### M-42 · `export-workflow.sh` ya admite ID y ruta como argumentos
+
+El script acepta `./export-workflow.sh [WORKFLOW_ID] [RUTA_SALIDA]` y por
+defecto exporta el de Fase 2. El workflow de break-glass no tenía script propio
+y se exportó con el mismo, pasando su ID y la ruta de destino.
+
+Eso importa porque el saneado de `credentials.*.id` a `REEMPLAZAR` solo ocurre
+por esa vía: una exportación cruda dejaría los IDs reales en el fichero
+versionado. Conviene documentarlo en el README de Fase 4 para que no haya que
+redescubrirlo, y para que nadie exporte ese workflow por otro camino.
