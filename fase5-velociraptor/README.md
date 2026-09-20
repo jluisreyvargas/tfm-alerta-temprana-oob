@@ -37,6 +37,8 @@ Tal como se define en la memoria del TFM, la estructura de evidencia debe quedar
 
 ---
 
+![Fase 5 · Forensics Automático (Velociraptor + MinIO)](../images/TFM_Fase5.png)
+
 ## 🏗️ 2. Arquitectura implementada
 
 ```mermaid

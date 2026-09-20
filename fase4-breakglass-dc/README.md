@@ -41,6 +41,8 @@ histórico, reemplazados por `README-fase4d-flujo-aprobacion.md`.
 - [ ] 💾 Workflow de n8n exportado con `export-workflow.sh` (hoy vive solo en el volumen de n8n)
 - [ ] 🏷️ `glkvm` etiquetado (`tag:kvm`) — offline desde el 13/07, aislado en el tailnet mientras tanto
 
+![Fase 4 · Break-Glass sobre Domain Controllers](../images/TFM_Fase4.png)
+
 ## 🏗️ Arquitectura del flujo 4d
 
 ```text

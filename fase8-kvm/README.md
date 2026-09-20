@@ -65,6 +65,8 @@
 
 ---
 
+![Fase 8 · Recuperación física: KVM sobre IP](../images/TFM_Fase8.png)
+
 ## Arquitectura
 
 El acceso al KVM se organiza en **dos niveles independientes**. El nivel normal

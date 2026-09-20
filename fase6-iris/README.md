@@ -64,6 +64,8 @@
 
 ---
 
+![Fase 6 · DFIR-IRIS — Gestión de casos](../images/TFM_Fase6.png)
+
 ## 🏗️ Arquitectura desplegada
 
 ```text

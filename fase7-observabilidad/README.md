@@ -16,6 +16,8 @@
 - [x] 📈 Dashboard inicial en OpenSearch Dashboards
 - [ ] 📊 Métricas avanzadas (MTTA, MTTApprove, Agent Precision)
 
+![Fase 7 · Observabilidad y métricas en OpenSearch Dashboards](../images/TFM_Fase7.png)
+
 ## 🏗️ Arquitectura de observabilidad
 
 ```text

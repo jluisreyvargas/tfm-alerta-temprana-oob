@@ -26,6 +26,8 @@
 
 ---
 
+![Fase 1 · Infraestructura Base del Enclave](../images/TFM_Fase1.png)
+
 ## 🏗️ Arquitectura de la fase
 
 ```mermaid

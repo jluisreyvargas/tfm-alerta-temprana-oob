@@ -39,6 +39,8 @@ inteligencia que n8n ya ha resuelto y entrega en el payload.
 
 ---
 
+![Fase 3 · Motor de triage y evaluación de viabilidad de LLM local](../images/TFM_Fase3.png)
+
 ## 🏗️ Arquitectura
 
 ```text

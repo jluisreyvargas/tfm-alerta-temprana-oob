@@ -30,6 +30,8 @@
 
 ---
 
+![Fase 2 · Orquestador de Alertas del Enclave](../images/TFM_Fase2.png)
+
 ## 🏗️ Arquitectura de la fase
 
 ```mermaid
