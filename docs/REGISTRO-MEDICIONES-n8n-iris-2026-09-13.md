@@ -1084,3 +1084,190 @@ Nota positiva que merece constar: la salida de error de `Lanzar
 Recolección` estaba cableada a un aviso, y por eso el primer fallo se vio
 de inmediato en lugar de morir en silencio. Es el remedio directo del
 patrón de M-21.
+
+## 12. Sesión 2026-09-18 (noche) — Filtro de postura
+
+### M-32 · El filtro de supresión estaba atado a un grupo, no a una categoría — resuelto
+
+El filtro del 2026-09-17 suprimía la escalada solo para
+`vulnerability-detector`. Los hallazgos SCA no quedaban cubiertos: nueve
+casos IRIS creados en un minuto el 2026-09-18 (casos #48 a #56, `soc_id` de
+1789725832 a 1789725893), todos resúmenes o controles del benchmark CIS,
+ninguno describiendo actividad.
+
+**La medición que decidió.** Censo sobre cuatro meses de alertas
+(`scripts/censo-grupos-alertas.py`, 52.513 alertas, 53 ficheros, cero
+líneas ilegibles). Por encima del umbral de escalada (nivel ≥ 9):
+
+| regla | nivel | alertas | descripción |
+| --- | --- | --- | --- |
+| 23505 | 10 | 396 | CVE-2026-50449 en Windows Server 2025 |
+| 19014 | 9 | 141 | Control CIS incumplido (Windows Server 2025) |
+| 19005 | 9 | 104 | Resumen SCA, puntuación baja |
+| 19011 | 9 | 45 | Control CIS incumplido (Ubuntu 24.04) |
+| 23506 | 13 | 24 | CVE-2026-50447 |
+| **521** | **11** | **7** | **Possible kernel level rootkit** |
+
+**La solución aplicada** (`7808ac1`): `GRUPOS_POSTURA =
+{"vulnerability-detector", "sca"}` en `tool_generate_response_flags`, y el
+flag pasa de `is_vulnerability` a `is_posture_finding`, que es lo que de
+verdad describe. Un flag llamado «vulnerability» que marca hallazgos SCA es
+la misma clase de afirmación falsa que el `classification_id` por defecto
+de M-22.
+
+**Criterio de diseño, fijado y aplicado: lista de supresión, nunca lista de
+escalada.** Si el criterio fuera «escalan solo estos grupos», un grupo
+nuevo de una regla de ataque real dejaría de escalar sin que nada lo
+señalara. Con lista de supresión, un grupo de postura no contemplado se
+cuela como incidente: ruido visible y corregible.
+
+**`rootcheck` queda deliberadamente fuera**, pese a parecer de la misma
+familia. La regla 521 («Possible kernel level rootkit», nivel 11, 7 alertas
+en la población real) vive en ese grupo y sí describe actividad. La
+cautela de no ampliar el filtro a grupos sin medir dejó de ser una
+precaución teórica: la medición muestra exactamente el caso que se habría
+silenciado.
+
+Verificado por comportamiento: `sca` y `vulnerability-detector` al canal de
+postura sin War Room ni caso; `sshd`/`authentication_failed` abre War Room,
+caso #63 y evidencia de Velociraptor.
+
+### M-33 · La supresión funcionaba a medias: la cadena forense seguía ejecutándose
+
+Durante la verificación del filtro, una alerta de postura —suprimida
+correctamente en cuanto a War Room y caso— **continuó hasta los nodos de la
+etapa D**, lanzando la cadena de recolección y fallando al registrar
+evidencia en un caso que no existía.
+
+El síntoma que lo delató fue un `401` en `Verificar Evidencia`, no un error
+que mencionara la supresión. Sin ese fallo, una alerta suprimida habría
+seguido disparando recolecciones forenses de forma invisible: el control
+impedía el registro del incidente pero no el consumo de recursos ni la
+actividad sobre el endpoint.
+
+Registrar como lección de método: **verificar que una rama suprimida
+termina donde debe, no solo que no produce el efecto observable que se
+estaba buscando.** Comprobar que no se crea el caso no es comprobar que la
+alerta deja de recorrer el flujo.
+
+### M-34 · El nodo `Anuncio en General` se perdió al recablear, sin aviso
+
+Al montar los seis nodos de la etapa D, la configuración de `Anuncio en
+General` quedó incompleta y el aviso dejó de publicarse. No hubo error
+visible: el mensaje simplemente no aparecía, y se detectó por comparación
+con ejecuciones anteriores de la misma tarde, no por ninguna señal del
+sistema.
+
+Mismo género que M-21: una función que deja de operar sin que nada lo
+distinga de «no había nada que publicar». La diferencia aquí es que el
+nodo llevaba funcionando ese mismo día, lo que permitió detectarlo; sin ese
+contraste habría pasado por comportamiento normal.
+
+### M-35 · Medir mientras se borra invalida la medición
+
+Dos diagnósticos equivocados en la misma jornada, ambos por el mismo
+motivo: se midió contra un sistema del que se estaban borrando objetos en
+paralelo.
+
+1. **El `500` del caso #47** se atribuyó a que el usuario de la API no
+   tenía acceso efectivo a los casos creados por la automatización, con una
+   hipótesis construida sobre `user_case_effective_access`. La refutó un
+   `200` sobre un caso vivo (#56): el caso #47 estaba siendo borrado
+   durante la consulta. Ver M-29 sobre por qué un caso inexistente devuelve
+   500 y no 404.
+2. **El Workflow 2 se dio por roto.** Una consulta a `cases_events` mostró
+   cuatro eventos, todos en el caso 1, ninguno en casos de la
+   automatización, lo que llevó a concluir que el enriquecimiento nunca
+   había escrito nada. Falso: los casos con eventos se habían borrado en la
+   limpieza. Comprobado después de la sesión de la noche: `cases_events`
+   tiene eventos en los casos 63 y 67 además del 1. **El Workflow 2
+   funciona.**
+
+Lección de método, aplicable a todo el proyecto: no limpiar mientras se
+mide, y ante un resultado anómalo, comprobar primero que el objeto medido
+sigue existiendo. Desde fuera, un objeto borrado y un defecto real son
+indistinguibles.
+
+### M-36 · El vaciado manual de `staticData` se olvidó dos veces en una tarde
+
+`export-workflow.sh` sanea `credentials.*.id` pero no `staticData` ni
+`parameters`. El vaciado manual del bloque `staticData` se olvidó en dos de
+los tres commits del día que tocaban el workflow (`cb3454e` y `7808ac1`), y
+hubo que corregirlo después en cada caso.
+
+Un paso manual que se olvida dos veces en una tarde no es un paso manual:
+es un defecto pendiente de automatizar. Registrar como argumento directo
+para ampliar `export-workflow.sh` a `staticData` y `parameters`, con su
+prueba negativa — exportar y que ambos greps devuelvan cero.
+
+### M-37 · Un campo en modo *fixed* envía la plantilla como literal, sin fallar
+
+El campo URL del nodo `Verificar Evidencia` quedó en modo *fixed* en lugar de
+*expression*. n8n no avisa de eso: envía
+`?cid={{ $('Preparar Evidencia').first().json.case_id }}` tal cual, como texto.
+
+IRIS tampoco rechaza la petición. Devuelve **HTTP 200 con la lista de
+evidencias de otro caso** —el que resuelve por defecto—, vacía. Dos capas
+encadenadas que convierten un error de configuración en una respuesta plausible
+y falsa: ni n8n ni IRIS emiten señal alguna.
+
+El síntoma que lo delató no fue un error sino un detalle del contenido:
+`object_last_update: 2026-06-26T16:07:45` —la fecha de instalación de IRIS— en
+una respuesta que decía describir un caso creado minutos antes.
+
+Distinto de M-28, donde un `cid` **vacío** devuelve 401. Aquí el `cid` no está
+vacío: contiene basura, y eso IRIS lo resuelve en silencio.
+
+### M-38 · Un control que siempre responde lo mismo no distingue nada, aunque acierte
+
+Durante tres inyecciones consecutivas, `Comparar Hash` publicó «La evidencia no
+acredita integridad». El mensaje era prudente, sonaba correcto, y coincidía con
+lo que se esperaba ver en la prueba negativa. Se dio por acreditado el control.
+
+No lo estaba: leía el caso equivocado (M-37), así que respondía exactamente lo
+mismo con el hash bien puesto y con el hash manipulado. **La prueba negativa fue
+un falso positivo** — el resultado correcto por el motivo equivocado.
+
+Lo que lo destapó fue comprobar por fuera que la evidencia sí existía en IRIS
+con el hash correcto, contradiciendo el mensaje que publicaba el control.
+
+**Regla que queda establecida para el proyecto:** un control solo está
+verificado cuando se ha comprobado que responde de forma **distinta** ante
+entradas distintas. Ver que avisa en el caso malo no basta si no se ha visto
+callar en el caso bueno. Un veredicto conservador —«no acredita»— es
+especialmente engañoso, porque el sesgo natural es aceptarlo sin examinarlo.
+
+Verificación definitiva, ya con el campo en modo expresión:
+
+- caso **#76** → «✅ Hash verificado contra el registro de IRIS»,
+  sha256 `5ab864c086fc0097a6c8611f9b6e48b7527f32dff803d24902c926dfe6a4b575`,
+  flow `F.DANQNRAF0GFHU`, 129 filas.
+- caso **#77**, con el hash enviado como `file_sha256` en lugar de `file_hash`
+  → «ninguna de las 1 evidencias del caso casa con el hash del manifiesto.
+  Presentes: **(sin hash)**».
+
+Dos mensajes distintos ante dos entradas distintas. Ese `(sin hash)` es M-27
+visto desde el otro extremo: IRIS aceptó el alta con `success`, creó la
+evidencia, y el campo del hash quedó vacío.
+
+Recurrencia. Esta entrada repite el patrón que M-35 acababa de nombrar como
+lección de método: aceptar un resultado plausible sin cruzarlo con otra
+fuente. Entre una y otra median menos de dos horas. Tener la lección escrita
+en el propio documento no impidió volver a cometerla, lo que sugiere que
+estas lecciones no operan como recordatorio sino solo como explicación a
+posteriori — salvo que se conviertan en un paso obligatorio del
+procedimiento.
+
+### M-39 · `Comparar Hash` no estaba conectado a nada
+
+El nodo calculaba el veredicto correctamente y su salida no iba a ningún sitio:
+el aviso moría dentro de la ejecución, sin publicarse en ningún canal.
+
+Un control que detecta y no comunica es, operativamente, un control que no
+detecta. Mismo patrón que M-21, esta vez en el control que sostiene la cadena de
+custodia. Resuelto con un nodo que publica el veredicto en el War Room del
+incidente —no en `#general`: es información del caso concreto, y su sitio es el
+canal donde se trabaja ese caso.
+
+La revisión de cableado de la sección 11 recorrió los nodos uno a uno sin
+detectar que `Comparar Hash` carecía de conexión de salida.
