@@ -60,6 +60,8 @@
 
 ---
 
+![Sistema de Alerta Temprana Out-of-Band para Respuesta a Incidentes](images/TFM_Principal.png)
+
 ## 🏗️ Arquitectura del enclave
 
 ### Diagrama lógico de alto nivel
