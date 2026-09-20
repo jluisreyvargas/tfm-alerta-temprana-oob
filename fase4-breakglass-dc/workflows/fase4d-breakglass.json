@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-16T19:29:25.594Z",
+  "updatedAt": "2026-09-20T11:00:23.942Z",
   "createdAt": "2026-08-30T11:54:17.608Z",
   "name": "fase4d-breakglass",
   "description": null,
@@ -50,6 +50,8 @@
     {
       "parameters": {
         "url": "={{ $env.RC_URL }}/api/v1/chat.getMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -62,10 +64,6 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
-            },
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
@@ -81,7 +79,13 @@
         -1376
       ],
       "id": "90f29b47-b10e-4537-a6ea-e9d64b7b0a89",
-      "name": "Verify Message Authorship"
+      "name": "Verify Message Authorship",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     },
     {
       "parameters": {
@@ -315,13 +319,11 @@
       "parameters": {
         "method": "POST",
         "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
-            },
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
@@ -340,7 +342,13 @@
         -256
       ],
       "id": "1fc71ffd-d624-4a5a-bd22-aa4118f844cf",
-      "name": "Post Reply2"
+      "name": "Post Reply2",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     },
     {
       "parameters": {
@@ -419,13 +427,11 @@
       "parameters": {
         "method": "POST",
         "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
-            },
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
@@ -454,19 +460,23 @@
         -32
       ],
       "id": "ce355d25-a00a-4f00-82a6-a4204ef6f4cb",
-      "name": "Post Agent Result"
+      "name": "Post Agent Result",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
-            },
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
@@ -485,19 +495,23 @@
         -976
       ],
       "id": "bfbeaf9c-7ae3-4c33-8270-96d33f9ef50e",
-      "name": "Post Reply Consulta"
+      "name": "Post Reply Consulta",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $env.RC_URL }}/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
-            },
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
@@ -516,7 +530,13 @@
         -800
       ],
       "id": "c50f3487-863a-48bb-b7a0-c7661ad71c11",
-      "name": "Post Pending Solicitud"
+      "name": "Post Pending Solicitud",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     },
     {
       "parameters": {
@@ -674,7 +694,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const item = $input.first().json;\nconst canal = String(item.channel_name ?? '');\n\n// Politica: solo se registra en IRIS desde un War Room de incidente.\n// Los canales de incidente se nombran inc-<rule_id>-<alert_id saneado>.\nconst m = canal.match(/^inc-\\d+-(.+)$/);\n\nreturn [{ json: {\n  ...item,\n  es_war_room: Boolean(m),\n  // El nombre del canal sustituye los puntos del alert_id por guiones\n  // (Rocket.Chat no admite puntos). Se compara en esa forma, sin intentar\n  // reconstruir el punto por posicion.\n  soc_id_canal: m ? m[1] : '',\n}}];"
+        "jsCode": "const item = $input.first().json;\nconst canal = String(item.channel_name ?? '');\n\n// Politica: solo se registra en IRIS desde un War Room de incidente.\n// Formato desde 2026-09-20: inc-<case_id>-<rule_id>-<alert_id saneado>.\n// El case_id viaja en el nombre, asi que la resolucion es directa y ya no\n// hace falta consultar /manage/cases/list ni comparar soc_id saneados.\nconst m = canal.match(/^inc-(\\d+)-(\\d+)-(.+)$/);\n\nreturn [{ json: {\n  ...item,\n  es_war_room: Boolean(m),\n  case_id: m ? Number(m[1]) : null,\n  case_encontrado: Boolean(m),\n  motivo: m ? '' :\n    `El canal ${canal || '(sin nombre)'} no tiene el formato de War Room`,\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -721,54 +741,6 @@
     },
     {
       "parameters": {
-        "url": "https://iris.oob.local:4833/manage/cases/list",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "dfirIrisApi",
-        "options": {
-          "response": {
-            "response": {
-              "fullResponse": true,
-              "neverError": true
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        -864,
-        -1152
-      ],
-      "id": "4431b4c0-b25f-4551-9426-c82f4ca3380f",
-      "name": "Listar Casos IRIS",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REEMPLAZAR",
-          "name": "Header Auth account"
-        },
-        "dfirIrisApi": {
-          "id": "REEMPLAZAR",
-          "name": "DFIR-IRIS account"
-        }
-      },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const r = $input.first().json;\nconst prev = $('Resolver Caso IRIS').first().json;\n\n// Con Never Error activo, un 401 o un 500 llegan como dato, no por la rama de\n// error: el body no traeria data y casos quedaria vacio, produciendo el\n// diagnostico falso \"no hay caso con ese SOC ID\". Se distingue aqui.\nconst status = Number(r.statusCode ?? 0);\nif (status < 200 || status >= 300) {\n  return [{ json: { ...prev, case_id: null, case_encontrado: false,\n    motivo: `IRIS respondió HTTP ${status} al listar casos` }}];\n}\n\nconst casos = r.body?.data ?? [];\n\n// Se compara el soc_id saneado, no el literal: el nombre del canal ya\n// convirtio los puntos en guiones.\nconst san = s => String(s ?? '').replace(/\\./g, '-');\n\nconst candidatos = casos\n  .filter(c => san(c.case_soc_id) === prev.soc_id_canal)\n  .filter(c => c.state_name !== 'Closed')\n  .sort((a, b) => b.case_id - a.case_id);\n\nconst caso = candidatos[0] ?? null;\n\nreturn [{ json: {\n  ...prev,\n  case_id: caso?.case_id ?? null,\n  case_encontrado: Boolean(caso),\n  motivo: caso ? '' :\n    `No hay caso abierto con SOC ID ${prev.soc_id_canal} (${casos.length} casos revisados)`,\n}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -592,
-        -1168
-      ],
-      "id": "230351d5-52b5-4b6e-80b6-103601c31592",
-      "name": "Buscar Caso",
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -795,8 +767,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -352,
-        -1168
+        -800,
+        -1136
       ],
       "id": "afa4f9e8-7af8-4c33-81a0-5d2cf8238db7",
       "name": "case_encontrado"
@@ -805,16 +777,14 @@
       "parameters": {
         "method": "POST",
         "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
-            },
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
             }
           ]
         },
@@ -830,7 +800,13 @@
         -912
       ],
       "id": "c6604cb0-575c-4264-ba71-f44bfb32c3aa",
-      "name": "Aviso Nota No Registrada"
+      "name": "Aviso Nota No Registrada",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     },
     {
       "parameters": {
@@ -920,22 +896,20 @@
       "parameters": {
         "method": "POST",
         "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
-            },
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
             }
           ]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"roomId\": \"{{ $('Resolver Caso IRIS').first().json.channel_id }}\",\n  \"text\": \"📝 Nota registrada en el caso #{{ $('Buscar Caso').first().json.case_id }} — {{ $json.body.data.event_date_wtz.slice(11,19) }}\"\n}",
+        "jsonBody": "={\n  \"roomId\": {{ JSON.stringify($('Resolver Caso IRIS').first().json.channel_id) }},\n  \"text\": {{ JSON.stringify('📝 Nota registrada en el caso #' + $('Resolver Caso IRIS').first().json.case_id + ' — ' + $json.body.data.event_date_wtz.slice(11,19)) }}\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -946,11 +920,17 @@
       ],
       "id": "7db4de90-2640-4a74-bc66-b9c46298069c",
       "name": "Confirmar Nota",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      },
       "onError": "continueErrorOutput"
     },
     {
       "parameters": {
-        "jsCode": "const m = $input.first().json;\n\n// El canal de la solicitud es el que se guardo al crearla, no donde se aprueba.\nconst canal = String(m.channel_name ?? '');\n\n// Las solicitudes creadas antes de que Create Request guardara channel_name no\n// lo tienen en el staticData. Sin esta guarda pasarian como \"no es War Room\",\n// que es un diagnostico falso: el canal puede serlo, lo que falta es el dato.\nif (!canal) {\n  return [{ json: { ...m,\n    es_war_room: false,\n    soc_id_canal: '',\n    motivo: 'La solicitud no guardó el canal de origen (creada antes del cambio)',\n  }}];\n}\n\nconst war = canal.match(/^inc-\\d+-(.+)$/);\n\nlet recurso;\nif (m.verb === 'rustdesk') {\n  recurso = `RustDesk sobre el DC · TTL ${m.ttl_minutes} min`;\n} else if (m.verb === 'kvm') {\n  recurso = `KVM ${m.kvm_accion} en ${m.devid} para @${m.kvm_usuario} · ventana 15 min`;\n} else {\n  recurso = `Ejecución de ${m.script} sobre ${m.target}`;\n}\n\nreturn [{ json: { ...m,\n  es_war_room: Boolean(war),\n  soc_id_canal: war ? war[1] : '',\n  titulo: `[break-glass] ${recurso} — solicitado por @${m.requester}, ` +\n          `aprobado por @${m.approver} (${m.request_id})`,\n}}];"
+        "jsCode": "const m = $input.first().json;\n\n// El canal de la solicitud es el que se guardo al crearla, no donde se aprueba.\nconst canal = String(m.channel_name ?? '');\n\n// Las solicitudes creadas antes de que Create Request guardara channel_name no\n// lo tienen en el staticData. Sin esta guarda pasarian como \"no es War Room\",\n// que es un diagnostico falso: el canal puede serlo, lo que falta es el dato.\nif (!canal) {\n  return [{ json: { ...m,\n    es_war_room: false,\n    case_id: null,\n    case_encontrado: false,\n    motivo: 'La solicitud no guardó el canal de origen (creada antes del cambio)',\n  }}];\n}\n\n// Formato desde 2026-09-20: inc-<case_id>-<rule_id>-<alert_id saneado>.\nconst war = canal.match(/^inc-(\\d+)-(\\d+)-(.+)$/);\n\nlet recurso;\nif (m.verb === 'rustdesk') {\n  recurso = `RustDesk sobre el DC · TTL ${m.ttl_minutes} min`;\n} else if (m.verb === 'kvm') {\n  recurso = `KVM ${m.kvm_accion} en ${m.devid} para @${m.kvm_usuario} · ventana 15 min`;\n} else {\n  recurso = `Ejecución de ${m.script} sobre ${m.target}`;\n}\n\nreturn [{ json: { ...m,\n  es_war_room: Boolean(war),\n  case_id: war ? Number(war[1]) : null,\n  case_encontrado: Boolean(war),\n  motivo: war ? '' :\n    `El canal ${canal} no tiene el formato de War Room`,\n  titulo: `[break-glass] ${recurso} — solicitado por @${m.requester}, ` +\n          `aprobado por @${m.approver} (${m.request_id})`,\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -998,54 +978,6 @@
     },
     {
       "parameters": {
-        "url": "https://iris.oob.local:4833/manage/cases/list",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "dfirIrisApi",
-        "options": {
-          "response": {
-            "response": {
-              "fullResponse": true,
-              "neverError": true
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        -368,
-        -688
-      ],
-      "id": "12f3de6e-c6d0-4285-bf40-5988be63a0ba",
-      "name": "Listar Casos IRIS1",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REEMPLAZAR",
-          "name": "Header Auth account"
-        },
-        "dfirIrisApi": {
-          "id": "REEMPLAZAR",
-          "name": "DFIR-IRIS account"
-        }
-      },
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
-        "jsCode": "const r = $input.first().json;\nconst prev = $('Auditar: resolver caso').first().json;\n\n// Con Never Error activo, un 401 o un 500 llegan como dato, no por la rama de\n// error: el body no traeria data y casos quedaria vacio, produciendo el\n// diagnostico falso \"no hay caso con ese SOC ID\". Se distingue aqui.\nconst status = Number(r.statusCode ?? 0);\nif (status < 200 || status >= 300) {\n  return [{ json: { ...prev, case_id: null, case_encontrado: false,\n    motivo: `IRIS respondió HTTP ${status} al listar casos` }}];\n}\n\nconst casos = r.body?.data ?? [];\n\n// Se compara el soc_id saneado, no el literal: el nombre del canal ya\n// convirtio los puntos en guiones.\nconst san = s => String(s ?? '').replace(/\\./g, '-');\n\nconst candidatos = casos\n  .filter(c => san(c.case_soc_id) === prev.soc_id_canal)\n  .filter(c => c.state_name !== 'Closed')\n  .sort((a, b) => b.case_id - a.case_id);\n\nconst caso = candidatos[0] ?? null;\n\nreturn [{ json: {\n  ...prev,\n  case_id: caso?.case_id ?? null,\n  case_encontrado: Boolean(caso),\n  motivo: caso ? '' :\n    `No hay caso abierto con SOC ID ${prev.soc_id_canal} (${casos.length} casos revisados)`,\n}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -128,
-        -688
-      ],
-      "id": "922f2d3e-c053-408a-ba9f-a663b250a481",
-      "name": "Buscar Caso1",
-      "onError": "continueErrorOutput"
-    },
-    {
-      "parameters": {
         "conditions": {
           "options": {
             "caseSensitive": true,
@@ -1072,7 +1004,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        112,
+        -416,
         -688
       ],
       "id": "66a019c8-a96a-4592-8adc-f1facd6f8418",
@@ -1086,7 +1018,7 @@
       "typeVersion": 2,
       "position": [
         -160,
-        -480
+        -608
       ],
       "id": "27990784-3788-467f-b3d3-77fb3da4966b",
       "name": "Preparar Evento IRIS1",
@@ -1113,8 +1045,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        128,
-        -480
+        48,
+        -608
       ],
       "id": "4cae9086-b3ab-48c8-95e0-6810a19bc68d",
       "name": "Crear Evento IRIS1",
@@ -1133,16 +1065,14 @@
       "parameters": {
         "method": "POST",
         "url": "http://rocketchat:3000/api/v1/chat.postMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "rocketchatApi",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "X-User-Id",
               "value": "kScBxrDSCtRDxZmnm"
-            },
-            {
-              "name": "X-Auth-Token",
-              "value": "BNze4dXLGFBagW7Zvsq1VDr9N131VgVUlnVVmA2Vsg6"
             }
           ]
         },
@@ -1154,11 +1084,17 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -480,
-        -480
+        48,
+        -384
       ],
       "id": "3fa37b61-5828-4eea-b174-c8fa64bb9db5",
-      "name": "Aviso Auditoría No Registrada"
+      "name": "Aviso Auditoría No Registrada",
+      "credentials": {
+        "rocketchatApi": {
+          "id": "REEMPLAZAR",
+          "name": "Rocket account"
+        }
+      }
     }
   ],
   "connections": {
@@ -1449,42 +1385,6 @@
       "main": [
         [
           {
-            "node": "Listar Casos IRIS",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Aviso Nota No Registrada",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Listar Casos IRIS": {
-      "main": [
-        [
-          {
-            "node": "Buscar Caso",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Aviso Nota No Registrada",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Buscar Caso": {
-      "main": [
-        [
-          {
             "node": "case_encontrado",
             "type": "main",
             "index": 0
@@ -1591,42 +1491,6 @@
       "main": [
         [
           {
-            "node": "Listar Casos IRIS1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Aviso Auditoría No Registrada",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Listar Casos IRIS1": {
-      "main": [
-        [
-          {
-            "node": "Buscar Caso1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Aviso Auditoría No Registrada",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Buscar Caso1": {
-      "main": [
-        [
-          {
             "node": "case_encontrado1",
             "type": "main",
             "index": 0
@@ -1685,27 +1549,8 @@
   "staticData": {
     "global": {
       "requests": {
-        "REQ-ffebcb51": {
-          "request_id": "REQ-ffebcb51",
-          "verb": "rustdesk",
-          "script": "rustdesk_enable.ps1",
-          "target": "",
-          "devid": "",
-          "kvm_accion": "",
-          "kvm_usuario": "",
-          "ttl_minutes": 10,
-          "requester_id": "KSaeE4jFabWrTSQKy",
-          "requester": "ir_lead2",
-          "channel_id": "6aaae7ca903c6205aca9edeb",
-          "channel_name": "inc-5710-1789600000-7001",
-          "created_at": 1789586725313,
-          "status": "approved",
-          "approver": "ir_lead",
-          "approver_id": "QN5wbMxDfzLAf9bjb",
-          "approved_at": 1789586773591
-        },
-        "REQ-2bbfdd03": {
-          "request_id": "REQ-2bbfdd03",
+        "REQ-8745a769": {
+          "request_id": "REQ-8745a769",
           "verb": "rustdesk",
           "script": "rustdesk_enable.ps1",
           "target": "",
@@ -1715,28 +1560,20 @@
           "ttl_minutes": 10,
           "requester_id": "QN5wbMxDfzLAf9bjb",
           "requester": "ir_lead",
-          "channel_id": "6aaae7ca903c6205aca9edeb",
-          "channel_name": "inc-5710-1789600000-7001",
-          "created_at": 1789587014472,
+          "channel_id": "6aafb359368ca9a7c63b7cc6",
+          "channel_name": "inc-78-5703-1789899607-6039",
+          "created_at": 1789901232160,
           "status": "approved",
           "approver": "ir_lead2",
           "approver_id": "KSaeE4jFabWrTSQKy",
-          "approved_at": 1789587060439
+          "approved_at": 1789901254791
         }
       },
       "credentials": {
-        "REQ-ffebcb51": {
-          "password": "9JayRtchNzhcAeo91f28",
+        "REQ-8745a769": {
+          "password": "9VYJOuGOxGeTXzY41zNg",
           "rustdesk_id": "161180321",
-          "expires_at": 1789587386416,
-          "consumed": false,
-          "requester": "ir_lead2",
-          "approver": "ir_lead"
-        },
-        "REQ-2bbfdd03": {
-          "password": "R67I2uG3H02fc762FJ6a",
-          "rustdesk_id": "161180321",
-          "expires_at": 1789587672807,
+          "expires_at": 1789901875452,
           "consumed": false,
           "requester": "ir_lead",
           "approver": "ir_lead2"
@@ -1746,12 +1583,12 @@
   },
   "meta": null,
   "pinData": {},
-  "activeVersionId": "6ea98063-6be4-49df-8956-a20bec6c6021",
-  "versionCounter": 853,
+  "activeVersionId": "68945072-6c0e-41df-bc78-7db66ae2a8ea",
+  "versionCounter": 917,
   "triggerCount": 3,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 6ea98063",
+    "name": "Version 68945072",
     "description": ""
   }
 }
