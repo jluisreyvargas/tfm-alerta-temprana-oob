@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-20T12:27:04.842Z",
+  "updatedAt": "2026-09-23T16:27:52.732Z",
   "createdAt": "2026-05-27T18:45:48.903Z",
   "name": "Wazuh Alert Handler with Langgraph",
   "description": null,
@@ -267,7 +267,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const crypto = require('crypto');\n\nconst secret = $env.OOB_WEBHOOK_SECRET;\nif (!secret) throw new Error('OOB_WEBHOOK_SECRET no configurado en el entorno de n8n');\n\nconst item     = $input.first().json;\nconst received = String(item.headers?.['x-oob-signature'] ?? '');\n\n// Con Raw Body activo, body es la cadena literal recibida. Firmar sobre una\n// reserializacion cambiaria separadores y orden de claves, y la firma no\n// coincidiria nunca.\nconst rawBody = typeof item.body === 'string' ? item.body : JSON.stringify(item.body);\n\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret)\n                                   .update(rawBody, 'utf8')\n                                   .digest('hex');\n\n// Comparacion en tiempo constante: un === filtra informacion sobre el prefijo\n// correcto de la firma y permite reconstruirla byte a byte.\nconst a = Buffer.from(received, 'utf8');\nconst b = Buffer.from(expected, 'utf8');\nif (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {\n  throw new Error('Firma HMAC invalida: alerta descartada');\n}\n\n// Reemite el cuerpo ya parseado para los nodos siguientes.\nreturn [{ json: { body: JSON.parse(rawBody), headers: item.headers } }];"
+        "jsCode": "const crypto = require('crypto');\n\nconst secret = $env.OOB_WEBHOOK_SECRET;\nif (!secret) throw new Error('OOB_WEBHOOK_SECRET no configurado en el entorno de n8n');\n\nconst item     = $input.first().json;\nconst received = String(item.headers?.['x-oob-signature'] ?? '');\n\n// Con Raw Body activo, body es la cadena literal recibida. Firmar sobre una\n// reserializacion cambiaria separadores y orden de claves, y la firma no\n// coincidiria nunca.\n// El webhook (rawBody: true) entrega los bytes crudos recibidos en el buffer\n// binario `data`. Firmar sobre esos bytes reproduce exactamente lo que firmo el\n// emisor, sin depender de reserializar un objeto ya parseado (JSON.stringify\n// re-emite los \\uXXXX como UTF-8 crudo y rompe la firma con cualquier no-ASCII).\n// Obtiene los bytes crudos del cuerpo desde el buffer binario del webhook.\n// getBinaryDataBuffer resuelve el binario tanto si n8n lo guarda inline como\n// si lo guarda por referencia a su filestore; el acceso directo\n// item.binary.data.data NO es fiable (devuelve un identificador corto, no los\n// bytes, cuando el binario esta por referencia), y por eso el arreglo previo\n// fallaba con cuerpos que iban al filestore.\nlet rawBody;\ntry {\n  const buf = await this.helpers.getBinaryDataBuffer(0, 'data');\n  rawBody = buf.toString('utf8');\n} catch (e) {\n  // Fallback defensivo: sin binario accesible, se recurre al comportamiento\n  // anterior (con el defecto conocido de reserializacion). No deberia ocurrir\n  // con el webhook en rawBody:true.\n  rawBody = typeof item.body === 'string' ? item.body : JSON.stringify(item.body);\n}\n\nconst expected = 'sha256=' + crypto.createHmac('sha256', secret)\n                                   .update(rawBody, 'utf8')\n                                   .digest('hex');\n\n// Comparacion en tiempo constante: un === filtra informacion sobre el prefijo\n// correcto de la firma y permite reconstruirla byte a byte.\nconst a = Buffer.from(received, 'utf8');\nconst b = Buffer.from(expected, 'utf8');\nif (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {\n  throw new Error('Firma HMAC invalida: alerta descartada');\n}\n\n// Reemite el cuerpo ya parseado para los nodos siguientes.\nreturn [{ json: { body: JSON.parse(rawBody), headers: item.headers } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1348,12 +1348,12 @@
     "templateCredsSetupCompleted": true
   },
   "pinData": {},
-  "activeVersionId": "7db02ec0-c472-45b1-b562-34d736e890c7",
-  "versionCounter": 2529,
+  "activeVersionId": "8108e5d5-2a8c-4118-8395-2f2b185b2d09",
+  "versionCounter": 2572,
   "triggerCount": 1,
   "tags": [],
   "versionMetadata": {
-    "name": "Version 7db02ec0",
+    "name": "Version 8108e5d5",
     "description": ""
   }
 }
