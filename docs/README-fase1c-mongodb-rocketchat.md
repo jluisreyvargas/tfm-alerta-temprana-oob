@@ -1,5 +1,41 @@
 # Fase 1c — MongoDB 8.0 + Rocket.Chat 8.4.1
 
+> [!IMPORTANT]
+> **Credencial rotada (2026-09-23).** Los comandos de este documento contenían
+> en claro la contraseña del usuario `rcuser` de MongoDB, que tiene los roles
+> `root` y `clusterAdmin` sobre `admin`. Se ha sustituido por el marcador
+> `<CONTRASENA_RCUSER>`; el valor vigente está en
+> `fase1-infraestructura/.env` (`MONGO_INITDB_ROOT_PASSWORD`) y no se
+> reproduce en ningún fichero versionado.
+>
+> **El valor anterior sigue en el historial de git** (este documento y
+> `fase1-infraestructura/docker-compose.yml`). No se ha reescrito el
+> historial: un `push --force` no elimina los objetos huérfanos en GitHub, y
+> hacerlo exigiría borrar y recrear los repositorios remotos. El riesgo queda
+> neutralizado por la **rotación** de la credencial, no por esta
+> sustitución, que es higiene del árbol de trabajo.
+>
+> Detalle del hallazgo y de la rotación:
+> `docs/HALLAZGO-credencial-mongodb-2026-09-23.md`.
+
+> [!IMPORTANT]
+> **Credencial rotada (2026-09-23).** Los comandos de este documento contenían
+> en claro la contraseña del usuario `rcuser` de MongoDB, que tiene los roles
+> `root` y `clusterAdmin` sobre `admin`. Se ha sustituido por el marcador
+> `<CONTRASENA_RCUSER>`; el valor vigente está en
+> `fase1-infraestructura/.env` (`MONGO_INITDB_ROOT_PASSWORD`) y no se
+> reproduce en ningún fichero versionado.
+>
+> **El valor anterior sigue en el historial de git** (este documento y
+> `fase1-infraestructura/docker-compose.yml`). No se ha reescrito el
+> historial: un `push --force` no elimina los objetos huérfanos en GitHub, y
+> hacerlo exigiría borrar y recrear los repositorios remotos. El riesgo queda
+> neutralizado por la **rotación** de la credencial, no por esta
+> sustitución, que es higiene del árbol de trabajo.
+>
+> Detalle del hallazgo y de la rotación:
+> `docs/HALLAZGO-credencial-mongodb-2026-09-23.md`.
+
 ## Descripción
 
 Esta fase despliega el canal de comunicación out-of-band del War Room. MongoDB 8.0 actúa como base de datos con Replica Set y autenticación via keyFile. Rocket.Chat 8.4.1 es el canal principal de comunicación para alertas e incidentes.
@@ -65,7 +101,7 @@ Esta fase requirió resolver varios problemas encadenados. Se documentan todos p
 **Solución para laboratorio:**
 ```bash
 docker exec -it mongodb mongosh admin \
-  -u rcuser -p MongoOOB2026! \
+  -u rcuser -p <CONTRASENA_RCUSER> \
   --authenticationDatabase admin \
   --quiet --eval '
 use rocketchat;
@@ -159,7 +195,7 @@ docker exec -it mongodb mongosh --quiet --eval \
 docker exec -it mongodb mongosh admin --quiet --eval '
 db.createUser({
   user: "rcuser",
-  pwd: "MongoOOB2026!",
+  pwd: "<CONTRASENA_RCUSER>",
   roles: [
     {role: "root", db: "admin"},
     {role: "clusterAdmin", db: "admin"}
@@ -186,7 +222,7 @@ db.createUser({
       - fase1-internal
     healthcheck:
       test: ["CMD", "mongosh", "--quiet",
-             "-u", "rcuser", "-p", "MongoOOB2026!",
+             "-u", "rcuser", "-p", "<CONTRASENA_RCUSER>",
              "--authenticationDatabase", "admin",
              "--eval", "rs.status().ok"]
       interval: 15s
@@ -267,7 +303,7 @@ ROOT_URL=https://chat.oob.local
 
 # === MONGODB ===
 MONGO_INITDB_ROOT_USERNAME=rcuser
-MONGO_INITDB_ROOT_PASSWORD=MongoOOB2026!
+MONGO_INITDB_ROOT_PASSWORD=<CONTRASENA_RCUSER>
 ```
 
 > [!NOTE]
@@ -294,7 +330,7 @@ docker compose ps mongodb rocketchat
 
 # MongoDB PRIMARY con auth
 docker exec -it mongodb mongosh admin \
-  -u rcuser -p MongoOOB2026! \
+  -u rcuser -p <CONTRASENA_RCUSER> \
   --authenticationDatabase admin \
   --quiet --eval 'rs.status().members[0].stateStr'
 # → "PRIMARY"

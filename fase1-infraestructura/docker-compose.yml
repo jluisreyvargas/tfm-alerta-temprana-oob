@@ -88,7 +88,7 @@ services:
       - fase1-internal
     healthcheck:
       test: ["CMD", "mongosh", "--quiet",
-             "-u", "rcuser", "-p", "MongoOOB2026!",
+             "-u", "rcuser", "-p", "${MONGO_INITDB_ROOT_PASSWORD}",
              "--authenticationDatabase", "admin",
              "--eval", "rs.status().ok"]
       interval: 15s

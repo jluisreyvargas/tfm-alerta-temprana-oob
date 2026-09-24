@@ -274,7 +274,7 @@ Las siguientes decisiones se apartan de la configuración recomendada para produ
 ### Deuda técnica identificada
 
 - **`authelia/users_database.yml` está versionado** pese a figurar en `.gitignore`, ya que la regla no afecta a ficheros previamente añadidos al índice. Debe retirarse con `git rm --cached` y sustituirse por un fichero de ejemplo.
-- **Contraseña de MongoDB incrustada** en el `healthcheck` del `docker-compose.yml`. Debe sustituirse por una referencia a variable de entorno.
+- ~~**Contraseña de MongoDB incrustada** en el `healthcheck` del `docker-compose.yml`. Debe sustituirse por una referencia a variable de entorno.~~ **Resuelto (2026-09-23):** el healthcheck usa `${MONGO_INITDB_ROOT_PASSWORD}`, verificado con `healthy` tras recrear; credencial rotada. Ver `docs/HALLAZGO-credencial-mongodb-2026-09-23.md`.
 - **Middleware `secure-headers` definido pero no aplicado.** Contiene además la directiva `sslRedirect`, obsoleta en Traefik v3.
 - **Etiquetas `latest`** en Authelia y Portainer.
 

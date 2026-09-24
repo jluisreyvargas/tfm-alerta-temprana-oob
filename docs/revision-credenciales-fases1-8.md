@@ -31,6 +31,15 @@ Ninguna clave ni fichero de entorno revisado está expuesto en git. Las
 exclusiones están repartidas en cuatro `.gitignore` distintos y todas
 funcionan.
 
+> **Corrección (2026-09-23).** La afirmación es correcta para lo que esta
+> revisión examinó —ficheros `.env` y claves— y falsa para el repositorio: la
+> contraseña del usuario `rcuser` de MongoDB (roles `root` y `clusterAdmin`)
+> estaba en claro en el healthcheck de `fase1-infraestructura/docker-compose.yml`
+> y en dos documentos de `docs/`, versionada desde mayo. La revisión comparó el
+> `.env` real con `.env.example`, no con los literales de los compose ni de la
+> documentación, de modo que el objeto quedaba fuera de su alcance. Credencial
+> rotada el 2026-09-23; ver `docs/HALLAZGO-credencial-mongodb-2026-09-23.md`.
+
 ---
 
 ## 2. Corregido

@@ -1,5 +1,41 @@
 # Fase 1e — Validación Final e Infraestructura Base
 
+> [!IMPORTANT]
+> **Credencial rotada (2026-09-23).** Los comandos de este documento contenían
+> en claro la contraseña del usuario `rcuser` de MongoDB, que tiene los roles
+> `root` y `clusterAdmin` sobre `admin`. Se ha sustituido por el marcador
+> `<CONTRASENA_RCUSER>`; el valor vigente está en
+> `fase1-infraestructura/.env` (`MONGO_INITDB_ROOT_PASSWORD`) y no se
+> reproduce en ningún fichero versionado.
+>
+> **El valor anterior sigue en el historial de git** (este documento y
+> `fase1-infraestructura/docker-compose.yml`). No se ha reescrito el
+> historial: un `push --force` no elimina los objetos huérfanos en GitHub, y
+> hacerlo exigiría borrar y recrear los repositorios remotos. El riesgo queda
+> neutralizado por la **rotación** de la credencial, no por esta
+> sustitución, que es higiene del árbol de trabajo.
+>
+> Detalle del hallazgo y de la rotación:
+> `docs/HALLAZGO-credencial-mongodb-2026-09-23.md`.
+
+> [!IMPORTANT]
+> **Credencial rotada (2026-09-23).** Los comandos de este documento contenían
+> en claro la contraseña del usuario `rcuser` de MongoDB, que tiene los roles
+> `root` y `clusterAdmin` sobre `admin`. Se ha sustituido por el marcador
+> `<CONTRASENA_RCUSER>`; el valor vigente está en
+> `fase1-infraestructura/.env` (`MONGO_INITDB_ROOT_PASSWORD`) y no se
+> reproduce en ningún fichero versionado.
+>
+> **El valor anterior sigue en el historial de git** (este documento y
+> `fase1-infraestructura/docker-compose.yml`). No se ha reescrito el
+> historial: un `push --force` no elimina los objetos huérfanos en GitHub, y
+> hacerlo exigiría borrar y recrear los repositorios remotos. El riesgo queda
+> neutralizado por la **rotación** de la credencial, no por esta
+> sustitución, que es higiene del árbol de trabajo.
+>
+> Detalle del hallazgo y de la rotación:
+> `docs/HALLAZGO-credencial-mongodb-2026-09-23.md`.
+
 ## Descripción
 
 Esta fase cierra la **Fase 1 completa** del TFM con la validación integral de todos los servicios desplegados en las subfases anteriores. Se verifica conectividad, estado de salud, autenticación y enrutamiento de cada componente del enclave out-of-band.
@@ -78,7 +114,7 @@ curl -k -o /dev/null -w "Wazuh TFK: %{http_code}\n" https://wazuh.oob.local
 
 # 5. MongoDB PRIMARY
 docker exec -it mongodb mongosh admin \
-  -u rcuser -p MongoOOB2026! \
+  -u rcuser -p <CONTRASENA_RCUSER> \
   --authenticationDatabase admin \
   --quiet --eval 'rs.status().members[0].stateStr'
 
