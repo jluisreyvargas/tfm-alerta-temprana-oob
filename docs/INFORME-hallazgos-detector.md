@@ -186,6 +186,24 @@ no por fichero.
 
 ## 5. Salida literal final del script
 
+> **Nota (2026-09-24).** Esta salida era cierta con las reglas de su fecha. La
+> auditoría de cierre midió el 2026-09-23 `exit 1` con 24 hallazgos (A-20), en
+> buena parte por las tres reglas añadidas en `619b41a` (2026-09-09):
+> `auth-header`, `x-token-header` y `credencial-literal`. No consta ninguna
+> ejecución registrada entre ambas fechas, y no hay CI ni hook de pre-commit que
+> lo ejecute: por eso pudo estar en rojo sin que ningún documento lo reflejara.
+> Resuelto el 2026-09-24: 9 hallazgos en documentos propios corregidos
+> (credenciales de fábrica citadas en prosa y marcadores sin `<…>`), y 15 en
+> código vendorizado excluidos solo para esas tres reglas, con recuento visible
+> en cada ejecución («Omitidos: 15») y acreditado con prueba negativa. Salida
+> actual: `OK: 0 hallazgos sobre 1826 ficheros trackeados`, `exit 0`.
+>
+> Límite que ha dejado claro la credencial de MongoDB
+> (`docs/HALLAZGO-credencial-mongodb-2026-09-23.md`): el detector encuentra lo
+> que **tiene forma** de secreto, no lo que **es** un secreto. Un literal con
+> forma de identificador no lo detecta ninguna regla (A20 en
+> `docs/CATALOGO-fallos-silenciosos.md`).
+
 ```
 $ ./scripts/verify-no-secrets.sh
 
@@ -353,6 +371,24 @@ No se han encontrado más referencias a `wazuh-admin` en `docs/` ni en
 `fase1-infraestructura/` fuera de las zonas listadas.
 
 ### 9.3 · Salida literal del detector
+
+> **Nota (2026-09-24).** Esta salida era cierta con las reglas de su fecha. La
+> auditoría de cierre midió el 2026-09-23 `exit 1` con 24 hallazgos (A-20), en
+> buena parte por las tres reglas añadidas en `619b41a` (2026-09-09):
+> `auth-header`, `x-token-header` y `credencial-literal`. No consta ninguna
+> ejecución registrada entre ambas fechas, y no hay CI ni hook de pre-commit que
+> lo ejecute: por eso pudo estar en rojo sin que ningún documento lo reflejara.
+> Resuelto el 2026-09-24: 9 hallazgos en documentos propios corregidos
+> (credenciales de fábrica citadas en prosa y marcadores sin `<…>`), y 15 en
+> código vendorizado excluidos solo para esas tres reglas, con recuento visible
+> en cada ejecución («Omitidos: 15») y acreditado con prueba negativa. Salida
+> actual: `OK: 0 hallazgos sobre 1826 ficheros trackeados`, `exit 0`.
+>
+> Límite que ha dejado claro la credencial de MongoDB
+> (`docs/HALLAZGO-credencial-mongodb-2026-09-23.md`): el detector encuentra lo
+> que **tiene forma** de secreto, no lo que **es** un secreto. Un literal con
+> forma de identificador no lo detecta ninguna regla (A20 en
+> `docs/CATALOGO-fallos-silenciosos.md`).
 
 ```
 $ ./scripts/verify-no-secrets.sh

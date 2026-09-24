@@ -340,8 +340,8 @@ curl -k -o /dev/null -w "%{http_code}" https://chat.oob.local
 # → 200
 
 # Canales creados
-curl -k -H "X-Auth-Token: TU_TOKEN" \
-     -H "X-User-Id: TU_USER_ID" \
+curl -k -H "X-Auth-Token: <TOKEN>" \
+     -H "X-User-Id: <USER_ID>" \
      https://chat.oob.local/api/v1/channels.list | python3 -m json.tool | grep name
 ```
 

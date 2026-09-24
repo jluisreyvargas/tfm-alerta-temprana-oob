@@ -75,6 +75,15 @@
 #   (TOKEN=) — un placeholder o una variable no es el secreto, y penalizar
 #   esa forma habría hecho ruidoso el propio README de despliegue.
 #
+#   Exclusión acotada de estas tres reglas (A-20, 2026-09-24): código vendorizado
+#   de terceros que el proyecto no modifica —subárboles de wazuh-docker,
+#   DFIR-IRIS (source, docker, tests, deploy, .github), glkvm-cloud y
+#   misp-docker—, cuyas credenciales de demostración o de prueba son del
+#   upstream. NO se excluyen los ficheros propios dentro de esos árboles
+#   (OWN_P14_RE). Las reglas ancladas y 'credencial-conocida' no cambian. Los
+#   hallazgos omitidos NO se descartan en silencio: se cuentan y se imprime el
+#   total, de modo que cualquier cambio en esa cifra es visible.
+#
 # Modo --staged: revisa el CONTENIDO DEL ÍNDICE (git grep --cached / git show
 #   ":<path>") en vez del árbol de trabajo. Pensado para ejecutarse justo
 #   antes de `git commit`: si se corrigió un secreto en el árbol de trabajo
@@ -240,8 +249,14 @@ EXAMPLE_PATH_RE='(^|/)(\.env\.example|env\.example)$' # ficheros de ejemplo
 # era solo un placeholder legítimo o además una credencial real.
 HARD_CRED_RE='(minioadmin|SecretPassword|admin:admin|password123)'
 
+# Exclusión acotada de las reglas P1-4 (ver cabecera). OWN_P14_RE lista los
+# ficheros propios dentro de árboles vendorizados: se siguen escaneando.
+VENDOR_P14_RE='^(fase1-infraestructura/wazuh/|fase6-iris/(source|docker|tests|deploy|\.github)/|fase8-kvm/glkvm-cloud/|misp/misp-docker/)'
+OWN_P14_RE='^(fase1-infraestructura/wazuh/single-node/docker-compose\.yml|fase8-kvm/glkvm-cloud/docker-compose/docker-compose\.override\.yml|misp/misp-docker/(docker-compose\.override\.yml|\.gitignore|template\.env))$'
+
 tracked_count=$(git ls-files | wc -l | tr -d ' ')
 findings=0
+vendor_skipped=0
 
 # -I git grep flag NO va aqui: con --cached, git grep sigue aceptando -I para
 # saltar binarios igual que sobre el arbol de trabajo.
@@ -262,8 +277,8 @@ _line_content() {   # $1 = ruta   $2 = numero de linea
 # Asume que las rutas trackeadas no contienen ':' (cierto en este repo).
 # git grep -I salta binarios; -n da número de línea; el contenido de la
 # línea se descarta con cut para no exponer nunca el valor.
-scan() {   # $1 = etiqueta   $2 = ERE   $3 = (opcional) filtro de ruta ERE
-  local label="$1" ere="$2" path_filter="${3:-}" hit path line
+scan() {   # $1 = etiqueta   $2 = ERE   $3 = (opcional) filtro de ruta ERE   $4 = 1: aplicar la exclusión de vendorizados P1-4
+  local label="$1" ere="$2" path_filter="${3:-}" vendor_skip="${4:-0}" hit path line
   while IFS= read -r hit; do
     [ -n "$hit" ] || continue
     path=${hit%%:*}
@@ -271,6 +286,12 @@ scan() {   # $1 = etiqueta   $2 = ERE   $3 = (opcional) filtro de ruta ERE
 
     [ "$path" = "$SELF" ] && continue
     if [ -n "$path_filter" ] && ! printf '%s' "$path" | grep -qE "$path_filter"; then
+      continue
+    fi
+
+    if [ "$vendor_skip" = "1" ] && printf '%s' "$path" | grep -qE "$VENDOR_P14_RE" \
+       && ! printf '%s' "$path" | grep -qE "$OWN_P14_RE"; then
+      vendor_skipped=$((vendor_skipped + 1))
       continue
     fi
 
@@ -328,10 +349,14 @@ scan "base64>60"         '[A-Za-z0-9+/]{60,}={0,2}'   "$B64_PATH_RE"
 scan_all "credencial-conocida" '(^|[^A-Za-z])(minioadmin123|minioadmin|SecretPassword|changeme|change_me|admin:admin|password123)([^A-Za-z]|$)'
 
 # Reglas nuevas P1-4 (3.1) — ver cabecera y definicion de *_RE mas arriba.
-scan "auth-header"        "$AUTH_HEADER_RE"
-scan "x-token-header"     "$XHEADER_RE"
-scan "credencial-literal" "$ASSIGN_RE"
+scan "auth-header"        "$AUTH_HEADER_RE" "" 1
+scan "x-token-header"     "$XHEADER_RE"     "" 1
+scan "credencial-literal" "$ASSIGN_RE"      "" 1
 
+if [ "$vendor_skipped" -gt 0 ]; then
+  echo
+  echo "  Omitidos: ${vendor_skipped} hallazgos de las reglas P1-4 en código vendorizado (ver cabecera)."
+fi
 echo
 scope_desc="ficheros trackeados"
 [ "$STAGED" -eq 1 ] && scope_desc="ficheros trackeados (indice, --staged)"

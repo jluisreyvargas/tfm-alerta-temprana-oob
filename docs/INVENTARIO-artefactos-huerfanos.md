@@ -93,7 +93,7 @@ arriba entre los 90 "difiere" con su estado ya actualizado.
 | `~/.cache/vmware/drag_and_drop/idt376/README.md` | README.md | 9292 | 2026-06-18 18:26 | SI (con diferencias): fase5-velociraptor/README.md | Difiere de fase5-velociraptor/README.md (ultimo commit 2026-09-02T00:51:14+02:00): +271/-208 lineas, similitud contenido 12% (reclasificado: titulo '🦖 Fase 5 — Forensics Automático (Velociraptor + MinIO)' coincide con el del fichero cache '🦖 Fase 5 — Forensics Automático: Velociraptor + MinIO', similitud titulo 97%) | Revisar manualmente (contiene patrones de posible credencial, ver seccion de secretos) antes de descartar |
 | `~/.cache/vmware/drag_and_drop/W4Pjkh/README.md` | README.md | 9292 | 2026-06-18 18:26 | SI (con diferencias): fase5-velociraptor/README.md | Difiere de fase5-velociraptor/README.md (ultimo commit 2026-09-02T00:51:14+02:00): +271/-208 lineas, similitud contenido 12% (reclasificado: titulo '🦖 Fase 5 — Forensics Automático (Velociraptor + MinIO)' coincide con el del fichero cache '🦖 Fase 5 — Forensics Automático: Velociraptor + MinIO', similitud titulo 97%) | Revisar manualmente (contiene patrones de posible credencial, ver seccion de secretos) antes de descartar |
 | `~/.cache/vmware/drag_and_drop/CZy2Dl/init-minio-bucket.sh` | init-minio-bucket.sh | 194 | 2026-06-20 21:17 | SI (con diferencias): fase5-velociraptor/init-minio-bucket.sh | Difiere de fase5-velociraptor/init-minio-bucket.sh (ultimo commit 2026-06-25T22:03:16+02:00): +2/-2 lineas, similitud 60% | Descartar (borrador anterior, superado por la version actual del repo) |
-| `~/.cache/vmware/drag_and_drop/NrHv37/env.example` | env.example | 226 | 2026-06-20 21:17 | AUSENTE | - | Descartar (borrador con credenciales por defecto conocidas — minioadmin/minioadmin123 — ya identificadas y corregidas en el proyecto, P0-3) |
+| `~/.cache/vmware/drag_and_drop/NrHv37/env.example` | env.example | 226 | 2026-06-20 21:17 | AUSENTE | - | Descartar (borrador con credenciales por defecto conocidas — <credenciales por defecto de MinIO> — ya identificadas y corregidas en el proyecto, P0-3) |
 | `~/.cache/vmware/drag_and_drop/WtsS6S/credential_dump_collection.yaml` | credential_dump_collection.yaml | 342 | 2026-06-20 21:17 | SI: fase5-velociraptor/collections/credential_dump_collection.yaml | Identico (hash sha256 igual) | Descartar (ya identico en el repo) |
 | `~/.cache/vmware/drag_and_drop/IGIUXz/hosts` | hosts | 1115 | 2026-06-21 14:54 | AUSENTE | - | Descartar (captura puntual de /etc/hosts; la fuente de verdad es docs/resolucion-nombres.tsv, ver scripts/verify-hosts.sh) |
 | `~/.cache/vmware/drag_and_drop/j6olV9/hosts` | hosts | 858 | 2026-06-21 14:57 | AUSENTE | - | Descartar (captura puntual de /etc/hosts; la fuente de verdad es docs/resolucion-nombres.tsv, ver scripts/verify-hosts.sh) |
@@ -116,7 +116,7 @@ arriba entre los 90 "difiere" con su estado ya actualizado.
 | `~/.cache/vmware/drag_and_drop/NVdYV6/README-fase8-kvm.md` | README-fase8-kvm.md | 16047 | 2026-07-11 23:02 | SI (con diferencias): fase8-kvm/README.md | Difiere de fase8-kvm/README.md (ultimo commit 2026-09-05T23:53:05+02:00): +303/-384 lineas, similitud contenido 2% (asociado manualmente: mismo tema Fase 8/GLKVM/KVM, titulo antiguo distinto del actual tras la reescritura documentada en el commit "fase8: alinear README con el estado verificado del KVM") | Descartar (borrador anterior, superado por la version actual del repo) |
 | `~/.cache/vmware/drag_and_drop/DGs19O/README.md` | README.md | 5512 | 2026-07-12 18:18 | SI (con diferencias): fase6-iris/README.md | Difiere de fase6-iris/README.md (ultimo commit 2026-09-06T13:55:54+02:00): +102/-328 lineas, similitud contenido 3% (reclasificado: titulo '📊 Fase 6 · DFIR-IRIS — Gestión de casos' coincide con el del fichero cache '🛡️ Fase 6 — DFIR-IRIS: Case Management e Integración Forense', similitud titulo 55%) | Descartar (borrador anterior, superado por la version actual del repo) |
 | `~/.cache/vmware/drag_and_drop/oUmuh4/fase7_metrica_datos_test_200.csv` | fase7_metrica_datos_test_200.csv | 30264 | 2026-08-12 19:24 | AUSENTE | - | Revisar manualmente — dataset de prueba util para fase7-observabilidad (no hay carpeta de fixtures ahi hoy); solo datos sinteticos, sin problema de contenido |
-| `~/.cache/vmware/drag_and_drop/oUmuh4/import_fase7_metrics.py` | import_fase7_metrics.py | 1479 | 2026-08-12 19:24 | AUSENTE | - (script util para Fase 7 no incorporado; ver hallazgo de seguridad en recomendaciones) | Revisar manualmente antes de rescatar — script util para cargar el CSV anterior en OpenSearch, pero su default --password es 'SecretPassword' (la misma credencial de fabrica que motivo el hallazgo P0-3); si se rescata, quitar el default y exigir el argumento |
+| `~/.cache/vmware/drag_and_drop/oUmuh4/import_fase7_metrics.py` | import_fase7_metrics.py | 1479 | 2026-08-12 19:24 | AUSENTE | - (script util para Fase 7 no incorporado; ver hallazgo de seguridad en recomendaciones) | Revisar manualmente antes de rescatar — script util para cargar el CSV anterior en OpenSearch, pero su default --password es '<contraseña de fábrica>' (la misma credencial de fabrica que motivo el hallazgo P0-3); si se rescata, quitar el default y exigir el argumento |
 | `~/.cache/vmware/drag_and_drop/H7CTEQ/agents.py` | agents.py | 4329 | 2026-08-21 17:19 | SI: fase3-agentic/app/agents.py | Identico (hash sha256 igual) | Descartar (ya identico en el repo) |
 | `~/.cache/vmware/drag_and_drop/H7CTEQ/config.py` | config.py | 1876 | 2026-08-21 17:19 | SI (con diferencias): fase3-agentic/app/config.py | Difiere de fase3-agentic/app/config.py (ultimo commit 2026-08-26T22:21:37+02:00): +0/-5 lineas, similitud 95% | Descartar (borrador anterior, superado por la version actual del repo) |
 | `~/.cache/vmware/drag_and_drop/H7CTEQ/docker-compose.yml` | docker-compose.yml | 1314 | 2026-08-21 17:19 | SI (con diferencias): fase3-agentic/docker-compose.yml | Difiere de fase3-agentic/docker-compose.yml (ultimo commit 2026-08-26T22:21:37+02:00): +1/-3 lineas, similitud 95% (elegido por similitud 95% entre 12 candidatos con igual nombre) | Descartar (borrador anterior, superado por la version actual del repo) |
@@ -200,7 +200,7 @@ arriba entre los 90 "difiere" con su estado ya actualizado.
 - **`oUmuh4/import_fase7_metrics.py`**: script para cargar
   `fase7_metrica_datos_test_200.csv` (dataset sintético de 200 eventos) en OpenSearch. Sería
   útil para `fase7-observabilidad/`, que hoy no tiene fixtures de prueba. **Pero su argumento
-  `--password` tiene por defecto el valor `SecretPassword`** — la misma credencial de fábrica
+  `--password` tiene por defecto el valor `<contraseña de fábrica>`** — la misma credencial de fábrica
   que motivó el hallazgo P0-3 en este mismo proyecto (`verify-no-secrets.sh` ya la trata como
   credencial conocida). Si se rescata, hay que quitar ese valor por defecto y exigir el
   argumento, no solo copiar el fichero.
@@ -217,8 +217,8 @@ arriba entre los 90 "difiere" con su estado ya actualizado.
 Detección por patrón (`SECRET=`, `TOKEN=`, `PASSWORD=`, `Bearer `, `api_key`, `X-Auth-Token`,
 sin distinguir mayúsculas para las dos últimas). Solo fichero y línea — **el valor no se
 reproduce aquí**. La revisión manual de una muestra confirma que la gran mayoría son
-ejemplos de documentación (`Bearer <token>`, `X-Auth-Token: TU_TOKEN`, prosa que menciona
-"Bearer Token") o valores vacíos/placeholder (`api_key: ""`, `IRIS_API_KEY=change_me`), no
+ejemplos de documentación (`Bearer <token>`, `X-Auth-Token: <TOKEN>`, prosa que menciona
+"Bearer Token") o valores vacíos/placeholder (`api_key: ""`, `IRIS_API_KEY=<marcador>`), no
 credenciales reales — pero no se han revisado las 25 líneas una a una y el patrón es
 deliberadamente amplio, así que decidir caso a caso queda para quien revise:
 
@@ -261,4 +261,4 @@ deliberadamente amplio, así que decidir caso a caso queda para quien revise:
   (`pwd_expiry_notifier.py`, `expiring_accounts.py`, `privileged_accounts.py`), 2 a rescatar
   (`DECISION-fase3.md`, `RESULTADOS-fase3.md`), 2 a revisar antes de rescatar
   (`fase7_metrica_datos_test_200.csv` sin problema, `import_fase7_metrics.py` con el default
-  `SecretPassword` a corregir primero).
+  `<contraseña de fábrica>` a corregir primero).

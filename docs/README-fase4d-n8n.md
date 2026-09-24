@@ -188,7 +188,7 @@ Se probó directamente contra el DC Agent para verificar rechazo por token erró
 
 ```bash
 curl -s -X POST http://dc01-tfm:8000/run \
-  -H "Authorization: Bearer token-incorrecto" \
+  -H "Authorization: Bearer <token-incorrecto>" \
   -H "Content-Type: application/json" \
   -d '{"script":"disable_account.ps1","target":"test"}'
 ```
