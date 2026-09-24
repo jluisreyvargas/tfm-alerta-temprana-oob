@@ -151,9 +151,11 @@ Todas las fases principales están completadas. La Fase 5 se divide en **dos car
 | **4** | **Break-glass y scripts DC** | ✅ Completada | RustDesk, agentes Python y Tailscale en controladores de dominio. | [Ver Fase 4](./fase4-breakglass-dc) |
 | **5A** | **Fase 5 · Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver Fase 5A](./fase5-orchestrator-api) |
 | **5B** | **Fase 5 · Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver Fase 5B](./fase5-velociraptor) |
-| **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, sincronización bidireccional y timeline. | [Ver Fase 6](./fase6-iris) |
+| **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, evidencias y timeline (integración n8n → IRIS unidireccional; ver nota[^sync-iris]). Ver estado de seguridad y verificación en el README de la fase. | [Ver Fase 6](./fase6-iris) |
 | **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./fase7-observabilidad) |
 | **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, autorización por dispositivo, validación TLS del canal y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm) |
+
+[^sync-iris]: **Corrección (2026-09-21).** Esta fila describía la responsabilidad de la Fase 6 como "sincronización bidireccional". Verificado contra `fase2-orquestador/n8n/workflows/wazuh-alert-handler.json` y `fase4-breakglass-dc/workflows/fase4d-breakglass.json`: las únicas llamadas a la API de IRIS son de escritura (crear caso, añadir evidencia, añadir evento de timeline) o de lectura para verificar una escritura propia (`case/evidences/list`, tras un `case/evidences/add`, para comprobar el hash que el propio flujo acaba de subir); la resolución de `case_id` se hace parseando el nombre del canal de Rocket.Chat, no consultando el estado de IRIS. Ningún componente del proyecto consume webhooks salientes de IRIS ni sondea cambios hechos de forma independiente en su interfaz (por ejemplo, cerrar un caso o añadir una nota desde la propia UI de IRIS no se propaga a ningún otro sitio). La integración es **unidireccional** (n8n/orchestrator → IRIS), tal como ya lo documenta `fase6-iris/README.md` en su lista "No implementado" ("Sincronización bidireccional por webhooks"). El texto anterior de esta fila decía "sincronización bidireccional y timeline"; se mantiene esta nota para que quede constancia del cambio.
 
 ### Relación entre las dos partes de la Fase 5
 
@@ -175,16 +177,23 @@ flowchart LR
 
 ## 🎯 Métricas objetivo
 
-| Métrica | Descripción | Objetivo |
-|:---|:---|:---:|
-| ⏱️ **MTTA** | Alerta → War Room creada | < 60 segundos |
-| ✅ **MTTApprove** | Solicitud de aprobación → decisión | < 5 minutos |
-| 🚀 **MTTAccess** | Aprobación → acceso activo | < 3 minutos |
-| 📦 **MTTCollection** | Disparo → artefactos en MinIO | < 10 minutos |
-| 🔁 **Dedup rate** | Alertas correctamente deduplicadas | > 95 % |
-| 🧠 **Agent precision** | Triage del agente frente a experto humano | > 80 % |
-| 🚫 **False positive rate** | Alertas que no llegan a aprobación | < 15 % |
-| ⚙️ **Script success rate** | Ejecuciones en DC con resultado correcto | > 98 % |
+> [!NOTE]
+> Esta tabla enuncia **objetivos de diseño**, no resultados medidos. Declarar
+> un objetivo y no alcanzarlo todavía es legítimo en un TFM; lo que no lo es
+> es no poder distinguir el objetivo del resultado. La columna "Estado de
+> medición" (añadida el 2026-09-21) remite al detalle y al cálculo completo
+> en [`docs/tfm/metricas-calculadas.md`](./docs/tfm/metricas-calculadas.md).
+
+| Métrica | Descripción | Objetivo | Estado de medición (2026-09-21) |
+|:---|:---|:---:|:---|
+| ⏱️ **MTTA** | Alerta → War Room creada | < 60 segundos | No calculable — no hay instrumentación del evento de creación del War Room |
+| ✅ **MTTApprove** | Solicitud de aprobación → decisión | < 5 minutos | No calculable — solo consta el límite de política (15 min de caducidad de la solicitud), no una latencia medida |
+| 🚀 **MTTAccess** | Aprobación → acceso activo | < 3 minutos | No calculable — mismo motivo que MTTApprove |
+| 📦 **MTTCollection** | Disparo → artefactos en MinIO | < 10 minutos | Calculable parcialmente: 2 mediciones reales (9 s y 12,0 s); consulta a OpenSearch propuesta para ampliar la muestra |
+| 🔁 **Dedup rate** | Alertas correctamente deduplicadas | > 95 % | No calculable — el mecanismo de deduplicación vive en memoria del proceso de n8n y no deja registro |
+| 🧠 **Agent precision** | Triage del agente frente a experto humano | > 80 % | No calculable tal como está definida (el propio proyecto la declara fuera de alcance del TFM); existe un proxy no equivalente: concordancia con el motor determinista, 100 % en modo `hybrid` (n=30) y 23,3 % en modo `llm` (n=30) |
+| 🚫 **False positive rate** | Alertas que no llegan a aprobación | < 15 % | No calculable — la definición operativa de "falso positivo" no está resuelta en el repositorio y no hay instrumentación del resultado de cada alerta |
+| ⚙️ **Script success rate** | Ejecuciones en DC con resultado correcto | > 98 % | Calculable como tasa de superación de la batería de pruebas de Fase 4 (no como tasa operativa en producción): 25/25 = 100 % (n=25) |
 
 ---
 
