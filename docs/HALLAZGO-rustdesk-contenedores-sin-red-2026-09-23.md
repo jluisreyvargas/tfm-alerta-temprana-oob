@@ -248,3 +248,30 @@ tfm-fase4-rustdesk.service`.
    demonio de Docker, que contenía la causa real desde el primer día.
 5. **«Ningún instrumento da señal».** Se afirmó sin tener un arranque sano con
    el que comparar el log. La señal existía; faltaba la referencia.
+
+### Prueba en arranque en frío (2026-09-24, tras `sudo reboot`)
+
+Resultado: `tfm-fase4-rustdesk` y `tfm-fase6-iris` en `active`; 29
+contenedores, ninguno sin red; seis puertos en `100.64.0.1` (21115-21119 y
+4833); desde DC01, `Test-NetConnection 100.64.0.1 -Port 21116` → `True`. Sin
+intervención manual.
+
+La espera se ejercitó: `tailscaled` arrancó sin caché de netmap a las 14:21:01
+y pasó a `Running` a las 14:23:13; la unidad arrancó a las 14:23:10, **antes**
+de que existiera la IP, y lanzó el compose a las 14:23:15, tras dos
+comprobaciones fallidas del bucle.
+
+**Corrección:** la hipótesis de la caché de netmap como fuente de
+intermitencia queda refutada para este arranque (tampoco había caché). El
+journal de Docker no registra ningún fallo de bind, y los contenedores
+aparecen como `Creating`: el `ExecStop=... down` de las unidades los eliminó en
+el apagado limpio, así que la política de reinicio de Docker no tuvo nada que
+levantar. El arranque del 2026-09-24 a las 12:42 mostraba `layer not mounted` y
+`Removing stale sandbox`, compatibles con un **apagado no limpio**, en el que
+los `ExecStop` no corren y los contenedores sobreviven. Hipótesis no medida.
+
+**Pendiente:** la prueba tras un apagado no limpio (en VMware, *Power Off* en
+vez de reinicio). Por diseño la unidad debería recuperar el canal —los
+contenedores quedan `Exited` tras fallar el bind, y la unidad hace `down` +
+`up` al tener la IP—, pero es el caso operativamente relevante (un corte de
+corriente durante un incidente) y no está acreditado.
