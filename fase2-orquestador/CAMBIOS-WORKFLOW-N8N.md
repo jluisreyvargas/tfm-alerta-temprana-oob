@@ -103,6 +103,8 @@ Requiere `NODE_FUNCTION_ALLOW_BUILTIN=crypto` en el entorno del contenedor.
 En el nodo `Webhook`, activar además **Raw Body** para que la firma se calcule
 sobre los bytes exactos recibidos y no sobre una reserialización.
 
+> **Nota (2026-09-24).** Activar Raw Body no bastaba: hasta el commit `9d69042` el nodo seguía firmando sobre `item.body` reserializado, y las alertas no ASCII se descartaban. La firma se calcula sobre los bytes recibidos leyéndolos con `this.helpers.getBinaryDataBuffer(0, 'data')`. Ver M-46 en `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`.
+
 ---
 
 ## 3. Condicionar el enriquecimiento CTI y tolerar sus fallos

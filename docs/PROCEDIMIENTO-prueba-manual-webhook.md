@@ -21,6 +21,8 @@ diferencia —un salto de línea de más, un espacio, un reordenado de claves—
 invalida la firma. De ahí que el JSON se escriba a fichero, se firme ese
 fichero y se envíe con `--data-binary`, nunca con `-d` y el JSON inline.
 
+> **Nota (2026-09-24).** «El verificador firma la cadena literal recibida» es cierto desde el commit `9d69042` (2026-09-23). Antes reserializaba el cuerpo ya parseado, así que la firma solo casaba cuando la serialización del emisor coincidía byte a byte con la de `JSON.stringify`; con caracteres no ASCII no coincidía nunca. Ver M-46 en `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`.
+
 **Dos URLs distintas según el estado del workflow:**
 
 | Estado | URL |

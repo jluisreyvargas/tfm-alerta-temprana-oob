@@ -1505,3 +1505,88 @@ comprobable en segundos. Es la imagen especular de M-28, donde un fallo de la
 petición se leyó como problema de credencial. En ambos casos el diagnóstico
 se fue hacia el componente lejano antes de agotar el cercano, y hasta ahora
 el registro no había cruzado las dos entradas.
+
+## 15. Sesiones 2026-09-23 y 2026-09-24 — Firma HMAC y alertas no ASCII
+
+### M-46 · La verificación HMAC descartaba las alertas no ASCII mientras el emisor registraba «entregada (HTTP 200)»
+
+Corregido en el commit `9d69042` (2026-09-23, 18:55 CEST) y registrado aquí el
+2026-09-24, a raíz del hallazgo A-2 de `docs/AUDITORIA-CIERRE-2026-09-23.md`:
+hasta hoy el caso solo constaba en el mensaje del commit.
+
+**Mecanismo** (según el commit). El integrador `custom-n8n` firma el cuerpo
+serializado con `json.dumps(..., ensure_ascii=True)`, que escapa los caracteres
+no ASCII como `\uXXXX`. Pese a `rawBody: true`, n8n entregaba al nodo
+`Code in JavaScript` el cuerpo ya parseado en `item.body`, y el nodo lo
+reserializaba con `JSON.stringify`, que emite UTF-8 crudo. Las dos
+serializaciones solo coinciden byte a byte si el cuerpo es ASCII puro. Con un
+acento, la firma recalculada no casaba y el nodo lanzaba «Firma HMAC invalida:
+alerta descartada». Para un controlador de dominio en español, eso es
+prácticamente cualquier evento real.
+
+**Por qué no se vio.** El webhook responde en modo `onReceived`: n8n devuelve
+`200` al recibir, antes de ejecutar el nodo que verifica (M-21;
+`fase2-orquestador/README.md:493`). El integrador registra ese `200` como
+entrega correcta. El descarte solo quedaba como ejecución en error dentro de n8n,
+sin aviso en ningún canal.
+
+**Medición (2026-09-24).** Emisor: `/var/ossec/logs/integrations.log` del
+manager de Wazuh, líneas por día. Receptor: `execution_entity` y
+`execution_data` de n8n (copia de `database.sqlite` junto con su `-wal`),
+workflow `TUzKK9OBP39SYILa`, contando las ejecuciones cuyo volcado contiene el
+texto de la excepción.
+
+| Día | Emisor: «entregada (HTTP 200)» | Emisor: otras líneas | n8n: rechazos de firma |
+|---|---|---|---|
+| 11-09 | 79 | 0 | 6 |
+| 12-09 | 42 | 0 | 0 |
+| 13-09 | 15 | 0 | 5 |
+| 16-09 | 169 | 0 | 13 |
+| 17-09 | 41 | 7 | 1 |
+| 18-09 | 56 | 0 | 4 |
+| 20-09 | 26 | 0 | 13 |
+| 23-09 | 163 | 0 | 9 |
+| 24-09, tras la corrección | — | — | 0 (71 ejecuciones, todas correctas) |
+
+Los días 14, 15, 19, 21 y 22 no tienen actividad en ninguno de los dos lados.
+Total: **51 rechazos** frente a **591 entregas** registradas como correctas por el
+emisor en los mismos días. Las 7 líneas «otras» del 17-09 no se han examinado.
+
+**Alcance de la cifra.** 51 es una **cota superior** de alertas reales
+descartadas: el recuento incluye cualquier prueba deliberada con firma inválida
+del periodo (M-21), y la atribución de cada rechazo a un carácter no ASCII no se
+ha medido ejecución a ejecución. Lo medido es el rechazo; la causa se apoya en el
+mecanismo y en el par de control.
+
+**Inicio no medible.** La ejecución más antigua que conserva n8n es del 11-09 a
+las 10:24 UTC, y el primer rechazo, del mismo día a las 17:16. n8n purga las
+ejecuciones antiguas: el fallo puede ser anterior, y estos datos no lo alcanzan.
+
+**Corrección y verificación.** La firma se calcula sobre los bytes recibidos,
+obtenidos con `this.helpers.getBinaryDataBuffer(0, 'data')`. Un primer intento
+con `item.binary.data.data` falló porque devuelve un identificador de filestore
+de 16 bytes, no el cuerpo. Par de control del 2026-09-23: la ejecución 2243 (alerta
+con acento, 16:34 UTC) terminó en `success` y abrió el caso IRIS #91 con la
+evidencia enlazada y el hash verificado; la alerta ASCII siguió funcionando
+(caso #90). El último rechazo registrado es de las 16:29:49 UTC (ejecución 2241).
+La ejecución 2199 que cita el commit como ejemplo del error es del **2026-09-20**
+a las 17:40 UTC, no del día de la corrección.
+
+**Instrumento invalidado durante la propia medición.** El primer clasificador
+buscaba `firma`, `signature` o `HMAC` en el volcado de cada ejecución. Marcó como
+«firma» las 155 ejecuciones correctas del 23-09: el nombre del mecanismo aparece
+en el volcado de todas, así que no discriminaba nada (el patrón de M-38). El
+discriminador válido es el texto de la excepción, con control incorporado: cero
+coincidencias en las ejecuciones correctas de todos los días. Sobre los errores
+del 20-09, el clasificador inicial atribuía 18 a la firma; eran 13.
+
+**Documentación afectada.** `fase2-orquestador/README.md:173`,
+`fase2-orquestador/CAMBIOS-WORKFLOW-N8N.md:103-104` y
+`docs/PROCEDIMIENTO-prueba-manual-webhook.md:17-19` afirmaban la firma sobre los
+bytes crudos antes de que fuera cierta, y la validación «sobre tráfico real» de
+`fase2-orquestador/README.md` no cubría alertas no ASCII.
+
+**Queda abierto.** El modo `onReceived` sigue igual: cualquier rechazo futuro de
+firma, legítimo o no, quedará registrado en el emisor como entrega correcta, y la
+única señal es una ejecución en error en n8n que nadie recibe (M-21). Catálogo:
+B1, mecanismo M1, en `docs/CATALOGO-fallos-silenciosos.md`.

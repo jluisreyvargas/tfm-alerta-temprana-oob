@@ -172,6 +172,8 @@ Requisitos en el entorno de n8n:
 
 Y **Raw Body activado** en el nodo `Webhook`: el script firma los bytes exactos que envía; firmar sobre una reserialización alteraría separadores y orden de claves.
 
+> **Nota (2026-09-24).** El verificador de n8n solo firma sobre los bytes recibidos desde el commit `9d69042` (2026-09-23). Hasta entonces, pese a `rawBody: true`, reserializaba el cuerpo ya parseado con `JSON.stringify`, y toda alerta con caracteres no ASCII fallaba la verificación y se descartaba: 51 rechazos registrados entre el 11-09 y el 23-09, con el emisor anotando cada entrega como `HTTP 200`. Ver M-46 en `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`.
+
 ### 💉 Inyección indirecta de prompt
 
 > [!IMPORTANT]
@@ -445,6 +447,8 @@ Verificado sobre **tráfico real de Wazuh**, no sobre payloads sintéticos:
 | 🚫 Alerta sin firma HMAC | Rechazada en `Verify Signature` |
 | 🚫 Firma HMAC inválida | Rechazada en `Verify Signature` |
 | 🔄 Ciclo agente → Rocket.Chat | Verificado de extremo a extremo |
+
+> **Acotación (2026-09-24).** Esta validación no incluía alertas con caracteres no ASCII, que son prácticamente todas las de un controlador de dominio en español: hasta el commit `9d69042` (2026-09-23) esas alertas se descartaban en la verificación de firma sin ningún aviso (M-46). La validación de extremo a extremo con una alerta real con acentos es la del 2026-09-23 (caso IRIS #91). En el workflow desplegado, el nodo que verifica la firma se llama `Code in JavaScript`, no `Verify Signature`.
 
 > [!IMPORTANT]
 > **Sobre la validación previa.** Las pruebas documentadas en las fases 2c–2f se realizaron con `curl` desde el host y payloads construidos a mano. No podía ser de otro modo: `wazuh-integratord` no estaba corriendo y `n8n.oob.local` resolvía a `127.0.0.1` dentro del manager, de forma que el camino real nunca funcionó. Es una diferencia cualitativa relevante y se declara explícitamente.

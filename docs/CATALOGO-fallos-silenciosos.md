@@ -89,7 +89,7 @@ colisiones conocidas (`P1-6`, `P0-4`, entre otras): ver
 
 | Id | Caso | Qué informaba | Qué ocurría | Cómo se detectó | Fuente (fichero:línea) | Estado | Origen |
 |---|---|---|---|---|---|---|---|
-| B1 | Verificación HMAC Wazuh→n8n con caracteres no ASCII | `200` al emisor: en modo `onReceived` n8n responde antes de verificar la firma | Toda alerta con un acento se descartaba en la firma; la documentación afirmaba que se firmaba sobre los bytes crudos | No consta en el commit; la corrección se verificó con las ejecuciones 2199 y 2243 | Mensaje del commit `9d69042` (`git show 9d69042`); `fase2-orquestador/README.md:493`, `:173`. **Sin registro en REGISTRO-MEDICIONES** | corregido (`9d69042`) | |
+| B1 | Verificación HMAC Wazuh→n8n con caracteres no ASCII | `entregada (HTTP 200)` en el `integrations.log` del emisor: en modo `onReceived` n8n responde antes de verificar la firma | Toda alerta con un acento se descartaba en la verificación: 51 rechazos (cota superior) entre el 11-09 y el 23-09, frente a 591 entregas registradas como correctas; la documentación afirmaba que se firmaba sobre los bytes crudos | Par de control con una alerta con acento y otra ASCII | REGISTRO-MEDICIONES M-46; commit `9d69042`; `fase2-orquestador/README.md:493` | corregido (`9d69042`) | |
 | B2 | Integración Wazuh→n8n | Error TLS genérico (con `CERT_NONE`) | `n8n.oob.local` resolvía a `127.0.0.1` dentro del contenedor: la integración nunca había entregado una alerta | No consta | `fase2-orquestador/README.md:144-145`, `:450` | corregido (`extra_hosts`) | |
 | B3 | Telemetría del orchestrator | Cero eventos, indistinguible de cero colecciones | 21 días de `401` del indexador por una contraseña rotada; el aviso de `print()` no salía por el buffer de stdout | `PYTHONUNBUFFERED=1` hizo aparecer el aviso | `fase5-velociraptor/SECURITY-NOTICE.md:228-248`; `docs/INFORME-P0-3.md:20-22`, `:44` | corregido | |
 | B4 | `zip_sha256` del endpoint `/velociraptor/collect` | `completed`, hash y `sha256.txt` | El hash era de `incidentid + host + ts`; el ZIP no se subía | Revisión de la Fase 5_4b | REGISTRO-MEDICIONES `:555-569`; `fase5-orchestrator-api/README.md:141-145`; `fase5-velociraptor/README.md:212-214` | corregido (`456fbf9`) | |
@@ -223,12 +223,10 @@ No se cuentan aparte B10 (subcaso de B9) ni B20 (tercera instancia de B18).
 | A11 · El `200` o «Workflow was started» de n8n leído como prueba de ejecución | `Workflow was started`, `onReceived`, `responseMode` | Solo existe la propiedad de diseño (`fase2-orquestador/README.md:493`). No se ha localizado ninguna lectura errónea registrada; el mecanismo forma parte de B1 |
 | A13 · `docker cp` de `database.sqlite` de n8n adelantándose a la escritura | `docker cp`, `database.sqlite` en `*.md` | Sin coincidencias sobre ese caso |
 
-**B1** se incluye en la tabla, con el mensaje del commit `9d69042` como fuente.
-Queda confirmado que **no tiene registro en REGISTRO-MEDICIONES** (sin
-coincidencias de `acento`, `ascii` ni `9d69042`). La afirmación de que
-`integrations.log` registraba «HTTP 200» **no se ha localizado** en ninguna
-fuente: ni el commit ni la documentación mencionan `integrations.log` para este
-caso. El `200` al emisor se apoya en `fase2-orquestador/README.md:493`.
+**B1** se registró formalmente el 2026-09-24 como M-46 de REGISTRO-MEDICIONES
+(hallazgo A-2), con la medición del emisor (`integrations.log`) y del receptor
+(`execution_entity`) día por día. La afirmación sobre `integrations.log`, que en
+la primera versión de este catálogo no tenía fuente, queda medida allí.
 
 ---
 
