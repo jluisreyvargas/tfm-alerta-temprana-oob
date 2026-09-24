@@ -195,9 +195,8 @@ automático sobre la ACL desapareció justo cuando la ACL se volvió más comple
 
 > **Corrección (2026-09-24).** Esta sección tiene la historia al revés. El
 > bloque `tests:` se retiró **deliberadamente** en el commit `0b16f18`
-> (2026-08-28, no el 30), porque la versión desplegada, `headscale:0.28.0`, no lo
-> admite; el comentario de `fase4-breakglass-dc/headscale/config/acl.hujson` lo
-> recoge. Con ese bloque presente, Headscale arrancaba **sin política, en
+> (2026-08-28, no el 30), porque Headscale 0.28 no lo admite; lo explica el
+> mensaje de ese commit. Con ese bloque presente, Headscale arrancaba **sin política, en
 > allow-all** (`docs/README-fase4-validacion.md`, caso B14 de
 > `docs/CATALOGO-fallos-silenciosos.md`). No se perdió un control: se retiró la
 > causa de un fallo silencioso. **La propuesta de recuperar las pruebas que sigue
