@@ -379,6 +379,30 @@ El nombre se sanea porque `alert_id` de Wazuh tiene forma `1787305487.1121` y Ro
 
 > [!NOTE]
 > Wazuh y n8n no pueden completar un flujo MFA. Por eso el compose de n8n define **dos routers**: la interfaz de usuario protegida con Authelia, y el path del webhook fuera de Authelia pero con firma HMAC y restricción de origen.
+>
+> **Corrección (2026-09-24).** Hasta esta fecha la afirmación anterior era falsa:
+> el router principal de n8n no llevaba Authelia, y el editor y la API solo
+> estaban protegidos por el inicio de sesión propio de n8n, un único factor
+> alcanzable desde la red corporativa (Traefik escucha en `0.0.0.0:443`).
+> Medido sin sesión: `https://n8n.oob.local/` → `200`, `/rest/*` → `401` de n8n
+> (hallazgo A-9 y medición D-5 de `docs/AUDITORIA-CIERRE-2026-09-23.md`).
+> Corregido y verificado el mismo día con tres routers:
+>
+> | Router | Ruta | Authelia |
+> |---|---|---|
+> | `n8n` | todo `n8n.oob.local` | sí (`two_factor`, grupo `ir_lead`) |
+> | `n8n-webhook` (prioridad 50) | `/webhook/` | no: lo protege la firma HMAC |
+> | `n8n-cred` (prioridad 100) | `/webhook/bg-credential` | sí, sin cambios |
+>
+> Verificación: el editor y la API responden `302` hacia Authelia;
+> `/webhook/wazuh-alerts` llega a n8n (su `404` para GET, no el de Traefik);
+> una alerta real (regla 5712) produjo la ejecución 2470 en `success`. Rocket.Chat,
+> rttys y la aprobación del KVM llaman a n8n por la red interna de Docker
+> (`n8n:5678` o `localhost:5678`) y no pasan por Traefik.
+>
+> **No hay restricción de origen en el borde**: el router `n8n-webhook` no lleva
+> filtro de IP. El webhook es alcanzable desde cualquier red que llegue al 443 del
+> enclave, y su única protección es la firma HMAC.
 
 ---
 
