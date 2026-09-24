@@ -1,0 +1,26 @@
+[Unit]
+Description=TFM Fase 4 - servidor RustDesk (hbbs/hbbr), arranque tras la IP del tailnet
+Documentation=https://github.com/jluisreyvargas/tfm-alerta-temprana-oob
+Requires=docker.service
+After=docker.service tailscaled.service network-online.target
+Wants=network-online.target tailscaled.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/home/jose/tfm-alerta-temprana-oob/fase4-breakglass-dc
+User=jose
+Group=jose
+# hbbs/hbbr publican sus puertos en TAILNET_IP. Esa IP solo existe cuando
+# tailscaled ha contactado con Headscale, que es un contenedor del propio
+# enclave: After=tailscaled.service no basta. Se espera a la IP (máx. 300 s).
+# Los $ van duplicados porque systemd sustituye variables en Exec*.
+ExecStartPre=/bin/sh -c '. ./.env; i=0; while [ $$i -lt 150 ]; do ip -4 -o addr show | grep -q " $$TAILNET_IP/" && exit 0; i=$$((i+1)); sleep 2; done; echo "TAILNET_IP $$TAILNET_IP no disponible tras 300 s" >&2; exit 1'
+# Sin --remove-orphans: headscale-ui comparte proyecto de Compose y lo borraría.
+ExecStart=/usr/bin/docker compose -f docker-compose.rustdesk.yml down
+ExecStart=/usr/bin/docker compose -f docker-compose.rustdesk.yml up -d --wait --wait-timeout 120
+ExecStop=/usr/bin/docker compose -f docker-compose.rustdesk.yml down
+TimeoutStartSec=420
+
+[Install]
+WantedBy=multi-user.target
