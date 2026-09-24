@@ -129,7 +129,7 @@ depende del nivel de competencia.
 
 En los tres casos la corrección vino de leer el dato completo, no de razonar
 mejor: el mismo remedio que el proyecto aplica al sistema.
-\n
+
 ---
 
 ## Actualización (2026-09-24): causa raíz, reproducción y reparación
