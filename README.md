@@ -222,11 +222,13 @@ defecto, que el consumidor lee como aprobación. El control falla cerrado ante
 caída del servicio y **abierto** ante error propio, que es el caso más probable.
 → [`docs/cierre-mejora1-hook.md`](./docs/cierre-mejora1-hook.md) §3
 
-**Los instrumentos de diagnóstico fallan en silencio.** Ocho casos registrados en
-el proyecto, todos con la misma forma: el instrumento no protesta y devuelve algo
-plausible en lugar de un error. La única defensa es contrastar con un segundo
-instrumento que mida lo mismo por otra vía.
-→ [`docs/api-reconocimiento-fase8.md`](./docs/api-reconocimiento-fase8.md) §1
+**El fallo silencioso es el modo de fallo dominante.** 69 ocurrencias documentadas
+en el proyecto, agrupadas en seis mecanismos: algo informa de éxito o de
+normalidad —o no informa de nada— mientras la función no se cumple. Afecta tanto
+a los instrumentos con los que se mide (34 ocurrencias) como al propio sistema
+(35). Para los primeros, la defensa es contrastar con un segundo instrumento que
+mida lo mismo por otra vía; para el segundo, medir desde el consumidor.
+→ [`docs/CATALOGO-fallos-silenciosos.md`](./docs/CATALOGO-fallos-silenciosos.md)
 
 ---
 
@@ -259,3 +261,8 @@ instrumento que mida lo mismo por otra vía.
   `fase7-observabilidad/dashboards/`; la fase deja constancia de que los datos
   de prueba no son reproducibles desde el repositorio. Hallazgo B-8 de la
   auditoría de cierre.
+
+- **2026-09-24.** El «ocho casos» de fallos silenciosos no tenía lista detrás
+  (el documento enlazado enumeraba cinco). Sustituido por el catálogo canónico,
+  `docs/CATALOGO-fallos-silenciosos.md`: 69 ocurrencias con fuente, en seis
+  mecanismos. Hallazgo A-22 de la auditoría de cierre.
