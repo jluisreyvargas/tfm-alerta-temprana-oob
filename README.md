@@ -158,7 +158,7 @@ Todas las fases principales están completadas. La Fase 5 se divide en **dos car
 | **5A** | **Fase 5 · Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver Fase 5A](./fase5-orchestrator-api) |
 | **5B** | **Fase 5 · Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver Fase 5B](./fase5-velociraptor) |
 | **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, evidencias y timeline (integración n8n → IRIS unidireccional; ver nota[^sync-iris]). Ver estado de seguridad y verificación en el README de la fase. | [Ver Fase 6](./fase6-iris) |
-| **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./fase7-observabilidad) |
+| **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. Dashboard exportado y versionado; datos de prueba no reproducibles desde el repositorio (ver README de la fase). | [Ver Fase 7](./fase7-observabilidad) |
 | **8** | **Plan C y hardening** | ✅ Completada | KVM GL.iNet como Plan C (sin conmutación automática desde RustDesk), autorización por dispositivo y de segunda persona, validación TLS del canal y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm) |
 
 [^sync-iris]: **Corrección (2026-09-21).** Esta fila describía la responsabilidad de la Fase 6 como "sincronización bidireccional". Verificado contra `fase2-orquestador/n8n/workflows/wazuh-alert-handler.json` y `fase4-breakglass-dc/workflows/fase4d-breakglass.json`: las únicas llamadas a la API de IRIS son de escritura (crear caso, añadir evidencia, añadir evento de timeline) o de lectura para verificar una escritura propia (`case/evidences/list`, tras un `case/evidences/add`, para comprobar el hash que el propio flujo acaba de subir); la resolución de `case_id` se hace parseando el nombre del canal de Rocket.Chat, no consultando el estado de IRIS. Ningún componente del proyecto consume webhooks salientes de IRIS ni sondea cambios hechos de forma independiente en su interfaz (por ejemplo, cerrar un caso o añadir una nota desde la propia UI de IRIS no se propaga a ningún otro sitio). La integración es **unidireccional** (n8n/orchestrator → IRIS), tal como ya lo documenta `fase6-iris/README.md` en su lista "No implementado" ("Sincronización bidireccional por webhooks"). El texto anterior de esta fila decía "sincronización bidireccional y timeline"; se mantiene esta nota para que quede constancia del cambio.
@@ -254,3 +254,8 @@ instrumento que mida lo mismo por otra vía.
   se enunciaban. Hallazgos A-3, A-4 y A-5 de
   [`docs/AUDITORIA-CIERRE-2026-09-23.md`](./docs/AUDITORIA-CIERRE-2026-09-23.md).
   El texto anterior se conserva en el historial de git.
+
+- **2026-09-24.** Fase 7: dashboard exportado y versionado en
+  `fase7-observabilidad/dashboards/`; la fase deja constancia de que los datos
+  de prueba no son reproducibles desde el repositorio. Hallazgo B-8 de la
+  auditoría de cierre.
