@@ -231,6 +231,11 @@ ambos exit 0.
 3. Etiquetar `glkvm` como `tag:kvm` cuando reconecte, o asumir explícitamente
    que la regla `tag:kvm` de la ACL queda inactiva.
 
+   > **Corrección (2026-09-24).** `glkvm` no reconectará: por la decisión D1
+   > se eliminó el nodo de Headscale (`fase8-kvm/README.md:112-118`). Queda la
+   > segunda opción: la regla `tag:kvm` (`acl.hujson:24`) está inactiva. Vale
+   > también para la acción de `:169-171` de este documento.
+
 ## `git status --porcelain`
 
 ```

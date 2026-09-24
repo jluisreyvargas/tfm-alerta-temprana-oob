@@ -477,7 +477,7 @@ inyección. Un modelo más capaz separaría ambas hipótesis.
 | `OLLAMA_BASE_URL` | `http://ollama:11434` | Solo en modos `llm`/`hybrid` |
 | `OLLAMA_MODEL` | `mistral:7b` | |
 | `OLLAMA_NUM_THREAD` | `8` | Hilos de inferencia. Máximo experimental de la curva sobre esta VM; por encima, el coste de sincronización supera la ganancia de paralelismo. |
-| `OLLAMA_TIMEOUT_SECONDS` | `45` | Timeout duro; agotado, degrada |
+| `OLLAMA_TIMEOUT_SECONDS` | `45` | Timeout duro; agotado, degrada. **Corrección (2026-09-24):** `45` es el valor por defecto de `app/config.py:44`, pero `docker-compose.yml:20` pasa `${OLLAMA_TIMEOUT_SECONDS:-60}`, así que sin la variable en `.env` el contenedor recibe `60`. El valor efectivo en el despliegue no está medido (D-11 de `docs/AUDITORIA-CIERRE-2026-09-23.md`) |
 | `OLLAMA_TEMPERATURE` | `0.1` | El triage no es una tarea creativa |
 | `MAX_SEVERITY_DOWNGRADE` | `1` | Margen del guardrail, en niveles |
 | `OS_URL` / `OS_INDEX` | ver compose | Métricas de Fase 7 |
@@ -578,6 +578,14 @@ docker exec -it n8n sh -c 'wget -qO- --post-file=/dev/stdin \
   < bench/una_alerta.json
 ```
 
+> **Corrección (2026-09-24).** `bench/una_alerta.json` no está en el
+> repositorio: existe en el host del laboratorio, pero `.gitignore` lo excluye
+> (`git ls-files --others --ignored --exclude-standard fase3-agentic/bench`).
+> Quien clone el repositorio solo tiene `corpus_alertas.json`,
+> `corpus_inyeccion.json`, `replay_alerts.py` y `resultados/`
+> (`git ls-files fase3-agentic/bench`). Para reproducir la prueba hay que
+> extraer una alerta de `corpus_alertas.json`.
+
 Comprobaciones esperadas:
 
 - [ ] `analysis_mode` coincide con `TRIAGE_MODE`, o indica degradación explícita.
@@ -593,7 +601,7 @@ Comprobaciones esperadas:
 | Riesgo | Estado |
 |---|---|
 | El saneado no cubre la inyección semántica (contexto falso creíble en el resumen) | Documentado; solo afecta a modos experimentales |
-| Al agotar el timeout, el hilo de inferencia queda huérfano consumiendo CPU hasta que Ollama termina | Documentado; aceptable con 32 vCPU |
+| Al agotar el timeout, el hilo de inferencia queda huérfano consumiendo CPU hasta que Ollama termina | Documentado; aceptable con ~~32~~ 16 vCPU. **Corrección (2026-09-24):** la VM tiene 1 socket × 16 vCPU (`:228`); 32 vCPU era la topología inicial descartada (`:240`). Con 16 vCPU no se ha reevaluado si sigue siendo aceptable |
 | `src_ip_is_private` proviene de n8n | Se valida además localmente con `ipaddress`; el campo externo es señal secundaria |
 | Dependencia de AbuseIPDB / VirusTotal (servicios externos) | Fase 2; degradable, documentado |
 | Sin evaluación de precisión frente a triaje manual de un analista | Fuera del alcance del TFM |
@@ -614,10 +622,18 @@ Comprobaciones esperadas:
 
 ## 🚀 Próximos pasos
 
-1. 🧪 Ejecutar el banco y completar [Resultados](#-resultados).
-2. 🌐 Fase 4 — conectividad OOB de los agentes mediante **Headscale** (sustituye a
+1. ~~🧪 Ejecutar el banco y completar [Resultados](#-resultados).~~
+2. ~~🌐 Fase 4 — conectividad OOB de los agentes mediante **Headscale** (sustituye a
    la propuesta inicial de Cloudflare Tunnels, descartada por dependencia de un
-   tercero externo).
-3. 🦖 Fase 5 — Velociraptor y colección forense dirigida por `recommendation`.
-4. 🗂️ Fase 6 — DFIR-IRIS: creación de caso y volcado de `decision` como registro de
-   trazabilidad del veredicto automatizado.
+   tercero externo).~~
+3. ~~🦖 Fase 5 — Velociraptor y colección forense dirigida por `recommendation`.~~
+4. ~~🗂️ Fase 6 — DFIR-IRIS: creación de caso y volcado de `decision` como registro de
+   trazabilidad del veredicto automatizado.~~
+
+> **Corrección (2026-09-24).** El punto 1 está hecho: la casilla «Ejecución del
+> banco» de «Estado» está marcada y «Resultados» contiene la ejecución del 26
+> de agosto (`bench/resultados/`, versionado). Las fases 4, 5 y 6 están
+> cerradas; ver sus README (`fase4-breakglass-dc/`, `fase5-velociraptor/`,
+> `fase5-orchestrator-api/`, `fase6-iris/`). Esta lista no recoge qué parte de
+> cada punto (por ejemplo, el volcado de `decision` en IRIS) quedó
+> implementada; la sección se conserva como plan original.

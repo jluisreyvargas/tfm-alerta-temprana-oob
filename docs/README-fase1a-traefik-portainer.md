@@ -330,7 +330,7 @@ echo "Portainer disponible en: https://$(hostname -I | awk '{print $1}'):9443"
 - [x] Traefik v3.3 arrancando sin errores ERR en logs
 - [x] Portainer accesible en `https://IP:9443`
 - [x] Puertos 80, 443 y 9443 en escucha
-- [x] Commit en Git con tag `fase1a-ok`
+- [x] Commit en Git ~~con tag `fase1a-ok`~~ — **Corrección (2026-09-24):** la etiqueta `fase1a-ok` no existe. `git tag` lista `fase1-base`, `fase1b`, `fase1c`, `fase1d`, `fase2a` y `fase2bcd`; el commit de esta subfase (`c322dea`, 2026-05-03, «fase1a: fix Traefik v3.3…») no lleva etiqueta
 
 ---
 
@@ -338,6 +338,10 @@ echo "Portainer disponible en: https://$(hostname -I | awk '{print $1}'):9443"
 
 **Fase 1b — Authelia (MFA independiente del AD)**
 Ver: [`docs/fase1b-authelia.md`](./README-fase1b-authelia.md)
+
+> **Corrección (2026-09-24).** El texto del enlace nombra un fichero que no
+> existe. El destino correcto, al que apunta el enlace, es
+> `docs/README-fase1b-authelia.md`.
 
 ---
 

@@ -29,6 +29,10 @@
 **Decide:** Jose Luis Rey
 **Afecta a:** secuenciación de `PLAN-P1-1a-borde-tls.md` (Fase C) y a la Mejora 1 de la Fase 8
 
+> **Corrección (2026-09-24).** `PLAN-P1-1a-borde-tls.md` no está en el
+> repositorio: ni en el árbol ni en el historial de git (`git ls-files`,
+> `git log --all -- '*PLAN-P1-1a*'`, sin resultados).
+
 ---
 
 ## Qué se decide
@@ -64,6 +68,13 @@ Ese control existe y funciona. Simplemente **no se consulta** en `/connect/:devi
 resolución de nombres): la única UI del enclave excluida del SSO es precisamente aquella cuya
 autenticación propia no gobierna el acceso a los dispositivos. Las dos decisiones son
 razonables por separado y su composición no lo es.
+
+> **Corrección (2026-09-24).** «F4» no es una etiqueta que exista en el README
+> de resolución de nombres: la sección «Excepciones» no numera sus entradas
+> (ya señalado en `docs/revision-workflow1-caso-iris-warroom.md:479-482`). La
+> referencia apunta a la subsección «`kvm.oob.local` atraviesa Traefik» de
+> `docs/README-resolucion-nombres.md`, que describe la exclusión del KVM de
+> Authelia y su composición con el P0-6.
 
 ---
 

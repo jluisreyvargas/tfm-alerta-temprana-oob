@@ -3,6 +3,11 @@
 **Fecha:** 2026-09-13
 **Decide:** Jose Luis Rey
 **Afecta a:** `PLAN-P1-1a-borde-tls.md`, secciones 3 y 4 (Fase C, dashboard de Traefik)
+
+> **Corrección (2026-09-24).** `PLAN-P1-1a-borde-tls.md` no está en el
+> repositorio: ni en el árbol ni en el historial de git (`git ls-files`,
+> `git log --all -- '*PLAN-P1-1a*'`, sin resultados). Las secciones citadas no
+> se pueden consultar. Esta decisión se sostiene por su propio texto.
 **Estado del servicio:** publicado en `127.0.0.1:8080`, `api.insecure: true`, sin router
 
 ---

@@ -81,6 +81,13 @@
 - [x] 🔑 Ancla de confianza del enclave en la aplicación, con validación funcional
 - [x] 📜 Bundle TLS saliente: 150 CAs públicas + CA del enclave
 - [x] 🌐 Publicación restringida al tailnet (`100.64.0.1:4833`)
+
+  > **Corrección (2026-09-24).** Desde el commit `c5faa1c` (2026-09-13), IRIS
+  > tiene dos caminos. Los humanos entran por el 443, a través de Traefik
+  > con `secure-headers@file,authelia@file`
+  > (`docker-compose.override.yml:31-40`; regla `iris.oob.local`, `two_factor`,
+  > en `fase1-infraestructura/authelia/configuration.yml:37-39`). n8n usa el
+  > `100.64.0.1:4833` del tailnet (`docs/DECISION-n8n-iris-ruta-directa.md`).
 - [x] 🛡️ MFA obligatorio (TOTP), con cuenta de acceso de emergencia
 - [x] 🔁 Arranque en frío determinista mediante unidad systemd
 - [x] ✅ Script de verificación con 16 comprobaciones de comportamiento
@@ -137,7 +144,7 @@
 |---|---|---|
 | `docker-compose.base.yml` | Upstream | Servicios, volúmenes y redes |
 | `docker-compose.yml` | Upstream, adaptado | Imágenes fijadas en `v2.4.27`, adhesión a `oob-network` |
-| `docker-compose.override.yml` | **Propio** | Puerto restringido al tailnet, bundle TLS, healthcheck, `rabbitmq` fijado |
+| `docker-compose.override.yml` | **Propio** | Puerto restringido al tailnet, bundle TLS, healthcheck, `rabbitmq` fijado. **Corrección (2026-09-24):** también el router `iris` de Traefik con Authelia (`:31-40`, commit `c5faa1c`) |
 | `.env` | Propio, no versionado | Credenciales y parámetros. Plantilla en `.env.example` |
 | `systemd/tfm-fase6-iris.service` | **Propio** | Arranque en frío determinista |
 
@@ -259,6 +266,13 @@ CA del enclave: `fase1-infraestructura/traefik/certs/oob-rootCA.crt`
 ## 🌐 Acceso
 
 `https://iris.oob.local:4833` desde el tailnet, con usuario, contraseña y TOTP.
+
+> **Corrección (2026-09-24).** Desde el commit `c5faa1c`, el acceso de los
+> humanos es `https://iris.oob.local` (443), por Traefik con Authelia
+> (`two_factor`, grupo `ir_lead`), además del TOTP nativo de IRIS.
+> `docs/HALLAZGO-headscale-politica-modo-file.md:82-83` lo verificó desde el
+> navegador del W11. El 4833 del tailnet queda como ruta directa de n8n
+> (`docs/DECISION-n8n-iris-ruta-directa.md`).
 
 Requiere `oob-rootCA.crt` en el almacén de confianza del cliente y que
 `iris.oob.local` resuelva a `100.64.0.1`.
@@ -393,7 +407,11 @@ systemctl is-active tfm-fase6-iris.service    # active
 
 **Pendiente:**
 
-- 🔗 MFA en el borde vía Traefik/Authelia como capa adicional (hoy es nativo de IRIS)
+- ~~🔗 MFA en el borde vía Traefik/Authelia como capa adicional (hoy es nativo de IRIS)~~
+
+  > **Corrección (2026-09-24).** Hecho en el commit `c5faa1c` (2026-09-13):
+  > router `iris` con `authelia@file` (`docker-compose.override.yml:38`) y
+  > regla `two_factor` en `fase1-infraestructura/authelia/configuration.yml:37-39`.
 
 ---
 
@@ -429,7 +447,7 @@ salientes hacia servicios del enclave.
 
 ### Endurecimiento adicional
 
-1. Traefik + Authelia por delante, como capa de borde complementaria al MFA nativo
+1. ~~Traefik + Authelia por delante, como capa de borde complementaria al MFA nativo~~ — **Corrección (2026-09-24):** hecho en `c5faa1c` (`docker-compose.override.yml:31-40`)
 2. Monitorización del estado de los contenedores desde la Fase 7, con prueba negativa
 
 ---

@@ -75,6 +75,10 @@ fase5-orchestrator-api/
 └── README.md
 ```
 
+> **Corrección (2026-09-24).** Faltan dos ficheros versionados
+> (`git ls-files fase5-orchestrator-api`): `velociraptor_client.py`, el cliente
+> gRPC de la Fase 5_4b (`456fbf9`), y `.env.example`.
+
 ---
 
 ## 🔌 Endpoint principal
@@ -211,6 +215,14 @@ networks:
     external: true
 ```
 
+> **Corrección (2026-09-24).** Este extracto ya no es copia literal de
+> `docker-compose.yml`. El puerto está publicado solo en loopback,
+> `127.0.0.1:8020:8000` (`docker-compose.yml:7`; medido el 2026-09-23, ver
+> `docs/MEDICION-postura-red-2026-09-23.md`). Además, el fichero real añade
+> `VELOCIRAPTOR_API_CONFIG` y `VELOCIRAPTOR_DOWNLOADS` (`:21-23`) y los
+> montajes en solo lectura de `api_client.yaml` y del directorio `downloads`
+> de Velociraptor (`:33-40`), todo de la Fase 5_4b.
+
 > [!IMPORTANT]
 > Este servicio debe compartir la red Docker `oob-network` con n8n y MinIO para resolver correctamente los nombres internos de contenedor. La red `single-node_default` le da acceso al indexador de Wazuh para las métricas de la Fase 7.
 
@@ -231,7 +243,7 @@ networks:
 | **Contenedor** | `orchestrator` |
 | **Imagen** | `fase5-orchestrator-api-orchestrator` |
 | **Puerto interno** | `8000/tcp` |
-| **Puerto publicado** | `8020:8000/tcp` |
+| **Puerto publicado** | ~~`8020:8000/tcp`~~ `127.0.0.1:8020:8000/tcp`, solo loopback. **Corrección (2026-09-24):** `docker-compose.yml:7`; medido el 2026-09-23 (`docs/MEDICION-postura-red-2026-09-23.md`) |
 | **Red principal** | `oob-network` |
 | **Red adicional** | `single-node_default` |
 | **Endpoint principal** | `POST /velociraptor/collect` |
@@ -271,7 +283,7 @@ networks:
 2. FastAPI valida el `profile` contra la allowlist.
 3. Se genera un timestamp UTC.
 4. Se construye el objeto `manifest` con los metadatos de la coleccion.
-5. Se calcula el valor `zip_sha256` (actualmente simulado en pruebas).
+5. Se calcula el valor `zip_sha256` ~~(actualmente simulado en pruebas)~~. **Corrección (2026-09-24):** desde `456fbf9` es el hash del ZIP real descargado de Velociraptor (ver la sección de cierre).
 6. Se generan los archivos `manifest.json` y `sha256.txt`.
 7. Ambos se almacenan en el bucket `evidence` en MinIO.
 8. El servicio devuelve una respuesta JSON con estado `queued` y la ubicacion logica de la evidencia.
@@ -311,6 +323,13 @@ curl -X POST http://localhost:8020/velociraptor/collect \
   }'
 ```
 
+> **Corrección (2026-09-24).** Este `curl` no lleva firma HMAC. Con el
+> comportamiento por defecto (`ORCH_REQUIRE_HMAC=true`, `main.py:49`) devuelve
+> `400 Missing signature headers` (`main.py:83`), el caso 1 de
+> `docs/INFORME-P0-4-implementacion.md` (§ casos de prueba, «Sin firma»).
+> Para una petición firmada, ver ese documento. Desde el commit `36d40b2`
+> (P0-4, serie global) el endpoint exige autenticación HMAC.
+
 ### Verificar evidencias en MinIO
 
 ```bash
@@ -338,6 +357,12 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 > - Quitar `s3:DeleteObject` impide el borrado pero **no la sobrescritura**: una clave existente puede reemplazarse sin dejar rastro. Hace falta versionado o bloqueo de objetos en el bucket.
 > - ~~`incidentid` y `host` llegan sin validar en el payload y se usan para construir la clave del objeto: es posible escribir en rutas arbitrarias del bucket.~~ **Corrección (2026-09-21):** cerrado desde el commit `36d40b2` (2026-09-03, P0-4). `CollectRequest` en `main.py:134-135` valida ambos campos con `Field(pattern=r"^[A-Za-z0-9._-]{1,64}$")`, documentado en `docs/INFORME-P0-4-implementacion.md`. Este párrafo describía un riesgo ya cerrado en el momento en que se redactó esta sección; se conserva tachado para dejar constancia.
 > - MinIO publica su API (`0.0.0.0:9000`) y su consola (`0.0.0.0:9001`) sin TLS.
+>
+> **Corrección (2026-09-24).** La consola ya no se publica: el `9001` se
+> retiró en el P1-1a Fase B y se sirve por `https://minio.oob.local` con
+> Authelia (`fase5-velociraptor/docker-compose.yml:40-44`). Medido cerrado el
+> 2026-09-23 (`docs/MEDICION-postura-red-2026-09-23.md` §3). La API sigue en
+> `0.0.0.0:9000` (y `[::]:9000`) sin TLS.
 
 ---
 
@@ -367,6 +392,10 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 ## 🧠 Resultado
 
 Este componente ya cumple el papel de **orquestador tcnico de evidencia** dentro de la Fase 5: recibe la orden, valida el perfil, construye metadatos trazables y los persiste en MinIO, dejando el sistema preparado para una futura integracion completa con Velociraptor Server y DFIR-IRIS.
+
+> **Corrección (2026-09-24).** Esa integración ya existe: recolección real por
+> gRPC desde `456fbf9` (Fase 5_4b) y registro de la evidencia en IRIS desde la
+> Etapa D (2026-09-18, caso IRIS #62). Ver la sección de cierre.
 
 ---
 

@@ -59,6 +59,11 @@ DERP embebido lo resuelve.
 - **`glkvm` sin etiquetar.** Offline desde el 13/07; queda aislado en el
   tailnet al aplicar la ACL. Su acceso principal es la plataforma KVM por red
   cableada, no el tailnet. Etiquetar como `tag:kvm` cuando vuelva a conectar.
+
+  > **Corrección (2026-09-24).** No va a reconectar: por la decisión D1 se
+  > desactivó Tailscale en el dispositivo y se eliminó el nodo `glkvm` de
+  > Headscale (`fase8-kvm/README.md:112-118`). El etiquetado queda obsoleto; las
+  > reglas `tag:kvm` siguen en `acl.hujson:11` y `:24` sin nodo.
 - **Sin monitorización de disponibilidad del tailnet.** `glkvm` estuvo 46 días
   caído sin detección.
 - **El plano de control viaja por la red corporativa.** El control plane de
@@ -137,6 +142,14 @@ Pendientes que quedan de este bloque:
 - **Workflow exportado con `export-workflow.sh`.** Hoy vive solo en el volumen
   de n8n; `$getWorkflowStaticData` (donde se guardan solicitudes y credenciales)
   se pierde si el workflow se reimporta.
+
+  > **Corrección (2026-09-24).** Los dos puntos están hechos. El registro en
+  > IRIS: la auditoría de una aprobación de break-glass escribe eventos en el
+  > caso (`docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md:1316-1320`). El
+  > export: `fase4-breakglass-dc/workflows/fase4d-breakglass.json`, versionado
+  > desde `759f77f` (2026-09-12). El `staticData` sí se vacía en el export
+  > (M-43 del mismo registro), así que lo dicho sobre su pérdida al reimportar
+  > sigue en pie.
 - **El enlace de credencial no es clicable en Rocket.Chat.** Pendiente ajustar
   el formato Markdown del mensaje.
 - **El mensaje de alerta muestra "desde ."**: el template de n8n espera un

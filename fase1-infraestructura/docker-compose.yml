@@ -66,10 +66,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.authelia.rule=Host(`auth.${ENCLAVE_DOMAIN}`)"
-     # → se resuelve a: Host(`auth.local`)
+     # → se resuelve a: Host(`auth.oob.local`) [corrección 2026-09-24; antes decía auth.local]
       - "traefik.http.routers.authelia.entrypoints=websecure"
       - "traefik.http.routers.authelia.tls=true"
-     # SIN certresolver → Traefik usa self-signed automático
+     # SIN certresolver → certificado por defecto de dynamic/tls.yml, CA del enclave [corrección 2026-09-24; antes decía self-signed automático]
       - "traefik.http.services.authelia.loadbalancer.server.port=9091"
 
   mongodb:

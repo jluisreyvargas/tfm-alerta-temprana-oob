@@ -37,9 +37,23 @@ histórico, reemplazados por `README-fase4d-flujo-aprobacion.md`.
 - [x] ✍️ Firma HMAC-SHA256 + anti-replay activa (`AGENT_REQUIRE_HMAC=true`) — **Paso 9**
 - [x] ✅ Flujo 4d: aprobación en Rocket.Chat (`!ir`) → n8n → agente DC, regla de dos personas, entrega de credencial tras MFA, identificador RustDesk resuelto desde el servidor de rendezvous
 - [x] 📡 Auditoría extremo a extremo en el SIEM del propio enclave (reglas `100600`–`100610`)
-- [ ] 🗂️ Callback y registro del caso en DFIR-IRIS (Fase 6)
-- [ ] 💾 Workflow de n8n exportado con `export-workflow.sh` (hoy vive solo en el volumen de n8n)
-- [ ] 🏷️ `glkvm` etiquetado (`tag:kvm`) — offline desde el 13/07, aislado en el tailnet mientras tanto
+- [x] 🗂️ Callback y registro del caso en DFIR-IRIS (Fase 6)
+- [x] 💾 Workflow de n8n exportado con `export-workflow.sh` (hoy vive solo en el volumen de n8n)
+- [ ] ~~🏷️ `glkvm` etiquetado (`tag:kvm`) — offline desde el 13/07, aislado en el tailnet mientras tanto~~
+
+> **Corrección (2026-09-24).**
+> - *IRIS:* marcado. La auditoría de una aprobación de break-glass registra
+>   eventos en el caso IRIS del War Room (eventos 13, 14 y 15 en
+>   `cases_events`, caso 78: `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md:1316-1320`).
+>   «Próximos pasos» de este README ya la daba por completada.
+> - *Workflow exportado:* marcado. `workflows/fase4d-breakglass.json` está
+>   versionado desde el commit `759f77f` (2026-09-12), exportado con
+>   `export-workflow.sh` (`docs/REGISTRO-MEDICIONES…:1375-1384`).
+> - *`glkvm` / `tag:kvm`:* obsoleto, no pendiente. Por la decisión D1 se
+>   desactivó Tailscale en el dispositivo y se eliminó el nodo `glkvm` de
+>   Headscale (`fase8-kvm/README.md:112-118`; `docs/INFORME-AUDITORIA-FASE8.md`,
+>   D1). Las reglas `tag:kvm` siguen en `headscale/config/acl.hujson:11` y
+>   `:24` sin ningún nodo al que aplicarse.
 
 ![Fase 4 · Break-Glass sobre Domain Controllers](../images/TFM_Fase4.png)
 

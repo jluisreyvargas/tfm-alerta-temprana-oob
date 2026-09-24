@@ -30,7 +30,7 @@ providers:
     directory: /etc/traefik/dynamic
     watch: true
 
-# SIN certificatesResolvers — Traefik usará self-signed automáticamente
+# SIN certificatesResolvers — certificado por defecto en dynamic/tls.yml, CA del enclave [corrección 2026-09-24; antes decía self-signed automático]
 
 serversTransport:
   insecureSkipVerify: true

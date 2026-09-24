@@ -135,6 +135,15 @@ En cada equipo de analista, en `/etc/hosts` (Linux/macOS) o
 192.168.0.36    glkvm-device.oob.local
 ```
 
+> **Corrección (2026-09-24).** `192.168.0.70` y `192.168.127.138` son el mismo
+> host, en dos interfaces: `ens33` (`192.168.0.70/24`, LAN del KVM) y `ens34`
+> (`192.168.127.138/24`, red del laboratorio donde escucha Traefik). Medido el
+> 2026-09-24; ver `docs/MEDICION-postura-red-2026-09-23.md` §1. Este bloque
+> vale para un equipo en `192.168.0.0/24`. El W11, en la red del laboratorio,
+> declara `kvm.oob.local` → `192.168.127.138` (`docs/resolucion-nombres.tsv`,
+> `docs/README-resolucion-nombres.md`). Las dos entradas llegan al mismo
+> Traefik por interfaces distintas.
+
 El certificado del dispositivo incluye `DNS:glkvm-device.oob.local` e
 `IP:192.168.0.36` en sus SAN, de modo que ambas formas validan contra la CA del
 enclave. Se prefiere el nombre: la IP es frágil ante cambios de red y obliga a
@@ -335,7 +344,7 @@ Con fecha de revisión en la defensa del TFM.
 | Autenticación del nivel 2 fuera de Authelia | La vía de último recurso no puede depender del SSO del enclave | Credencial en custodia fuera de línea; acceso sólo desde LAN |
 | Sin segundo factor en el dispositivo (`totp.secret` vacío) | Ídem | Ídem |
 | Acciones del nivel 2 sin registro en IRIS | El dispositivo no tiene integración | Registro manual obligatorio en el caso IRIS |
-| Canal rtty cifrado sin validar certificado | Requiere modificar el firmware | Segmento LAN aislado; pendiente de corrección |
+| ~~Canal rtty cifrado sin validar certificado~~ | ~~Requiere modificar el firmware~~ | ~~Segmento LAN aislado; pendiente de corrección~~ **Corrección (2026-09-24):** resuelto por la mejora 2 (`-C` con `oob-rootCA`, con prueba negativa; `docs/mejora2-tls-canal-rtty.md:3` y la casilla de este mismo README en «Mejoras previstas») |
 | Certificado ligado a IP | Necesario para acceso directo | IP fija/reserva DHCP documentada |
 
 ---

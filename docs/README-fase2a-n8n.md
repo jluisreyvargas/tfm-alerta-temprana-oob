@@ -103,3 +103,7 @@ n8n Webhook Node ← Fase 2b
 - **Fase 2c:** Workflow n8n — recepción y filtrado de alertas
 - **Fase 2d:** Integración con Rocket.Chat
 - **Fase 2e:** Playbooks de respuesta activa + tag fase2-orquestador
+
+> **Corrección (2026-09-24).** La etiqueta `fase2-orquestador` no se llegó a
+> crear. Las de la Fase 2 son `fase2a` (commit `60b3611`) y `fase2bcd`
+> (`git tag`).

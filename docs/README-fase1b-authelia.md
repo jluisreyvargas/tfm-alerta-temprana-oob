@@ -91,6 +91,12 @@ notifier:
 > - **`access_control.rules[0].subject`**: era `'group:irlead'`; el valor real es `'group:ir_lead'` (con guión bajo), igual que en `users_database.yml` — ver la nota de corrección más abajo.
 > - **`session.cookies[0].default_redirection_url`**: era `https://portainer.oob.local`; el valor real es `https://chat.oob.local`. Tiene sentido: Portainer nunca estuvo detrás de Authelia, así que redirigir ahí tras autenticarse no encajaba con el único servicio protegido. Ver también la nota en "Error 4" más abajo.
 
+> **Corrección (2026-09-24).** La nota anterior describe esta fase. Hoy la
+> política no protege solo Rocket.Chat: `fase1-infraestructura/authelia/configuration.yml:20-50`
+> tiene reglas `two_factor` para `chat`, `minio`, `wazuh`, `hs`, `misp`, `iris`,
+> `portainer` y `n8n` (commits `6b1197e`, `4de838e`, `c5faa1c` y `655162f`).
+> Portainer está detrás de Authelia desde `4de838e` (2026-09-11).
+
 ### `authelia/users_database.yml`
 
 ```yaml
@@ -176,6 +182,11 @@ AUTHELIA_STORAGE_ENCRYPTION_KEY=<hex-32-bytes>
 
 > [!NOTE]
 > **Corrección.** El valor final desplegado es `https://chat.oob.local`, no `https://portainer.oob.local`: Portainer nunca quedó detrás de Authelia (ver `fase1-infraestructura/README.md`), así que no tenía sentido como destino tras un login que solo protege Rocket.Chat.
+>
+> **Corrección (2026-09-24).** «Nunca» valía para esta fase. Portainer está
+> detrás de Authelia desde el commit `4de838e` (2026-09-11):
+> `fase1-infraestructura/docker-compose.yml:49` y regla `portainer.oob.local`
+> en `configuration.yml:40-42`.
 
 ### Error 5 — WebAuthn no disponible en `https://auth.oob.local`
 **Causa:** WebAuthn requiere contexto seguro: HTTPS con certificado válido o `localhost` exacto. Los certificados self-signed no son aceptados por los navegadores para WebAuthn.  

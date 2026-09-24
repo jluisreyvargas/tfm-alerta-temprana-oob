@@ -224,7 +224,7 @@ serversTransport:
 
 | Tag | Descripción |
 |-----|-------------|
-| `fase1a` | Traefik v3.3 + Portainer operativos |
+| ~~`fase1a`~~ | Traefik v3.3 + Portainer operativos. **Corrección (2026-09-24):** esta etiqueta no existe (`git tag`); el commit de la subfase es `c322dea` (2026-05-03), sin etiqueta |
 | `fase1b` | Authelia v4.39.19 MFA/IdP operativo |
 | `fase1c` | MongoDB 8.0 + Rocket.Chat 8.4.1 operativos |
 | `fase1d` | Wazuh 4.14.0 single-node operativo |

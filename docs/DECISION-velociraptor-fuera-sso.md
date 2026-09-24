@@ -3,6 +3,11 @@
 **Fecha:** 2026-09-13
 **Decide:** Jose Luis Rey
 **Afecta a:** `PLAN-P1-1a-borde-tls.md`, sección 3 (tabla de política por servicio)
+
+> **Corrección (2026-09-24).** `PLAN-P1-1a-borde-tls.md` no está en el
+> repositorio: ni en el árbol ni en el historial de git (`git ls-files`,
+> `git log --all -- '*PLAN-P1-1a*'`, sin resultados). La tabla citada no se
+> puede consultar. Esta decisión se sostiene por su propio texto.
 **Estado del servicio:** detrás de Traefik, con `secure-headers@file`, sin `authelia@file`
 
 ---

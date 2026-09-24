@@ -7,6 +7,12 @@ el `README.md` raíz habla de «ocho casos registrados» y remite a
 `docs/api-reconocimiento-fase8.md` §1, que enumera cinco. Este documento
 sustituye esa cifra por una lista trazable caso a caso.
 
+> **Referencias `fichero:línea` ancladas al commit `3f26c07`.** Las citas se
+> validaron contra el árbol de ese commit. Las notas añadidas después en varios
+> documentos desplazan números de línea; para ver cada cita tal como se
+> comprobó: `git show 3f26c07:<fichero>`. La fila B1 se actualizó después para
+> citar M-46 (`77e4d1c`).
+
 ---
 
 ## 1. Criterio

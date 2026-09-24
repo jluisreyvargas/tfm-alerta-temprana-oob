@@ -22,11 +22,16 @@
 | 7. Planos de control externos | ✅ Cortados y verificados tras reinicio |
 | 8. Historial de git | ✅ Sin acción necesaria — ver §7 |
 | 9.1 Sonda de capacidad | ✅ Implementada y validada en 4 casos |
-| 9.2 Prueba funcional mensual | ⏳ Pendiente de procedimentar |
-| 9.3 Reescritura del README | ⏳ Pendiente |
+| 9.2 Prueba funcional mensual | ~~⏳ Pendiente de procedimentar~~ ✅ Procedimentada y ejecutada el 11 sep (`docs/mejora5-prueba-mensual-resiliencia.md:3-4`) |
+| 9.3 Reescritura del README | ~~⏳ Pendiente~~ ✅ Hecha (commit `644edf8`, 2026-09-05) |
 | Certificado del dispositivo desde `oob-rootCA` | ✅ Instalado y persistente |
-| Validación TLS del canal rtty (`-C`) | ⏳ Bloque separado |
-| Trazabilidad del operador | ⏳ Pendiente |
+| Validación TLS del canal rtty (`-C`) | ~~⏳ Bloque separado~~ ✅ Mejora 2, con prueba negativa (`docs/mejora2-tls-canal-rtty.md:3`) |
+| Trazabilidad del operador | ~~⏳ Pendiente~~ ✅ Mejora 3, con cuentas nominales (`docs/mejora3-trazabilidad-operador.md:3`) |
+
+> **Corrección (2026-09-24).** Las cuatro filas tachadas describían el estado
+> al cerrar esta sesión (4-5 sep). Se resolvieron después; lo vigente está en
+> `fase8-kvm/README.md` («Mejoras previstas», estado a 11 sep) y en los
+> documentos de mejora citados. §6 de este informe conserva el plan original.
 
 **Resultado: el GL-RM1 volvió a estar en línea tras 54 días**, por ruta LAN, sin dependencia de Headscale ni de la nube del fabricante, con certificado del enclave, vídeo funcional y monitorización verificada.
 
@@ -292,6 +297,15 @@ Programada cada 5 minutos en el crontab del usuario (sin `sudo`: la BD ya no se 
 ---
 
 ## 6. Pendiente
+
+> **Corrección (2026-09-24).** Estado posterior de los cuatro puntos de esta
+> sección: P1-3 (de este informe) cerrado por la mejora 2
+> (`docs/mejora2-tls-canal-rtty.md`); P1-4 (de este informe) por la mejora 3,
+> con cuentas nominales y no con PROXY protocol
+> (`docs/mejora3-trazabilidad-operador.md`); la prueba mensual (9.2), por la
+> mejora 5, que además sustituyó el criterio de «Headscale detenido»
+> (`docs/mejora5-prueba-mensual-resiliencia.md`); la reescritura del README
+> (9.3), en el commit `644edf8`. Se conserva el texto como plan original.
 
 **Validación TLS del canal rtty (P1-3).** Colocar `oob-rootCA` en ruta persistente del dispositivo, añadir `-C <ruta>` al heredoc de `S01selfCloud`, y emitir el certificado de rttys con SAN para `192.168.0.70`. Se mantiene separado porque mezclarlo con la reconexión juntaba dos cambios con modos de fallo distintos.
 

@@ -440,7 +440,7 @@ de triaje.
 | ~~Firma HMAC~~ | ✅ **Resuelto (Paso 9).** `AGENT_REQUIRE_HMAC=true`; el orquestador n8n firma. Validación en 3.3 |
 | ~~Fase 4d~~ | ✅ **Resuelto.** Flujo de aprobación de dos personas — ver [`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md) |
 | Cuenta de servicio | `LocalSystem`; procedería una gMSA con derechos delegados sobre la OU objetivo |
-| Verificación de integridad | Firma Authenticode de los scripts previa a su invocación |
+| Verificación de integridad | ~~Firma Authenticode de los scripts previa a su invocación~~ **Corrección (2026-09-24):** evaluado y descartado; lo cubre en parte la ACL de directorios. Ver `README-fase4-pendientes.md` («Firma Authenticode de los scripts de respuesta») y `fase4-breakglass-dc/README.md` (fila «Integridad de scripts (Authenticode)») |
 
 ---
 

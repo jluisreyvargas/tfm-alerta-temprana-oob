@@ -28,6 +28,9 @@ openssl rand -hex 32
 
 # Editar docker-compose.yml y sustituir N8N_ENCRYPTION_KEY
 # con el valor generado arriba
+# Corrección (2026-09-24): ya no se edita el compose. docker-compose.yml:6-7
+# carga las variables con env_file: .env; la clave va en fase2-orquestador/n8n/.env,
+# que no está versionado. No existe .env.example en este directorio.
 
 # Levantar el servicio
 docker compose up -d
@@ -54,6 +57,10 @@ n8n/
 ├── docker-compose.yml # Definición del servicio
 └── README.md # Este archivo
 
+> **Corrección (2026-09-24).** También están versionados `export-workflow.sh`,
+> `certs/misp.crt`, `certs/oob-rootCA.crt` y `workflows/wazuh-alert-handler.json`
+> (`git ls-files fase2-orquestador/n8n`).
+
 ## Volúmenes
 
 | Volumen | Destino en contenedor | Contenido |
@@ -69,14 +76,29 @@ n8n Webhook → Filtrado por severidad
 ├──▶ Rocket.Chat #alertas (notificación)
 └──▶ Respuesta activa (bloqueo IP, etc.)
 
+> **Corrección (2026-09-24).** El flujo vigente no publica en `#alertas`. Si
+> la alerta escala, abre un War Room privado `#inc-*` y deja un aviso sin
+> indicadores en `#general`; si no escala, publica la alerta completa en
+> `#general` (`fase2-orquestador/README.md`, diagrama del enrutado y casilla
+> «War Room privado por incidente con anuncio en `#general`»). Los avisos de
+> postura van a su propio canal (`#alertas-cve`,
+> `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md:927-931`).
+
 
 ## Workflows implementados
 
 | Workflow | Estado | Fase |
 |----------|--------|------|
-| Recepción alertas Wazuh | ⏳ Pendiente | 2b/2c |
-| Notificación Rocket.Chat | ⏳ Pendiente | 2d |
+| Recepción alertas Wazuh | ~~⏳ Pendiente~~ ✅ | 2b/2c |
+| Notificación Rocket.Chat | ~~⏳ Pendiente~~ ✅ | 2d |
 | Playbook bloqueo de IP | ⏳ Pendiente | 2e |
+
+> **Corrección (2026-09-24).** La recepción y la notificación están hechas: el
+> workflow versionado es `workflows/wazuh-alert-handler.json`, y
+> `fase2-orquestador/README.md` («Estado») marca integración, firma HMAC,
+> normalización, enriquecimiento, triage y War Room. El playbook de bloqueo de
+> IP no se modifica: el README de la fase no documenta ningún playbook de ese
+> tipo, así que su estado no consta.
 
 ## Seguridad
 

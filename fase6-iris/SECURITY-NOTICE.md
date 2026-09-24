@@ -192,6 +192,13 @@ IPv6 heredado. El acceso desde `192.168.127.0/24` queda cortado.
 Pendiente: MFA en el borde, sea el nativo de IRIS (TOTP/WebAuthn) o Authelia por
 delante.
 
+> **Corrección (2026-09-24).** Resuelto por las dos vías: MFA nativo
+> obligatorio (P1-9 de `docs/INFORME-AUDITORIA-FASE6.md`) y, desde el commit
+> `c5faa1c` (2026-09-13), Traefik con Authelia por delante en el 443
+> (`docker-compose.override.yml:31-40`; `fase1-infraestructura/authelia/configuration.yml:37-39`).
+> El 4833 sigue publicado solo en el tailnet, para n8n
+> (`docs/DECISION-n8n-iris-ruta-directa.md`).
+
 ---
 
 # Lección

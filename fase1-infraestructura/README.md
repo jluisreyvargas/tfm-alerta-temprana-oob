@@ -21,8 +21,17 @@
 - [x] 🌐 Redes Docker segmentadas (`oob-network` y `fase1-internal`)
 - [x] 🔒 Rocket.Chat protegido tras Authelia con doble factor
 - [x] 🏛️ CA propia del enclave sirviendo el certificado de Traefik (`*.oob.local`)
-- [ ] 🔗 Extensión del middleware de autenticación al resto de servicios
+- [x] 🔗 Extensión del middleware de autenticación al resto de servicios
 - [ ] 🔏 Certificados emitidos por la CA del enclave para los backends (Wazuh, MISP...)
+
+> **Corrección (2026-09-24).** Casilla marcada. `authelia/configuration.yml:20-50`
+> tiene reglas `two_factor` para `chat`, `minio`, `wazuh`, `hs`, `misp`, `iris`,
+> `portainer` y `n8n`. n8n está protegido entero desde el commit `655162f`; el
+> resto se añadió en los commits `6b1197e`, `4de838e` y `c5faa1c` (10-13 sep).
+> Velociraptor queda fuera por decisión (`docs/DECISION-velociraptor-fuera-sso.md`).
+> Medido sin sesión el 2026-09-24 (`302` hacia `auth.oob.local`) solo en `chat` y
+> `n8n`; el resto consta por configuración. Ver
+> `docs/MEDICION-postura-red-2026-09-23.md` §5.
 
 ---
 
@@ -55,6 +64,14 @@ flowchart TB
   U -->|"https://host:9443"| PT
 ```
 
+> **Corrección (2026-09-24).** El diagrama describe la publicación inicial.
+> Hoy el `:8080` de Traefik y el `:9443` de Portainer solo escuchan en
+> `127.0.0.1` (`docker-compose.yml:20` y `:37`), y Portainer se sirve en
+> `https://portainer.oob.local` con Authelia (`docker-compose.yml:49`). El
+> `:4443` de Wazuh está cerrado (`wazuh/single-node/docker-compose.yml:78-81`):
+> el dashboard se sirve en `https://wazuh.oob.local` con Authelia. Medido el
+> 2026-09-23; ver `docs/MEDICION-postura-red-2026-09-23.md`.
+
 > [!IMPORTANT]
 > **Principio fundamental:** arquitectura Out-of-Band. Los servicios se ejecutan sobre infraestructura bajo control del operador y la autenticación no depende del Directorio Activo corporativo. Un compromiso del AD no impide a los analistas acceder al enclave.
 
@@ -79,6 +96,13 @@ MongoDB **no** está conectado a `oob-network`: solo Rocket.Chat, que pertenece 
 | 🗄️ **MongoDB** | `mongo:8.0` | Solo red interna | Keyfile + usuario root |
 | 🧭 **Portainer** | `portainer/portainer-ce:latest` | `https://<HOST>:9443` | Propia de Portainer |
 | 🛡️ **Wazuh** | `wazuh/wazuh-*:4.14.0` | Dashboard en `:4443`; API en `:55000` | Propia de Wazuh |
+
+> **Corrección (2026-09-24).** Dashboard de Traefik: solo `127.0.0.1:8080`
+> (`docker-compose.yml:20`). Portainer: `127.0.0.1:9443` y
+> `https://portainer.oob.local` con Authelia (`docker-compose.yml:37`, `:49`).
+> Wazuh: el `:4443` ya no se publica; el dashboard está en
+> `https://wazuh.oob.local`, con Authelia (`wazuh/single-node/docker-compose.yml:78-81`,
+> `:116`). Medido el 2026-09-23; ver `docs/MEDICION-postura-red-2026-09-23.md`.
 
 > **Nota de reproducibilidad:** Authelia y Portainer usan la etiqueta `latest`. Está pendiente anclarlas a una versión concreta.
 
@@ -160,6 +184,11 @@ access_control:
 ```
 
 La política por defecto es **denegar**. Solo los usuarios del grupo `ir_lead` acceden a Rocket.Chat, y siempre con doble factor.
+
+> **Corrección (2026-09-24).** El extracto muestra la regla inicial. La
+> configuración vigente (`authelia/configuration.yml:20-50`) aplica la misma
+> política (`group:ir_lead`, `two_factor`) a `chat`, `minio`, `wazuh`, `hs`,
+> `misp`, `iris`, `portainer` y `n8n`.
 
 ### Cableado del middleware
 
@@ -244,6 +273,17 @@ Accediendo directamente a `https://auth.oob.local`, tras autenticarse el destino
 | Traefik dashboard | `http://<HOST>:8080` | ❌ No |
 | Wazuh dashboard | `https://<HOST>:4443` | ❌ No |
 
+> **Corrección (2026-09-24).** Estado actual:
+>
+> | Servicio | URL | Protegido por Authelia |
+> | --- | --- | --- |
+> | Portainer | `https://portainer.oob.local` (el `:9443` solo en `127.0.0.1`) | ✅ Sí, por configuración (`docker-compose.yml:49`) |
+> | Traefik dashboard | `http://127.0.0.1:8080`, solo desde el host | ❌ No (`docs/DECISION-dashboard-traefik.md`) |
+> | Wazuh dashboard | `https://wazuh.oob.local` (`:4443` cerrado) | ✅ Sí, por configuración (`wazuh/single-node/docker-compose.yml:116`) |
+>
+> Puertos medidos el 2026-09-23. La redirección a Authelia de Portainer y Wazuh
+> no se ha medido (D-6). Ver `docs/MEDICION-postura-red-2026-09-23.md`.
+
 Ni Rocket.Chat ni Authelia publican puertos en el host: solo son accesibles a través de Traefik por nombre de dominio.
 
 ---
@@ -269,13 +309,20 @@ Las siguientes decisiones se apartan de la configuración recomendada para produ
 | **Verificación TLS de backend desactivada** (`serversTransport.insecureSkipVerify: true`) | La CA propia del enclave (`generate-oob-ca.sh`) ya emite el certificado que Traefik presenta a los clientes (`*.oob.local`), pero los backends —en particular el dashboard de Wazuh, cuyos certificados genera el propio indexer— siguen presentando certificados autofirmados no emitidos por esa CA. Con verificación activa, Traefik rechazaría esas conexiones internas. | Emitir certificados para cada backend desde la CA del enclave y retirar la excepción global, acotándola como mucho al transporte nombrado de Wazuh mientras dure la migración. |
 | **Dashboard de Traefik sin autenticación** (`api.insecure: true`, puerto 8080) | Acceso directo al estado de routers y servicios durante el desarrollo del laboratorio, sin depender de que la cadena de autenticación esté operativa. | Enrutar el dashboard a través de Traefik con el middleware de Authelia, o deshabilitar la publicación del puerto. |
 | **Portainer publicado directamente en `:9443`** | Mantener una herramienta de diagnóstico de contenedores accesible aunque Traefik o Authelia fallen. Un fallo en la cadena de autenticación no debe impedir el diagnóstico de la propia infraestructura. | Enrutar por Traefik con Authelia, manteniendo un procedimiento documentado de acceso de emergencia. |
+
+> **Corrección (2026-09-24).** Las dos filas anteriores describen la
+> publicación inicial. El 8080 (con `api.insecure` todavía activo) y el 9443
+> solo escuchan en `127.0.0.1` (`docker-compose.yml:20`, `:37`; medido el
+> 2026-09-23, ver `docs/MEDICION-postura-red-2026-09-23.md`). Portainer además
+> se enruta por Traefik con Authelia (commit `4de838e`). La decisión sobre el
+> dashboard está en `docs/DECISION-dashboard-traefik.md`.
 | **Montaje de `docker.sock`** en Traefik y Portainer | Traefik lo requiere para el descubrimiento dinámico de servicios y Portainer para su función. Está montado en solo lectura. | Interponer un proxy de socket Docker que limite las operaciones permitidas. El montaje en solo lectura no impide la escalada a root del host. |
 
 ### Deuda técnica identificada
 
-- **`authelia/users_database.yml` está versionado** pese a figurar en `.gitignore`, ya que la regla no afecta a ficheros previamente añadidos al índice. Debe retirarse con `git rm --cached` y sustituirse por un fichero de ejemplo.
+- ~~**`authelia/users_database.yml` está versionado** pese a figurar en `.gitignore`, ya que la regla no afecta a ficheros previamente añadidos al índice. Debe retirarse con `git rm --cached` y sustituirse por un fichero de ejemplo.~~ **Corrección (2026-09-24):** ya no está versionado. Se retiró del índice en el commit `4417467` (2026-08-20) y `git ls-files fase1-infraestructura/authelia/` no lo lista. El fichero de ejemplo sigue sin existir.
 - ~~**Contraseña de MongoDB incrustada** en el `healthcheck` del `docker-compose.yml`. Debe sustituirse por una referencia a variable de entorno.~~ **Resuelto (2026-09-23):** el healthcheck usa `${MONGO_INITDB_ROOT_PASSWORD}`, verificado con `healthy` tras recrear; credencial rotada. Ver `docs/HALLAZGO-credencial-mongodb-2026-09-23.md`.
-- **Middleware `secure-headers` definido pero no aplicado.** Contiene además la directiva `sslRedirect`, obsoleta en Traefik v3.
+- ~~**Middleware `secure-headers` definido pero no aplicado.**~~ Contiene además la directiva `sslRedirect`, obsoleta en Traefik v3. **Corrección (2026-09-24):** sí está aplicado, en Portainer (`docker-compose.yml:49`) y en los routers de Wazuh, MinIO, Velociraptor, MISP, IRIS, Headscale UI y KVM (`git grep secure-headers@file`). La directiva `sslRedirect` sigue en `traefik/dynamic/middlewares.yml:5`.
 - **Etiquetas `latest`** en Authelia y Portainer.
 
 ---

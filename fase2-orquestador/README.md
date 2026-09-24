@@ -170,6 +170,9 @@ Requisitos en el entorno de n8n:
       - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 ```
 
+> **Corrección (2026-09-24).** El compose real permite dos módulos, no uno:
+> `NODE_FUNCTION_ALLOW_BUILTIN=crypto,fs` (`n8n/docker-compose.yml:15`).
+
 Y **Raw Body activado** en el nodo `Webhook`: el script firma los bytes exactos que envía; firmar sobre una reserialización alteraría separadores y orden de claves.
 
 > **Nota (2026-09-24).** El verificador de n8n solo firma sobre los bytes recibidos desde el commit `9d69042` (2026-09-23). Hasta entonces, pese a `rawBody: true`, reserializaba el cuerpo ya parseado con `JSON.stringify`, y toda alerta con caracteres no ASCII fallaba la verificación y se descartaba: 51 rechazos registrados entre el 11-09 y el 23-09, con el emisor anotando cada entrega como `HTTP 200`. Ver M-46 en `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md`.
@@ -344,6 +347,14 @@ Hardware: **32 vCPU, sin GPU**. Medidas indicativas sobre la misma alerta.
 | ⚡ `deterministic` | **~3 s** (dominado por las llamadas CTI) |
 | 🔀 `hybrid` (mistral:7b) | **~50 s** |
 
+> **Corrección (2026-09-24).** El hardware no coincide con la medición de la
+> Fase 3. `fase3-agentic/README.md:228` fija la ejecución del banco (26 de
+> agosto) en **1 socket × 16 vCPU**. La topología de 32 vCPU (8 × 4) fue la
+> inicial y se descartó por su rendimiento (`fase3-agentic/README.md:240`).
+> Allí la latencia p50 de `hybrid` es **56,5 s** (`:422`), no ~50 s. Esta tabla
+> se conserva como medida indicativa anterior; la de referencia es la de la
+> Fase 3.
+
 > [!WARNING]
 > Bajo carga concurrente el modo LLM no solo es lento sino **impredecible**: con `OLLAMA_NUM_PARALLEL=1` las peticiones se encolan y la latencia crece de forma acumulativa. En un SOC donde las alertas llegan en ráfagas, eso lo descarta del camino crítico.
 
@@ -436,6 +447,13 @@ docker cp workflows/wazuh-alert-handler.json n8n:/tmp/w.json
 docker exec n8n n8n import:workflow --input=/tmp/w.json
 docker restart n8n
 ```
+
+> **Corrección (2026-09-24).** El paso 3️⃣ no se puede ejecutar tal cual:
+> `fase2-orquestador/n8n/.env.example` no existe y nunca se ha versionado
+> (`git ls-files fase2-orquestador/n8n`; `git log --all -- fase2-orquestador/n8n/.env.example`,
+> sin resultados). El `.env` de n8n hay que crearlo a mano, con al menos las
+> dos variables del comentario. La plantilla de `fase3-agentic/.env.example`
+> del paso 2️⃣ sí existe.
 
 > [!CAUTION]
 > Tras importar el workflow hay que **reasignar las credenciales a mano**: el export de n8n conserva referencias por ID, y los identificadores se regeneran en cada instancia.
@@ -557,6 +575,12 @@ fase2-orquestador/
     ├── 🔑 n8n-integration.conf.example
     └── 📄 ossec-integration.xml
 ```
+
+> **Corrección (2026-09-24).** `n8n/.env.example` no existe en el
+> repositorio y nunca se ha versionado. Los ficheros versionados de `n8n/` son
+> `README.md`, `docker-compose.yml`, `export-workflow.sh`, `certs/misp.crt`,
+> `certs/oob-rootCA.crt` y `workflows/wazuh-alert-handler.json`
+> (`git ls-files fase2-orquestador/n8n`).
 
 ---
 

@@ -1,6 +1,13 @@
 # Fase 8 · Mejora 1 — Hook de autorización y flujo de aprobación
 
 **Estado:** diseño cerrado, pendiente de construcción.
+
+> **Corrección (2026-09-24).** El hook está construido, activo y verificado
+> (commit `a214052`, 2026-09-11; `docs/cierre-mejora1-hook.md:3-5`). La
+> aprobación de segunda persona, que este diseño daba por no construida, se
+> construyó después (commit `f2b9399`, 2026-09-13), según
+> `fase8-kvm/README.md` («Mejoras previstas»), pendiente de acreditación por
+> comportamiento.
 **Origen:** el README lo planteaba como "flujo de solicitud de sesión con
 aprobación, tipo RustDesk de Fase 4". El reconocimiento
 (`docs/api-reconocimiento-fase8.md`) cambió su naturaleza: el hook es la única

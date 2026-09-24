@@ -25,13 +25,22 @@ De ahí, dos reglas:
    IP del tailnet (`100.64.0.0/10`), que está reservada para el rendezvous de
    RustDesk y gobernada por la ACL de Headscale.
 
+> **Corrección (2026-09-24).** El host del enclave tiene dos interfaces
+> físicas, además de la del tailnet: `ens34` con `192.168.127.138/24`, la red
+> del laboratorio donde escucha Traefik y a la que se refiere este documento,
+> y `ens33` con `192.168.0.70/24`, la LAN del KVM, donde publica
+> `glkvm_cloud`. `tailscale0` tiene `100.64.0.1/32`. Medido el 2026-09-24; ver
+> `docs/MEDICION-postura-red-2026-09-23.md` §1. Por eso `fase8-kvm/README.md`
+> usa `192.168.0.70` para el KVM y este documento `192.168.127.138`: las dos
+> son del mismo host. Ninguna IP de este documento cambia.
+
 ## Dos mecanismos de resolución
 
 El enclave resuelve nombres por dos vías independientes:
 
 | Mecanismo | Qué resuelve | Verificado por |
 |---|---|---|
-| MagicDNS de Headscale | Nombres de **nodo** del tailnet (`dc01-tfm`, `analyst-w11`, `glkvm`, `orchestrator-tfm`) bajo `tailnet.internal` | Headscale; solo alcanza a los nodos del tailnet |
+| MagicDNS de Headscale | Nombres de **nodo** del tailnet (`dc01-tfm`, `analyst-w11`, ~~`glkvm`~~, `orchestrator-tfm`) bajo `tailnet.internal`. **Corrección (2026-09-24):** `glkvm` ya no es nodo; se eliminó de Headscale por la decisión D1 (`fase8-kvm/README.md:112-118`) | Headscale; solo alcanza a los nodos del tailnet |
 | Ficheros `hosts` | Nombres de **servicio** `*.oob.local` y alias `.local` | `scripts/verify-hosts.sh` |
 
 Consecuencias:
@@ -108,6 +117,13 @@ El puesto de analista (`w11`) **no** resuelve `traefik`, `portainer`, `wazuh` ni
 `misp`: son superficies de operador y de infraestructura, no de análisis
 (regla 1).
 
+> **Corrección (2026-09-24).** `misp` ya no está en esta lista. La tabla
+> anterior declara `w11 misp.oob.local 192.168.127.138` («Única ruta a la UI
+> de MISP tras el cierre del :12443»), igual que `docs/resolucion-nombres.tsv:47`.
+> La fila se añadió en la sesión de
+> `docs/REGISTRO-HALLAZGOS-P1-1a-FaseC-2026-09-12.md:16`. El W11 no resuelve
+> `traefik`, `portainer` ni `wazuh`.
+
 ## Excepciones
 
 ### `hs.oob.local` en el DC01
@@ -157,6 +173,13 @@ declaran en el puesto de analista. Es una decisión, no una omisión:
   pila de contenedores se hace desde el Ubuntu.
 - `wazuh` y `misp` no se consultan desde el puesto: son superficies de operador y
   de infraestructura, no de análisis (regla 1).
+
+> **Corrección (2026-09-24).** La decisión sobre `misp` se revisó: desde la
+> sesión del 2026-09-12 (`docs/REGISTRO-HALLAZGOS-P1-1a-FaseC-2026-09-12.md:16`),
+> el W11 sí declara `misp.oob.local` (tabla de «Estado declarado» y
+> `resolucion-nombres.tsv:47`). Es el procedimiento que describe el párrafo
+> siguiente: se añadió la fila, no se reabrió el puerto. La sección vale para
+> `traefik`, `portainer` y `wazuh`.
 
 **Consecuencia aceptada.** Tras la Fase D del P1-1a, que retira los puertos directos `:4443`
 y `:12443`, el panel del SIEM y MISP solo serán alcanzables desde el Ubuntu. Si un incidente

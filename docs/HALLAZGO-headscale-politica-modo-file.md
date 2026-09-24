@@ -193,6 +193,17 @@ RustDesk— las eliminó. Y `policy check` devuelve `Policy is valid` igual con
 pruebas que sin ellas, así que la pérdida no produjo ninguna señal: el control
 automático sobre la ACL desapareció justo cuando la ACL se volvió más compleja.
 
+> **Corrección (2026-09-24).** Esta sección tiene la historia al revés. El
+> bloque `tests:` se retiró **deliberadamente** en el commit `0b16f18`
+> (2026-08-28, no el 30), porque la versión desplegada, `headscale:0.28.0`, no lo
+> admite; el comentario de `fase4-breakglass-dc/headscale/config/acl.hujson` lo
+> recoge. Con ese bloque presente, Headscale arrancaba **sin política, en
+> allow-all** (`docs/README-fase4-validacion.md`, caso B14 de
+> `docs/CATALOGO-fallos-silenciosos.md`). No se perdió un control: se retiró la
+> causa de un fallo silencioso. **La propuesta de recuperar las pruebas que sigue
+> reintroduciría ese fallo** mientras la versión de Headscale sea la 0.28; las
+> pruebas de política tendrían que ejecutarse fuera de la ACL desplegada.
+
 Propuesta para recuperarlas, ampliada con lo decidido hoy:
 
 ```

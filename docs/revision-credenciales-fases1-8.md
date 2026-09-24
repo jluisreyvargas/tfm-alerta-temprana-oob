@@ -183,6 +183,15 @@ reconocimiento de Fase 8 aplica: valores vacíos **y** validación en la carga �
 sin la segunda mitad, el vacío sólo aplaza el problema hasta el punto de uso.
 Vaciar esos campos es trabajo de cinco minutos.
 
+> **Corrección (2026-09-24).** Hecho en el commit `d64d2d5` (2026-09-11): las
+> cinco variables sensibles de `fase1-infraestructura/.env.example`
+> (`ROCKETCHAT_ADMIN_PASS`, `MONGO_INITDB_ROOT_PASSWORD` y los tres secretos de
+> Authelia) están vacías (`:6`, `:9`, `:14-16`). El commit justifica que
+> Authelia no arranca con los secretos vacíos. No se ha verificado que haya
+> validación en la carga para las demás variables. El 2026-09-24,
+> `ENCLAVE_DOMAIN` y `ROCKETCHAT_VERSION` de la misma plantilla se alinearon
+> con el despliegue documentado (`oob.local`, `8.4.1`).
+
 ---
 
 ## 5. Observaciones que no son hallazgos pero cuentan
