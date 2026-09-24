@@ -46,8 +46,10 @@
 |:---:|:---|:---|:---:|
 | 🛎️ **Detección** | Wazuh | Alertas, telemetría y respuesta inicial. | Docker |
 | 💬 **Comunicación OOB** | Rocket.Chat | War Rooms, coordinación y bot de orquestación. | Docker |
-| 🧭 **Orquestación** | FastAPI + PostgreSQL + Redis | Motor de decisión y workflows. | Docker |
-| 🧠 **IA agéntica** | LangGraph + Ollama | Triage inteligente y apoyo a decisiones. | Docker |
+| 🧭 **Orquestación** | n8n | Workflows de alerta, deduplicación, enriquecimiento CTI, War Rooms, aprobaciones e integración con IRIS. | Docker |
+| 🧪 **API de recolección** | FastAPI (Fase 5A) | Validación de perfiles, orden de colección a Velociraptor y manifiestos de evidencia, con autenticación HMAC. | Docker |
+| 🔎 **CTI** | MISP + AbuseIPDB + VirusTotal | Enriquecimiento de indicadores, consultado desde n8n. | Docker / servicios externos |
+| 🧠 **Triage** | LangGraph | Clasificación de severidad; en producción, motor determinista. Un LLM local (Ollama) se evaluó en banco de pruebas y se descartó (ver Fase 3). | Docker |
 | 🧪 **Forensics** | Velociraptor | Recolección remota y adquisición de evidencias. | Docker |
 | 📦 **Evidence Store** | MinIO | Almacenamiento compatible con S3 para evidencias. | Docker |
 | 📚 **Case Management** | DFIR-IRIS | Gestión de casos, timeline y evidencias. | Docker |
@@ -76,8 +78,10 @@ flowchart LR
 
   subgraph ENCLAVE["🔒 Enclave Out-of-Band bajo control propio"]
     WZ[🛰️ Wazuh Server]
-    ORC[🧠 Orquestador FastAPI]
-    AI[🤖 IA agéntica\nLangGraph + Ollama]
+    ORC[🧭 n8n\norquestación]
+    AI[🤖 Triage LangGraph\nmotor determinista]
+    API5A[🧪 API de recolección\nFastAPI · Fase 5A]
+    CTI[🔎 CTI\nMISP · AbuseIPDB · VirusTotal]
     RC[💬 Rocket.Chat]
     IRIS[🗂️ DFIR-IRIS]
     VR[🦖 Velociraptor Server]
@@ -95,18 +99,20 @@ flowchart LR
 
   A --> W --> WZ
   DC --> TS --> PYA
-  WZ -->|alert webhook| ORC
-  ORC <-->|triage y enriquecimiento| AI
+  WZ -->|webhook firmado HMAC| ORC
+  ORC <-->|triage| AI
+  ORC -->|enriquecimiento| CTI
   ORC --> RC
   ORC --> IRIS
-  ORC --> VR
+  ORC -->|orden de colección| API5A
+  API5A --> VR
   ORC -->|HTTPS mediante Tailscale| TS
   PYA -->|callback de resultado| ORC
-  RC -->|/approve /reject| ORC
+  RC -->|!ir run · approve · kvm| ORC
   VR -->|artefactos| MINIO
-  IRIS -->|webhooks de caso| ORC
   WZ -->|logs| OS
-  ORC -->|métricas| OS
+  AI -->|métricas| OS
+  API5A -->|métricas| OS
 ```
 
 > **Nota:** La conectividad remota hacia los controladores de dominio se implementa mediante Tailscale con Headscale autoalojado, sustituyendo la propuesta inicial basada en Cloudflare Tunnels.
@@ -124,16 +130,16 @@ flowchart LR
 
 ## 🔁 Flujo principal
 
-1. 🛰️ **Wazuh** detecta una alerta y envía el JSON al Orquestador mediante `POST /wazuh/alert`.
-2. 🧭 El Orquestador correlaciona y deduplica las alertas mediante Redis TTL.
-3. 🤖 El **Triage Agent** realiza el análisis y el enriquecimiento con CTI.
+1. 🛰️ **Wazuh** detecta una alerta y su integrador `custom-n8n` la envía, firmada con HMAC, al webhook de **n8n**, que verifica la firma sobre los bytes recibidos.
+2. 🧭 n8n deduplica las alertas (en memoria del proceso, con ventana fija) y las enriquece con CTI: MISP, AbuseIPDB y VirusTotal.
+3. 🤖 El motor de **triage** de la Fase 3 (LangGraph, determinista en producción) clasifica la severidad.
 4. 💬 Se crea una **War Room** en Rocket.Chat con una tarjeta de incidente enriquecida.
-5. 🗂️ Se crea o actualiza el **caso DFIR-IRIS** asociado.
-6. 🦖 Velociraptor lanza la colección forense no destructiva según el perfil seleccionado.
-7. 📦 Los artefactos y metadatos se almacenan en MinIO.
-8. ✅ Las acciones sensibles requieren aprobación humana desde la War Room.
+5. 🗂️ n8n crea el **caso DFIR-IRIS** y lo enlaza a la War Room (integración unidireccional, ver nota[^sync-iris]).
+6. 🦖 n8n pide la colección a la **API de la Fase 5A**, que valida el perfil y la lanza en **Velociraptor** (colección forense no destructiva).
+7. 📦 Los artefactos, el manifiesto y su SHA-256 se almacenan en MinIO, y la evidencia se registra en el caso de IRIS con el hash verificado.
+8. ✅ Las acciones sensibles requieren aprobación humana desde la War Room, con comandos `!ir` que Rocket.Chat entrega a n8n por webhook saliente.
 9. 🧯 El acceso break-glass mediante RustDesk se habilita temporalmente con TTL.
-10. ⏱️ Si RustDesk falla, se ofrece el **Plan C mediante KVM**, con doble aprobación para acciones disruptivas.
+10. ⏱️ Si RustDesk no está disponible, el **Plan C** es el KVM GL.iNet, con autorización por dispositivo. La consola (`/cmd/`) y el proxy web (`/web/`) exigen la aprobación de un segundo IR Lead (`!ir kvm`, ventana de 15 minutos; construida, pendiente de acreditación por comportamiento). El reinicio de alimentación queda como vía de emergencia de nivel 2, auditada *a posteriori*. El paso de RustDesk al KVM no es automático.
 
 ---
 
@@ -146,14 +152,14 @@ Todas las fases principales están completadas. La Fase 5 se divide en **dos car
 | Fase | Título | Estado | Responsabilidad | Enlace |
 |:---:|:---|:---:|:---|:---:|
 | **1** | **Infraestructura base** | ✅ Completada | Docker, Rocket.Chat, Wazuh, Authelia y red privada. | [Ver Fase 1](./fase1-infraestructura) |
-| **2** | **Orquestador MVP** | ✅ Completada | FastAPI, PostgreSQL, Redis, ingesta, War Rooms y aprobaciones. | [Ver Fase 2](./fase2-orquestador) |
-| **3** | **IA agéntica** | ✅ Completada | LangGraph, Ollama, triage inteligente y CTI. | [Ver Fase 3](./fase3-agentic) |
+| **2** | **Orquestador MVP** | ✅ Completada | n8n: ingesta firmada de Wazuh, deduplicación, enriquecimiento CTI, War Rooms y aprobaciones. | [Ver Fase 2](./fase2-orquestador) |
+| **3** | **IA agéntica** | ✅ Completada | LangGraph: motor de triage determinista en producción; LLM local (Ollama) evaluado en banco de pruebas y descartado. | [Ver Fase 3](./fase3-agentic) |
 | **4** | **Break-glass y scripts DC** | ✅ Completada | RustDesk, agentes Python y Tailscale en controladores de dominio. | [Ver Fase 4](./fase4-breakglass-dc) |
 | **5A** | **Fase 5 · Orchestrator API** | ✅ Completada | API FastAPI, validación de perfiles, manifiestos y persistencia de metadatos en MinIO. | [Ver Fase 5A](./fase5-orchestrator-api) |
 | **5B** | **Fase 5 · Velociraptor** | ✅ Completada | Servidor Velociraptor, perfiles de colección, agentes y pipeline de evidencias. | [Ver Fase 5B](./fase5-velociraptor) |
 | **6** | **DFIR-IRIS Case Management** | ✅ Completada | Gestión de casos, evidencias y timeline (integración n8n → IRIS unidireccional; ver nota[^sync-iris]). Ver estado de seguridad y verificación en el README de la fase. | [Ver Fase 6](./fase6-iris) |
 | **7** | **Observabilidad** | ✅ Completada | OpenSearch Dashboards y pipeline de métricas operativas. | [Ver Fase 7](./fase7-observabilidad) |
-| **8** | **Plan C y hardening** | ✅ Completada | Fallback a GL.iNet KVM, autorización por dispositivo, validación TLS del canal y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm) |
+| **8** | **Plan C y hardening** | ✅ Completada | KVM GL.iNet como Plan C (sin conmutación automática desde RustDesk), autorización por dispositivo y de segunda persona, validación TLS del canal y pruebas de resiliencia. | [Ver Fase 8](./fase8-kvm) |
 
 [^sync-iris]: **Corrección (2026-09-21).** Esta fila describía la responsabilidad de la Fase 6 como "sincronización bidireccional". Verificado contra `fase2-orquestador/n8n/workflows/wazuh-alert-handler.json` y `fase4-breakglass-dc/workflows/fase4d-breakglass.json`: las únicas llamadas a la API de IRIS son de escritura (crear caso, añadir evidencia, añadir evento de timeline) o de lectura para verificar una escritura propia (`case/evidences/list`, tras un `case/evidences/add`, para comprobar el hash que el propio flujo acaba de subir); la resolución de `case_id` se hace parseando el nombre del canal de Rocket.Chat, no consultando el estado de IRIS. Ningún componente del proyecto consume webhooks salientes de IRIS ni sondea cambios hechos de forma independiente en su interfaz (por ejemplo, cerrar un caso o añadir una nota desde la propia UI de IRIS no se propaga a ningún otro sitio). La integración es **unidireccional** (n8n/orchestrator → IRIS), tal como ya lo documenta `fase6-iris/README.md` en su lista "No implementado" ("Sincronización bidireccional por webhooks"). El texto anterior de esta fila decía "sincronización bidireccional y timeline"; se mantiene esta nota para que quede constancia del cambio.
 
@@ -235,3 +241,16 @@ instrumento que mida lo mismo por otra vía.
 - 📊 Métricas de evaluación del sistema y del triage agéntico.
 
 ---
+
+## 📝 Registro de correcciones
+
+- **2026-09-24.** Corregida la descripción de la arquitectura, que presentaba
+  una Fase 2 basada en FastAPI, PostgreSQL y Redis que nunca llegó a
+  implementarse (la orquestación es n8n; FastAPI es la API de recolección de
+  la Fase 5A), webhooks salientes de IRIS que ningún componente consume, un
+  triage con CTI en la Fase 3 (el CTI se consulta desde n8n, y en producción
+  el triage es determinista) y un Plan C con doble aprobación para acciones
+  disruptivas y conmutación automática desde RustDesk, que no existen tal como
+  se enunciaban. Hallazgos A-3, A-4 y A-5 de
+  [`docs/AUDITORIA-CIERRE-2026-09-23.md`](./docs/AUDITORIA-CIERRE-2026-09-23.md).
+  El texto anterior se conserva en el historial de git.
