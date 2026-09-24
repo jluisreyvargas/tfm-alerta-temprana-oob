@@ -35,6 +35,41 @@
 > Ver [`docs/INFORME-AUDITORIA-FASE6.md`](../docs/INFORME-AUDITORIA-FASE6.md) y
 > [`SECURITY-NOTICE.md`](SECURITY-NOTICE.md).
 
+> [!NOTE]
+> **Estado de seguridad — detalle del cierre (2026-09-21).**
+> Auditoría del 2026-09-03: 5 P0, 11 P1, 4 P2 (`docs/INFORME-AUDITORIA-FASE6.md`).
+>
+> | P0 | Corregido | Verificación |
+> |---|---|---|
+> | P0-A (README con capacidades inexistentes) | Sí | Reescritura del README; sin chequeo de comportamiento repetible |
+> | P0-B (compose documentado ficticio) | Sí | Reescritura del README; sin chequeo de comportamiento repetible |
+> | P0-C (ancla de confianza) | Sí | `scripts/verify-fase6.sh` (comprobaciones 4-5), positiva |
+> | P0-D (exposición 0.0.0.0:4833) | Sí | `scripts/verify-fase6.sh` (comprobación 3), positiva |
+> | P0-E (clave de sesión pública) | Sí | `scripts/verify-fase6.sh` (comprobación 7), **con prueba negativa acreditada** (restituir la constante pública → `exit 1`) |
+>
+> P1 abiertos: **P1-7**, la aplicación corre como `root` en el contenedor
+> (riesgo aceptado, bifurcar la imagen vendorizada es el único remedio
+> completo).
+>
+> **P1-4 (API key aprovisionada sin consumidor) — superado por los hechos, no
+> remediado.** Este bloque lo daba por abierto por error: desde la Fase 5_4a
+> (2026-09-13) el workflow de n8n consume la API de IRIS sin intervención
+> manual, y desde la Etapa D (2026-09-18) enlaza además la evidencia de
+> Velociraptor; última ejecución medida, caso **#91** (2026-09-23), con
+> evidencia enlazada y hash verificado contra el manifiesto. Ver la
+> corrección vigente en la cabecera de este README y
+> `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md` §8-11. Nadie endureció
+> nada: apareció el consumidor que faltaba. Lo que queda abierto no es la
+> ausencia de consumidor sino el **privilegio de la clave** — bitmask
+> completo de permisos (65535) y sin usuario de API dedicado
+> (`docs/DECISION-n8n-iris-ruta-directa.md:104-107`).
+>
+> `scripts/verify-fase6.sh` (16 comprobaciones, 3 acreditadas con prueba
+> negativa: red/P1-11, MFA/P1-9, clave pública/P0-E) es un **procedimiento
+> manual**: no está enganchado a ningún hook de git ni a integración
+> continua en este repositorio. El README pide ejecutarlo tras cualquier
+> recreación de contenedores y antes de cada commit que toque la fase.
+
 ---
 
 ## 📋 Estado

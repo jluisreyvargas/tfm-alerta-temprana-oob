@@ -1,5 +1,11 @@
 # Informe — Fase B del P0-4 (autenticación HMAC del orchestrator)
 
+> **Desambiguación (2026-09-23).** Identificador compartido con un hallazgo no
+> relacionado de la serie local de la Fase 8 (P0-4 (KVM), plano de control del
+> fabricante activo, `docs/INFORME-AUDITORIA-FASE8.md:120`). Este documento
+> define **P0-4 (orchestrator)**, de la serie global del proyecto. Ver
+> `docs/REGISTRO-HALLAZGOS-P1-1a-FaseC-2026-09-12.md` §3.5.1.
+
 ## Alcance
 
 `POST /velociraptor/collect` del orchestrator (`fase5-orchestrator-api`) no

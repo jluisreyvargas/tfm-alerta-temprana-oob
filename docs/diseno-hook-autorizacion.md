@@ -335,4 +335,14 @@ de usuario vía `/api/users` y `/api/device-groups`.
 deniegan incondicionalmente con motivo `aprobacion no implementada`. V8 —rechazo
 de la autoaprobación— vive en ese bloque y sigue pendiente.
 
+> **Corrección (2026-09-23).** La aprobación de segunda persona **sí está
+> construida, desplegada y activa** desde el commit `f2b9399` (2026-09-13):
+> el nodo `Aprobacion` está presente en el workflow versionado y en el
+> desplegado (`9GAZg1ChhxeOHSsA`), llama a `/webhook/kvm-approval`, y la
+> cadena `aprobacion no implementada` no existe ya en ninguno de los dos
+> (medido el 2026-09-23). Lo que sigue pendiente es la **acreditación por
+> comportamiento**, V8 incluido: ver la nota de corrección en
+> `fase8-kvm/README.md`, sección del hook, para el estado completo y la
+> batería pendiente.
+
 Ver `docs/cierre-mejora1-hook.md` y `docs/webhook-kvm-hook-construccion.md`.

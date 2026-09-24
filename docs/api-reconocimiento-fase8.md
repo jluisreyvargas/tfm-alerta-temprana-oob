@@ -231,8 +231,10 @@ Familias: `auth`, `2fa`, `init`, `info`, `ws`, `atx`, `hid`, `msd`, `switch`,
 
 ## 5. Hallazgos nuevos
 
-**P1-6 · `/api/script-info` entrega `RTTYS_TOKEN` y `WEBRTC_PASSWORD` a
-cualquier usuario autenticado.** Única ruta de la API moderna sin
+**P1-6 (`/api/script-info`, Fase 8) · `/api/script-info` entrega `RTTYS_TOKEN` y `WEBRTC_PASSWORD` a
+cualquier usuario autenticado.** Identificador compartido con otros tres
+hallazgos no relacionados; ver `docs/REGISTRO-HALLAZGOS-P1-1a-FaseC-2026-09-12.md`
+§3.5.1 para la desambiguación completa. Única ruta de la API moderna sin
 `middleware.Require`. `device.go:470` (`cfg.Token != "" && dev.token != cfg.Token`)
 confirma que ese token es la credencial de autenticación del dispositivo.
 Tercera vía de fuga del mismo secreto, junto al P2-6 (`docker logs`) y al

@@ -192,7 +192,7 @@ Esta nota todavía no se inserta automáticamente en IRIS, pero ya está prepara
 
 | Subobjetivo | Estado |
 |---|---|
-| Despliegue de Velociraptor server | 🟡 Parcial / lógico |
+| Despliegue de Velociraptor server | ✅ Completado (Fase 5_4b, commit `456fbf9`) — corrección 2026-09-23, esta fila decía `🟡 Parcial / lógico` |
 | Integración webhook n8n → Orchestrator | ✅ Completado |
 | Validación de perfiles permitidos | ✅ Completado |
 | Generación de `manifest.json` | ✅ Completado |
@@ -206,7 +206,9 @@ Esta nota todavía no se inserta automáticamente en IRIS, pero ya está prepara
 
 ## ✅ Cierre — recolección real y enlace a IRIS
 
-Las dos filas marcadas `🟡 Pendiente` en la tabla anterior, y el ejemplo de
+Las filas de la tabla anterior que estuvieron marcadas como pendientes o
+parciales (corregidas el 2026-09-23; esta frase citaba "las dos filas marcadas
+`🟡 Pendiente`", que ya no existían en la tabla), y el ejemplo de
 `manifest.json` de la sección 6 (con `started_at == ended_at` y un
 `zip_sha256` que en realidad era el hash de `incident_id + host + timestamp`,
 no de ningún fichero), describen el estado de esta fase en su primera
@@ -237,6 +239,21 @@ y sección 11 (M-26 a M-31).
 Pendiente todavía, sin medir: la prueba negativa de `Comparar Hash` (forzar
 un nombre de campo erróneo en `Preparar Evidencia` y comprobar que el aviso
 sale como fallo) — el nodo está ejercitado solo en el camino correcto.
+
+> **Corrección (2026-09-21).** El párrafo anterior ya no es exacto.
+> `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md` documenta esa prueba
+> negativa exacta, ejecutada el 2026-09-18: el caso **#77**, con el hash
+> enviado como `file_sha256` en vez de `file_hash` en `Preparar Evidencia`,
+> produjo el aviso de fallo esperado — "ninguna de las 1 evidencias del caso
+> casa con el hash del manifiesto. Presentes: (sin hash)" — frente al caso
+> **#76**, con el campo correcto, que produjo "✅ Hash verificado contra el
+> registro de IRIS" (M-38: dos entradas distintas, dos salidas distintas).
+> Además, la misma sesión (M-39) corrigió que el nodo `Comparar Hash` **no
+> tenía conexión de salida** — calculaba el veredicto pero no llegaba a
+> ningún canal —, conectándolo para que publique en el War Room del
+> incidente concreto. Con las dos correcciones, la cadena queda verificada
+> de extremo a extremo: compara, distingue entrada válida de inválida, y
+> entrega el resultado donde corresponde.
 
 ---
 
@@ -404,6 +421,16 @@ tercero con `sha256sum`.
 ---
 
 ## 🧠 Resultado alcanzado
+
+> **Corrección (2026-09-23).** El párrafo que sigue cierra el documento
+> anunciando como saltos evolutivos futuros dos cosas que ya están hechas:
+> la integración automática con DFIR-IRIS (Etapa D, 2026-09-18, caso IRIS
+> #62) y la sustitución del ZIP lógico por un artefacto real procedente de
+> Velociraptor (Fase 5_4b, commit `456fbf9`), verificada con el mismo
+> sha256 en el filestore de Velociraptor, en el manifiesto y en el objeto
+> descargado de vuelta desde MinIO. Ver la sección "Cierre — recolección
+> real y enlace a IRIS" más arriba, que es el estado vigente. Se conserva
+> el texto original por documentar la evolución del proyecto.
 
 La Fase 5 queda validada funcionalmente en su núcleo: el sistema ya puede recibir una orden de colección, procesar el incidente, construir un manifiesto coherente y persistir evidencia estructurada en MinIO bajo control del enclave OOB.
 

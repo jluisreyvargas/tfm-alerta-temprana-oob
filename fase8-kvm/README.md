@@ -41,8 +41,11 @@
   establecidas, **no** intentos denegados
 - [x] Autorización por dispositivo en el nivel 1 — mejora 1. `user-hook-url`
   cubre `/connect/`, `/cmd/` y `/web/`; remedia el P0-6
-- [ ] Flujo de solicitud de sesión con aprobación de segunda persona — diseñado
-  (F8-D5), **no construido**. `/cmd/` y `/web/` deniegan incondicionalmente
+- [x] Flujo de solicitud de sesión con aprobación de segunda persona —
+  **construido, desplegado y activo** (commit `f2b9399`, 2026-09-13). Verbo
+  `!ir kvm <devid> <cmd|web> <usuario>`; dos IR Lead conceden una ventana de
+  15 minutos. Pendiente de acreditación por comportamiento: ver la nota de
+  corrección al final de esta sección
 - [ ] ~~Política de dos personas para `powerreset`~~ — **no es construible tal
   como estaba enunciada**. `powerreset` es una acción del nivel 2, que no
   atraviesa rttys ni el hook. Lo gobernable desde el nivel 1 son `/cmd/` y
@@ -356,8 +359,43 @@ remedia sin parchear rttys: intercepta `/connect/`, `/cmd/` y `/web/`.
 que hereda el esquema de grupos sin reimplementarlo. El rol `admin` **no** se
 exime: su asignación se resuelve por intersección de grupos de usuario.
 
-**No construido:** la aprobación de segunda persona. `/cmd/` y `/web/` deniegan
-incondicionalmente con motivo `aprobacion no implementada`.
+~~**No construido:** la aprobación de segunda persona. `/cmd/` y `/web/` deniegan
+incondicionalmente con motivo `aprobacion no implementada`.~~
+
+> **Corrección (2026-09-23).** El párrafo tachado describe el estado anterior
+> al commit `f2b9399` (2026-09-13) y es falso desde esa fecha. Estado real,
+> medido el 2026-09-23:
+>
+> | Comprobación | Resultado |
+> |---|---|
+> | Nodo `Aprobacion` en el workflow versionado (`workflows/kvm-hook.json`) | Presente (4 ocurrencias) |
+> | Nodo `Aprobacion` en el workflow **desplegado** (`9GAZg1ChhxeOHSsA`) | Presente (4 ocurrencias) |
+> | Llamada a `/webhook/kvm-approval` en el desplegado | Presente |
+> | Hook activo en n8n | Sí (`list:workflow --active=true`) |
+> | Cadena `aprobacion no implementada` | **Ausente** en repositorio y en desplegado |
+>
+> La denegación incondicional que describe el texto tachado, por tanto, ya no
+> es el comportamiento del sistema. Todas las comprobaciones de la tabla son
+> **lectura de configuración**: acreditan que la capacidad está construida,
+> desplegada y activa, no que apruebe y deniegue correctamente.
+>
+> **Acreditación por comportamiento: pendiente.** El flujo se ejercitó durante
+> el desarrollo con resultado correcto según constatación del operador, pero
+> **no hay evidencia archivada** de esa ejecución en el repositorio. Batería
+> pendiente (D-1 del informe de auditoría de cierre): (1) `/cmd/<devid>` sin
+> ventana abierta → 403; (2) con aprobación de un segundo IR Lead → 200 dentro
+> de los 15 minutos; (3) al caducar la ventana → 403; (4) **V8**, el
+> solicitante aprueba su propia sesión → rechazado; (5) con n8n detenido → 403,
+> control que distingue la denegación por política de la ausencia de servicio y
+> verifica que el patrón de *fail-open* documentado en
+> `docs/cierre-mejora1-hook.md` §3 no alcanza a este camino.
+>
+> Mientras esa batería no se ejecute y registre, la capacidad consta como
+> construida y no acreditada. Los documentos `docs/diseno-hook-autorizacion.md`
+> (§335-336), `docs/cierre-mejora1-hook.md` (§36, §184) y
+> `docs/webhook-kvm-hook-construccion.md` (§233-234) declaran V8 «pendiente» o
+> «no aplica todavía»: esa declaración sigue siendo correcta en cuanto a la
+> acreditación, y obsoleta en cuanto a la construcción.
 
 Ver `docs/diseno-hook-autorizacion.md`, `docs/cierre-mejora1-hook.md` y
 `docs/webhook-kvm-hook-construccion.md`.

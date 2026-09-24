@@ -336,7 +336,7 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 > [!WARNING]
 > **Riesgos residuales conocidos tras el P0-3** (ver `fase5-velociraptor/SECURITY-NOTICE.md`):
 > - Quitar `s3:DeleteObject` impide el borrado pero **no la sobrescritura**: una clave existente puede reemplazarse sin dejar rastro. Hace falta versionado o bloqueo de objetos en el bucket.
-> - `incidentid` y `host` llegan sin validar en el payload y se usan para construir la clave del objeto: es posible escribir en rutas arbitrarias del bucket.
+> - ~~`incidentid` y `host` llegan sin validar en el payload y se usan para construir la clave del objeto: es posible escribir en rutas arbitrarias del bucket.~~ **Corrección (2026-09-21):** cerrado desde el commit `36d40b2` (2026-09-03, P0-4). `CollectRequest` en `main.py:134-135` valida ambos campos con `Field(pattern=r"^[A-Za-z0-9._-]{1,64}$")`, documentado en `docs/INFORME-P0-4-implementacion.md`. Este párrafo describía un riesgo ya cerrado en el momento en que se redactó esta sección; se conserva tachado para dejar constancia.
 > - MinIO publica su API (`0.0.0.0:9000`) y su consola (`0.0.0.0:9001`) sin TLS.
 
 ---
@@ -349,7 +349,7 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 | Hash real del ZIP | El campo `zip_sha256` contiene valor simulado | ✅ Cerrado (Fase 5_4b, `456fbf9`) |
 | Integracion con DFIR-IRIS | No se registra la evidencia automaticamente en IRIS | ✅ Cerrado (Etapa D, caso IRIS #62) |
 | Bucket sin versionado | Quitar `s3:DeleteObject` no impide la sobrescritura de un manifiesto | 🔴 Pendiente (P0-3) |
-| `incidentid` / `host` sin validar | Se usan sin sanear para construir la clave del objeto en MinIO | 🔴 Pendiente (P0-3) |
+| `incidentid` / `host` sin validar | Se usan sin sanear para construir la clave del objeto en MinIO | ✅ Cerrado (P0-4, commit `36d40b2`, 2026-09-03) — corrección 2026-09-21, esta fila decía `🔴 Pendiente` |
 
 ---
 
@@ -359,7 +359,7 @@ mc ls minio/evidence/INC-2026-042/HOST-DC01/
 2. ~~🟡 Calcular hash SHA-256 real del ZIP generado~~ — ✅ cerrado en Fase 5_4b (`456fbf9`)
 3. ~~🟡 Integrar con DFIR-IRIS para registro automatico de evidencias (Fase 6)~~ — ✅ cerrado en la Etapa D (2026-09-18), caso IRIS #62
 4. 🔴 Activar versionado / bloqueo de objetos en el bucket `evidence` (P0-3)
-5. 🔴 Validar `incidentid` y `host` antes de construir la clave del objeto (P0-3)
+5. ~~🔴 Validar `incidentid` y `host` antes de construir la clave del objeto (P0-3)~~ — ✅ cerrado en P0-4 (commit `36d40b2`, 2026-09-03); corrección 2026-09-21
 6. 🟡 Añadir validacion de integridad de evidencias (verificar hash)
 
 ---
@@ -420,9 +420,33 @@ Las dos filas de "Bucket sin versionado" e "`incidentid`/`host` sin validar"
 de la tabla de limitaciones conocidas (P0-3) **no están cerradas** por esta
 sesión y siguen `🔴 Pendiente`.
 
+> **Corrección (2026-09-21).** El párrafo anterior es correcto respecto a lo
+> que cerró *esta* sesión (Etapa D, 2026-09-18), pero ha quedado incompleto:
+> la fila `incidentid`/`host` sin validar se cerró por una sesión distinta y
+> anterior, la del P0-4 (commit `36d40b2`, 2026-09-03), que añadió
+> `Field(pattern=r"^[A-Za-z0-9._-]{1,64}$")` a ambos campos en
+> `fase5-orchestrator-api/main.py:134-135` (`docs/INFORME-P0-4-implementacion.md`).
+> Solo "Bucket sin versionado" sigue `🔴 Pendiente` hoy. Ver la tabla de
+> "Limitaciones conocidas" más arriba, ya corregida.
+
 Pendiente todavía, sin medir: la prueba negativa de `Comparar Hash` (forzar
 un nombre de campo erróneo en `Preparar Evidencia` y comprobar que el aviso
 sale como fallo) — el nodo está ejercitado solo en el camino correcto.
+
+> **Corrección (2026-09-21).** El párrafo anterior ya no es exacto.
+> `docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md` documenta esa prueba
+> negativa exacta, ejecutada el 2026-09-18: el caso **#77**, con el hash
+> enviado como `file_sha256` en vez de `file_hash` en `Preparar Evidencia`,
+> produjo el aviso de fallo esperado — "ninguna de las 1 evidencias del caso
+> casa con el hash del manifiesto. Presentes: (sin hash)" — frente al caso
+> **#76**, con el campo correcto, que produjo "✅ Hash verificado contra el
+> registro de IRIS" (M-38: dos entradas distintas, dos salidas distintas).
+> Además, la misma sesión (M-39) corrigió que el nodo `Comparar Hash` **no
+> tenía conexión de salida** — calculaba el veredicto pero no llegaba a
+> ningún canal —, conectándolo para que publique en el War Room del
+> incidente concreto. Con las dos correcciones, la cadena queda verificada
+> de extremo a extremo: compara, distingue entrada válida de inválida, y
+> entrega el resultado donde corresponde.
 
 ---
 

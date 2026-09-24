@@ -33,7 +33,7 @@ heredadas quedan cubiertas con una única configuración y sin parchear el binar
 | V5 | Error interno del flujo | **Aprobada tras corrección** | `throw` en el Code → `403`. Ver §3 |
 | V6 | `--force-recreate` | **Aprobada** | `user-hook-url` en línea 59 de `/home/rttys.conf` |
 | V7 | `/cmd/` sin aprobación previa | **Aprobada** | `POST` → `403`, cuerpo vacío, comando no ejecutado |
-| V8 | Autoaprobación rechazada | **No aplica todavía** | Vive en el bloque de aprobación de segunda persona |
+| V8 | Autoaprobación rechazada | **Pendiente de medir** (corrección 2026-09-23; esta celda decía «No aplica todavía») | El bloque de aprobación de segunda persona está construido y activo desde `f2b9399` (2026-09-13), así que V8 ya es aplicable; falta ejecutarlo. Ver `fase8-kvm/README.md` |
 | V9 | Cookie ausente | **Reenunciada** | Ver §4 |
 | V10 | Latencia | **Aprobada** | p50 103 ms, p95 135 ms, máx 151 ms, contra 3.000 |
 
@@ -182,6 +182,16 @@ siempre, incluso cuando el rol es `user` y dos fallarán por permisos. Cuesta un
 **Del propio hook:**
 
 - Aprobación de segunda persona para `cmd` y `web`, con V8 dentro de ese bloque.
+
+> **Corrección (2026-09-23).** La aprobación de segunda persona **sí está
+> construida, desplegada y activa** desde el commit `f2b9399` (2026-09-13):
+> el nodo `Aprobacion` está presente en el workflow versionado y en el
+> desplegado (`9GAZg1ChhxeOHSsA`), llama a `/webhook/kvm-approval`, y la
+> cadena `aprobacion no implementada` no existe ya en ninguno de los dos
+> (medido el 2026-09-23). Lo que sigue pendiente es la **acreditación por
+> comportamiento**, V8 incluido: ver la nota de corrección en
+> `fase8-kvm/README.md`, sección del hook, para el estado completo y la
+> batería pendiente.
   Hoy ambas deniegan incondicionalmente.
 - **Paginación.** `/api/devices` devuelve `pageSize` igual al número de elementos
   y `/api/users` no devuelve `total`. Con un dispositivo y tres cuentas no se
@@ -209,7 +219,10 @@ siempre, incluso cuando el rol es `user` y dos fallarán por permisos. Cuesta un
 
 **Rotación a decidir:** el fichero `/home/rttys.conf` renderizado, con `token` y
 `password` en claro, se volcó durante la construcción. El `token` es la
-credencial de autenticación del dispositivo (P1-6).
+credencial de autenticación del dispositivo (P1-6 (GL-RM1) — identificador
+compartido con otros tres hallazgos no relacionados; ver
+`docs/REGISTRO-HALLAZGOS-P1-1a-FaseC-2026-09-12.md` §3.5.1 para la
+desambiguación completa).
 
 ---
 

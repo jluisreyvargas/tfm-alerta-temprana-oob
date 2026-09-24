@@ -76,9 +76,9 @@ tres detecciones acreditadas mediante prueba negativa.
 | P1-1 | Código vendorizado sin NOTICE de licencia LGPL-3.0 | P1 | **Corregido** |
 | P1-2 | Fase no reproducible desde el repositorio | P1 | **Corregido** |
 | P1-3 | `rabbitmq:3-management-alpine` con etiqueta flotante | P1 | **Corregido** |
-| P1-4 | API key documentada sin consumidor | P1 | Abierto |
+| P1-4 | API key documentada sin consumidor | P1 | **Superado** (ver nota 2026-09-23) |
 | P1-5 | Imprecisiones en `SECURITY-NOTICE.md` | P1 | **Corregido** |
-| P1-6 | La CA del enclave fuera de los almacenes de confianza | P1 | **Corregido** |
+| P1-6 (Fase 6) | La CA del enclave fuera de los almacenes de confianza | P1 | **Corregido** |
 | P1-7 | La aplicación se ejecuta como `root` en el contenedor | P1 | **Riesgo aceptado** |
 | P1-8 | `SECURITY_PASSWORD_SALT` declarada y no consumida | P1 | Documentado |
 | P1-9 | `MFA_ENABLED` inerte en despliegues ya inicializados | P1 | **Corregido** |
@@ -533,7 +533,11 @@ breakglass|t
 `verify-fase6.sh` consulta la base de datos, no el registro de arranque.
 Acreditado con prueba negativa.
 
-## P1-6 · La CA del enclave fuera de los almacenes de confianza
+## P1-6 (Fase 6) · La CA del enclave fuera de los almacenes de confianza
+
+> Identificador compartido con otros tres hallazgos no relacionados de
+> otras fases; ver `docs/REGISTRO-HALLAZGOS-P1-1a-FaseC-2026-09-12.md` §3.5.1
+> para la desambiguación completa.
 
 **Estado: corregido y verificado.** Detectado al verificar P0-C.
 
@@ -665,6 +669,19 @@ ancla; y la incorporación de P0-E a los riesgos.
 **Estado: abierto, no bloqueante.** Aprovisionada (columna `api_key` en la tabla
 `user`) y documentada. Tendrá consumidor cuando se implemente la automatización,
 declarada como trabajo futuro.
+
+> **Corrección (2026-09-23).** El párrafo anterior describe el estado del
+> 2026-09-03 y ya no es cierto. El hallazgo está **superado por los hechos, no
+> remediado**: desde la Fase 5_4a (2026-09-13) el workflow de n8n consume la API
+> de IRIS sin intervención manual, y desde la Etapa D (2026-09-18) enlaza además
+> la evidencia de Velociraptor; última ejecución medida, caso **#91**
+> (2026-09-23), con evidencia enlazada y hash verificado contra el manifiesto
+> (`docs/REGISTRO-MEDICIONES-n8n-iris-2026-09-13.md` §8-11). Nadie endureció
+> nada: apareció el consumidor que faltaba. Lo que queda abierto no es la
+> ausencia de consumidor sino el **privilegio de la clave** — bitmask completo
+> de permisos (65535) y sin usuario de API dedicado
+> (`docs/DECISION-n8n-iris-ruta-directa.md:104-107`), recogido como deuda
+> declarada. Se conserva el texto original por encima de esta nota.
 
 ---
 

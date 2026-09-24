@@ -232,6 +232,16 @@ quitar la línea 59 de la plantilla y `--force-recreate`.
 
 - **Estado de aprobación y emisión** para `cmd` y `web`, con V8 (rechazo de la
   autoaprobación) dentro de ese bloque, no del hook.
+
+> **Corrección (2026-09-23).** La aprobación de segunda persona **sí está
+> construida, desplegada y activa** desde el commit `f2b9399` (2026-09-13):
+> el nodo `Aprobacion` está presente en el workflow versionado y en el
+> desplegado (`9GAZg1ChhxeOHSsA`), llama a `/webhook/kvm-approval`, y la
+> cadena `aprobacion no implementada` no existe ya en ninguno de los dos
+> (medido el 2026-09-23). Lo que sigue pendiente es la **acreditación por
+> comportamiento**, V8 incluido: ver la nota de corrección en
+> `fase8-kvm/README.md`, sección del hook, para el estado completo y la
+> batería pendiente.
 - **Paginación.** `/api/devices` devuelve `pageSize` igual al número de
   elementos y `/api/users` no devuelve `total`. Con un dispositivo y tres
   cuentas no se distingue si hay límite de página. Si la lista crece, un

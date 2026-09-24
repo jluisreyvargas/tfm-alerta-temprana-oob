@@ -117,7 +117,15 @@ El certificado, que era el tercer riesgo, **ha quedado resuelto** (§5).
 
 **P0-3 · Cuatro credenciales fuera de inventario** descubiertas durante la auditoría: token rtty del dispositivo, `WEBRTC_PASSWORD`, token de `gl-cloud.conf`, `htpasswd` local.
 
-**P0-4 · Plano de control del fabricante ACTIVO.**
+**P0-4 (KVM) · Plano de control del fabricante ACTIVO.**
+
+> Identificador compartido con un hallazgo no relacionado de la serie global
+> del proyecto (P0-4 (orchestrator), autenticación HMAC,
+> `docs/INFORME-P0-4-implementacion.md`). Ver
+> `docs/REGISTRO-HALLAZGOS-P1-1a-FaseC-2026-09-12.md` §3.5.1 para la
+> desambiguación. Todas las menciones de "P0-4" en este documento y en
+> `api-reconocimiento-fase8.md` se refieren a este hallazgo, el de la Fase 8.
+
 
 ```
 192.168.0.36:60016 → 47.107.176.138:8883   1648/eco

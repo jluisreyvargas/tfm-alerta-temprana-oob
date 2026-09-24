@@ -238,6 +238,43 @@ Dos hallazgos distintos con el mismo identificador, en documentos distintos.
 Cerrar uno haría parecer cerrado el otro. Hay que renumerar uno de los dos antes
 de que eso ocurra.
 
+> **Corrección (2026-09-21).** La colisión es mayor de lo que este párrafo
+> registraba: `docs/revision-workflow1-caso-iris-warroom.md` §P4 identifica
+> **cuatro** hallazgos distintos citados como "P1-6" en el repositorio, no
+> dos — los dos de arriba más `docs/api-reconocimiento-fase8.md:234`
+> (`/api/script-info` filtra `RTTYS_TOKEN`/`WEBRTC_PASSWORD`) y
+> `docs/INFORME-AUDITORIA-FASE6.md` (la CA del enclave fuera de los
+> almacenes de confianza de IRIS, corregido). **No se renumera ninguno**
+> (renumerar rompe referencias cruzadas que no se pueden enumerar todas con
+> certeza): la desambiguación se hace por documento de origen —
+> **P1-6 (GL-RM1, `cierre-mejora1-hook.md`)**, **P1-6 (Velociraptor, esta
+> sección, cerrado 2026-09-13)**, **P1-6 (`/api/script-info`, Fase 8,
+> `api-reconocimiento-fase8.md`)** y **P1-6 (CA fuera de confianza, Fase 6,
+> `INFORME-AUDITORIA-FASE6.md`)** — y así debe citarse en adelante, siempre
+> junto al nombre del fichero de origen.
+
+> **Segunda colisión — `P0-4` (añadido 2026-09-23).** El mismo problema
+> afecta al identificador `P0-4`, con dos hallazgos sin relación entre sí:
+>
+> - **P0-4 (orchestrator, `INFORME-P0-4-implementacion.md`)** — autenticación
+>   HMAC del orchestrator API. Serie global del proyecto. Citado en
+>   `fase5-orchestrator-api/README.md` y en
+>   `fase5-velociraptor/SECURITY-NOTICE.md`.
+> - **P0-4 (KVM, `INFORME-AUDITORIA-FASE8.md:120`)** — plano de control del
+>   fabricante GL.iNet activo en el dispositivo. Serie local de la Fase 8.
+>   Citado en `api-reconocimiento-fase8.md` y
+>   `mejora6-endurecimiento-dispositivo.md`.
+>
+> Mismo criterio que arriba: **no se renumera ninguno**; se citan junto al
+> documento de origen. Nótese que `INFORME-AUDITORIA-FASE8.md:176` contiene
+> la frase "Distinción importante frente a P0-4", redactada cuando la
+> colisión aún no existía: ahí P0-4 es el de la Fase 8.
+>
+> **Causa común de las dos colisiones:** el proyecto mantiene en paralelo una
+> serie global de hallazgos (P0-n, P1-n) y series locales por fase que
+> reinician la numeración. Nada impide que coincidan y nada avisa cuando
+> ocurre. Las dos colisiones se detectaron por lectura, no por un control.
+
 ### 3.5.2 — El webhook del hook falla abierto ante error interno
 
 Registrado en `docs/cierre-mejora1-hook.md` §3; no se reproduce aquí. Se anota en
@@ -319,7 +356,11 @@ lo que obliga al `scheme=https` y, con ello, la dependencia del 3.3.
 
 ---
 
-## 5. El P1-6 de Velociraptor, con el alcance ya reducido
+## 5. El P1-6 (Velociraptor, Fase C), con el alcance ya reducido
+
+> Identificador desambiguado — ver §3.5.1. Este es **P1-6 (Velociraptor,
+> Fase C)**, distinto de P1-6 (GL-RM1), P1-6 (`/api/script-info`, Fase 8) y
+> P1-6 (CA fuera de confianza, Fase 6).
 
 Se mantiene como bloqueante antes de cerrar el 8889, pero es más pequeño de lo
 que decía el documento de traspaso.

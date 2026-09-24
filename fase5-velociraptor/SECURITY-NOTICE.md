@@ -152,6 +152,13 @@ sin que el sistema produjera ningún error.
 MinIO guarda la evidencia forense del enclave. Publica su API en
 `0.0.0.0:9000` y su consola en `0.0.0.0:9001`, sin TLS.
 
+> **Corrección (2026-09-23).** La consola ya no se publica: se retiró en la
+> Fase B y hoy se sirve por Traefik. Medido en el host con `ss -tlnp` (ningún
+> proceso en el 9001) y `docker ps` (contenedor `minio` con un único mapeo,
+> `0.0.0.0:9000->9000/tcp`). La API sí sigue publicada en `0.0.0.0:9000` sin
+> TLS, confirmado en la misma medición. Se conserva el texto original por ser
+> el estado que motivó este aviso.
+
 ## Detección
 
 Doble, independiente:
@@ -273,9 +280,25 @@ Riesgo aceptado y razonado.
   borrado deja un hueco visible y la sobrescritura no deja rastro—. Quitar
   `s3:DeleteObject` es necesario pero no suficiente: hace falta versionado o
   bloqueo de objetos en el bucket.
-- **`incidentid` y `host` sin validar.** Llegan sin sanear en el payload y se
+- ~~**`incidentid` y `host` sin validar.** Llegan sin sanear en el payload y se
   usan para construir la clave del objeto, de modo que es posible escribir en
-  rutas arbitrarias del bucket y pisar el manifiesto de otro incidente.
-- **MinIO sin TLS y publicado en `0.0.0.0`** (`:9000` API, `:9001` consola).
+  rutas arbitrarias del bucket y pisar el manifiesto de otro incidente.~~
+  **Corrección (2026-09-23):** cerrado en el commit `36d40b2` (2026-09-03,
+  P0-4 del orchestrator). `CollectRequest` valida ambos campos con
+  `Field(pattern=r"^[A-Za-z0-9._-]{1,64}$")` en
+  `fase5-orchestrator-api/main.py:134-135`
+  (`docs/INFORME-P0-4-implementacion.md`). Este aviso conservaba el texto
+  anterior al commit. **Matiz de verificación:** la corrección consta por
+  lectura del código; la batería de pruebas de traversal descrita en
+  `INFORME-P0-4-implementacion.md` §182-198 no tiene ejecución registrada
+  (D-12 del informe de auditoría de cierre), de modo que el control está
+  implementado pero no acreditado por comportamiento.
+- **MinIO sin TLS, publicado en `0.0.0.0:9000` (API).** ~~`:9001` consola.~~
+  **Corrección (2026-09-23):** la consola no está publicada. Medido en el host
+  con `ss -tlnp`: no hay ningún proceso escuchando en el 9001, y
+  `docker ps` muestra el contenedor `minio` con un único mapeo,
+  `0.0.0.0:9000->9000/tcp`. La consola se retiró en la Fase B y se sirve por
+  Traefik. La API sí sigue en `0.0.0.0:9000` sin TLS, confirmado en la misma
+  medición.
 - **`minio/minio:latest` sin fijar versión** en un almacén de evidencia
   forense: el dígito de la imagen puede cambiar bajo los pies del despliegue.

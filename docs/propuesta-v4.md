@@ -3,6 +3,19 @@
 
 > Documento técnico y funcional del proyecto con arquitectura, fases, criterios de diseño y estado consolidado.
 
+> [!NOTE]
+> **Documento histórico (nota añadida el 2026-09-21).** Este documento es
+> una fotografía del estado del proyecto en el momento en que se redactó, no
+> el estado vigente. Su propia tabla de "Estado por fases" y el pie del
+> documento lo fechan como **"v4 actualizada · Estado actual: Fase 4
+> completada"**, con las fases 5 a 8 marcadas "⏳ Pendiente". Ese estado
+> corresponde a un punto anterior a agosto/septiembre de 2026; a día de hoy
+> las ocho fases están cerradas (ver `README.md`, tabla "Estado del
+> proyecto"). No se ha reescrito el cuerpo de este documento para que
+> refleje el estado actual: su valor es precisamente ser una foto de un
+> momento del proyecto, no un documento vivo. El estado vigente está en
+> `README.md` (raíz) y en el README de cada fase.
+
 ---
 
 ## 🧭 Resumen ejecutivo

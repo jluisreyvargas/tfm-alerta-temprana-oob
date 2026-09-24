@@ -72,10 +72,21 @@ Cuatro capas para un beneficio que este despliegue no materializa.
 
 ### 2.3 Hay trabajo pendiente que sí cierra funcionalidad
 
-La aprobación de segunda persona para `/cmd/` y `/web/` está diseñada (F8-D5) y
+~~La aprobación de segunda persona para `/cmd/` y `/web/` está diseñada (F8-D5) y
 no construida: ambas acciones deniegan incondicionalmente. Eso es funcionalidad
 prometida en el diseño del hook y ausente, frente a un aislamiento que hoy no
-separa nada.
+separa nada.~~
+
+> **Corrección (2026-09-23).** La premisa del párrafo tachado dejó de ser
+> cierta con el commit `f2b9399` (2026-09-13): la aprobación de segunda
+> persona está construida, desplegada y activa, y `/cmd/` y `/web/` ya no
+> deniegan incondicionalmente (medido el 2026-09-23; ver la nota de
+> corrección en `fase8-kvm/README.md`). **La conclusión de esta sección no
+> cambia por ello**: el argumento contra priorizar la consola por subdominio
+> era la comparación entre cuatro capas de complejidad y un aislamiento que
+> no separa nada, y eso sigue en pie. Lo que ya no vale es el refuerzo de
+> "hay trabajo pendiente que sí cierra funcionalidad" apoyado en este
+> ejemplo concreto, porque ese trabajo se hizo.
 
 ---
 
