@@ -275,3 +275,36 @@ vez de reinicio). Por diseño la unidad debería recuperar el canal —los
 contenedores quedan `Exited` tras fallar el bind, y la unidad hace `down` +
 `up` al tener la IP—, pero es el caso operativamente relevante (un corte de
 corriente durante un incidente) y no está acreditado.
+
+### Prueba tras apagado no limpio (2026-09-25)
+
+Instantánea de la VM, *Power Off* desde VMware y arranque sin tocar nada; la
+comprobación, unos seis minutos después.
+
+| Comprobación | Resultado |
+|---|---|
+| Arranque | nuevo, 2026-09-25 12:35 (`uptime -s`, `journalctl --list-boots`) |
+| Firmas de apagado sucio en el journal de Docker (`layer not mounted`, `stale sandbox`) | 58 |
+| Fallos de bind (`cannot assign requested address`) | 12 |
+| `tfm-fase4-rustdesk.service` | arranca 12:39:11; lanza los contenedores a las 12:39:47, tras 36 s de espera a la IP; `active` |
+| `tfm-fase6-iris.service` | `active` |
+| Contenedores | 29 en marcha, ninguno sin red |
+| Puertos en `100.64.0.1` | los seis previstos (21115-21119 y 4833) |
+| Desde DC01, `Test-NetConnection 100.64.0.1 -Port 21116` | `True` |
+
+La prueba discrimina porque el fallo **ocurrió**: la política de reinicio de
+Docker volvió a intentar levantar los contenedores antes de que existiera la IP
+y falló, como el 2026-09-24 por la mañana; la unidad los levantó después.
+
+Un primer intento de esta prueba no llegó a reiniciar la máquina, y la misma
+comprobación lo delató: la unidad mostraba el arranque anterior (14:23 del
+2026-09-24) y los dos recuentos de apagado brusco daban cero. Sin esos dos
+recuentos, aquella salida, con todo en verde, habría pasado por prueba superada.
+
+**Intermitencia, explicada con un caso de cada tipo:** el `sudo reboot` limpio
+del 2026-09-24 produjo cero fallos de bind, porque el `ExecStop=... down` de las
+unidades eliminó los contenedores y Docker no tuvo nada que reiniciar; el
+apagado brusco de hoy, doce. El fallo original solo aparece cuando los
+`ExecStop` no se ejecutan, que es el escenario de un corte de corriente.
+
+Con esto queda cerrado el pendiente anotado más arriba.
