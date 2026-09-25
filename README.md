@@ -139,7 +139,7 @@ flowchart LR
 7. 📦 Los artefactos, el manifiesto y su SHA-256 se almacenan en MinIO, y la evidencia se registra en el caso de IRIS con el hash verificado.
 8. ✅ Las acciones sensibles requieren aprobación humana desde la War Room, con comandos `!ir` que Rocket.Chat entrega a n8n por webhook saliente.
 9. 🧯 El acceso break-glass mediante RustDesk se habilita temporalmente con TTL.
-10. ⏱️ Si RustDesk no está disponible, el **Plan C** es el KVM GL.iNet, con autorización por dispositivo. La consola (`/cmd/`) y el proxy web (`/web/`) exigen la aprobación de un segundo IR Lead (`!ir kvm`, ventana de 15 minutos; construida, pendiente de acreditación por comportamiento). El reinicio de alimentación queda como vía de emergencia de nivel 2, auditada *a posteriori*. El paso de RustDesk al KVM no es automático.
+10. ⏱️ Si RustDesk no está disponible, el **Plan C** es el KVM GL.iNet, con autorización por dispositivo. La ejecución de comandos (`/cmd/`) y el proxy web hacia la interfaz del dispositivo (`/web/`, con vídeo y shell) exigen la aprobación de un segundo IR Lead (`!ir kvm`); la ventana de 15 minutos limita el inicio de la sesión, no su duración. Acreditado para `web` el 2026-09-25; `cmd`, sin ejercitar. El terminal (`/connect/`) depende solo de la autorización por dispositivo. El reinicio de alimentación queda como vía de emergencia de nivel 2, auditada *a posteriori*. El paso de RustDesk al KVM no es automático.
 
 ---
 
@@ -266,3 +266,8 @@ mida lo mismo por otra vía; para el segundo, medir desde el consumidor.
   (el documento enlazado enumeraba cinco). Sustituido por el catálogo canónico,
   `docs/CATALOGO-fallos-silenciosos.md`: 69 ocurrencias con fuente, en seis
   mecanismos. Hallazgo A-22 de la auditoría de cierre.
+
+- **2026-09-25.** Plan C del flujo principal: la aprobación de segunda persona
+  queda acreditada por comportamiento para `web` (batería D-1); se corrige que
+  la consola no es `/cmd/` sino `/connect/`, fuera de la ventana; y se declara
+  que la ventana limita el inicio de la sesión, no su duración.

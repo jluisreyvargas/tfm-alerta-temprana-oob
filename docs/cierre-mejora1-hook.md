@@ -33,7 +33,7 @@ heredadas quedan cubiertas con una única configuración y sin parchear el binar
 | V5 | Error interno del flujo | **Aprobada tras corrección** | `throw` en el Code → `403`. Ver §3 |
 | V6 | `--force-recreate` | **Aprobada** | `user-hook-url` en línea 59 de `/home/rttys.conf` |
 | V7 | `/cmd/` sin aprobación previa | **Aprobada** | `POST` → `403`, cuerpo vacío, comando no ejecutado |
-| V8 | Autoaprobación rechazada | **Pendiente de medir** (corrección 2026-09-23; esta celda decía «No aplica todavía») | El bloque de aprobación de segunda persona está construido y activo desde `f2b9399` (2026-09-13), así que V8 ya es aplicable; falta ejecutarlo. Ver `fase8-kvm/README.md` |
+| V8 | Autoaprobación rechazada | **Superada el 2026-09-25** (`REQ-879a17ef`: «el solicitante no puede aprobar su propia petición»). Antes: pendiente de medir (corrección 2026-09-23); originalmente «No aplica todavía» | El bloque de aprobación de segunda persona está construido y activo desde `f2b9399` (2026-09-13), así que V8 ya es aplicable; falta ejecutarlo. Ver `fase8-kvm/README.md` |
 | V9 | Cookie ausente | **Reenunciada** | Ver §4 |
 | V10 | Latencia | **Aprobada** | p50 103 ms, p95 135 ms, máx 151 ms, contra 3.000 |
 

@@ -388,7 +388,7 @@ incondicionalmente con motivo `aprobacion no implementada`.~~
 > **lectura de configuración**: acreditan que la capacidad está construida,
 > desplegada y activa, no que apruebe y deniegue correctamente.
 >
-> **Acreditación por comportamiento: pendiente.** El flujo se ejercitó durante
+> ~~**Acreditación por comportamiento: pendiente.**~~ (superado el 2026-09-25; ver más abajo) El flujo se ejercitó durante
 > el desarrollo con resultado correcto según constatación del operador, pero
 > **no hay evidencia archivada** de esa ejecución en el repositorio. Batería
 > pendiente (D-1 del informe de auditoría de cierre): (1) `/cmd/<devid>` sin
@@ -405,6 +405,54 @@ incondicionalmente con motivo `aprobacion no implementada`.~~
 > `docs/webhook-kvm-hook-construccion.md` (§233-234) declaran V8 «pendiente» o
 > «no aplica todavía»: esa declaración sigue siendo correcta en cuanto a la
 > acreditación, y obsoleta en cuanto a la construcción.
+
+> **Acreditación por comportamiento (2026-09-25).** Batería D-1 ejecutada desde el
+> W11 con dos IR Lead (`ir_lead`, `ir_lead2`), el usuario de rttys `admin` y el
+> dispositivo `zsb25f8`. Testigos: las ejecuciones del workflow `kvm-hook`
+> (`9GAZg1ChhxeOHSsA`) en `execution_entity`, clasificadas por el nodo de respuesta
+> que se ejecutó (`Respond to Webhook1` → 200, `Respond to Webhook2` → 403), y el
+> log de rttys (`call user hook url … StatusCode`). El estado `success` de una
+> ejecución no distingue una concesión de una denegación; el discriminador por
+> nodo de respuesta se validó en los dos sentidos.
+>
+> | Caso | Resultado | Testigos |
+> |---|---|---|
+> | (1) `web` sin ventana | **403** | ejecuciones 2525, 2527, 2531; rttys a las 12:19:54, 12:21:53 y 12:22:12 UTC |
+> | (2) `web` con ventana | **200** | 2513-2521, 2535, 2548 |
+> | (3) `web` tras caducar | **403** | 2550 y rttys, 15:26:11 UTC (ventana 14:54-15:09 UTC) |
+> | (4) V8, autoaprobación | **rechazada** | `REQ-879a17ef`: «el solicitante no puede aprobar su propia petición» |
+> | (5) n8n detenido, terminal | **denegado** | rttys `context deadline exceeded` (12:37 UTC) y vuelta al login |
+> | (5) n8n detenido, `web` | no medido | ningún intento durante la parada |
+> | `cmd` | no ejercitado | sin enlace en la interfaz de rttys |
+>
+> **Lo que mostró además la batería:**
+>
+> 1. **El terminal de rttys (`/connect/`) no lo gobierna la ventana**, sino la
+>    autorización por dispositivo del nivel 1: se concedió con la ventana ya
+>    caducada, como está diseñado.
+> 2. **La ventana `web` da la interfaz del propio dispositivo** a través del proxy
+>    de rttys: el vídeo y, según lo observado por el operador, una shell con más
+>    privilegios que el terminal. Aprobar `web` concede más que la consola. El
+>    mensaje del bot («Abrir control remoto (vídeo)») no lo dice.
+> 3. **La ventana limita el inicio de la sesión, no su duración.** Una sesión
+>    `web` abierta dentro de la ventana siguió dando acceso al dispositivo más de
+>    quince minutos después de caducar, mientras una pestaña nueva recibía 403.
+>    Es el riesgo aceptado del vale de sesión persistente, medido por primera vez.
+>    Consecuencia: una aprobación de 15 minutos puede dar una sesión privilegiada
+>    de duración indefinida.
+> 4. **La misma interfaz sigue alcanzable por el nivel 2**, con la contraseña del
+>    KVM y sin aprobación (RA-1).
+> 5. **Fallo cerrado ante n8n caído**: medido en el terminal. Para `web` es
+>    inferencia (el mismo mecanismo de llamada al hook), no medición.
+> 6. **Resolución de nombres**: `docs/resolucion-nombres.tsv:42` declara
+>    `zsb25f8.oob.local` en el W11, necesario para seguir la redirección de rttys,
+>    pero el `hosts` real del W11 no lo tenía y su DNS (`192.168.127.2`, la
+>    pasarela NAT de VMware) no resuelve `oob.local`. El acceso funcionaba o no
+>    según el momento, por un mecanismo no determinado. Entrada añadida al `hosts`
+>    del W11 el 2026-09-25. Es la divergencia entre estado declarado y real que
+>    `verify-hosts.sh --check` detectaría con el `hosts` real (D-18).
+> 7. El nodo `Respond to Webhook` del workflow (código de respuesta dinámico) está
+>    desconectado: nodo muerto, sin efecto sobre el comportamiento.
 
 Ver `docs/diseno-hook-autorizacion.md`, `docs/cierre-mejora1-hook.md` y
 `docs/webhook-kvm-hook-construccion.md`.
