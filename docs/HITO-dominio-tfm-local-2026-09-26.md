@@ -504,7 +504,7 @@ versiona**. En el repositorio solo se cita su hash. Fuente:
 | Elemento | Valor |
 |---|---|
 | Original | `C:\tfm-agent\logs\agent.log` en `dc01-tfm` |
-| Solo lectura en el DC | Se ordenó con `Set-ItemProperty … -Name IsReadOnly -Value $true`. `conservacion-log.txt` no recoge ninguna salida que lo confirme: `PENDIENTE` (`(Get-Item C:\tfm-agent\logs\agent.log).IsReadOnly`) |
+| Solo lectura en el DC | Confirmado el 27/09/2026: `(Get-Item C:\tfm-agent\logs\agent.log).IsReadOnly` devuelve `True` (fuente: `conservacion-log.txt`). El atributo se fijó con `Set-ItemProperty … -Name IsReadOnly -Value $true` |
 | Copia | `~/tfm-evidencias/dominio-tfm-local/agent-log-C-tfm-agent-2026-09-12_2026-09-26.log` (3.686 bytes, 40 líneas, permisos `0555`) |
 | SHA-256 del original (`Get-FileHash`, DC) | `7917E284C62E84F991DEB4669BEE62B35B7653622AB53A33AF420CB1505F15EC` |
 | SHA-256 de la copia (`sha256sum`, enclave) | `7917e284c62e84f991deb4669bee62b35b7653622ab53a33af420cb1505f15ec` |
@@ -571,8 +571,12 @@ la ejecución. `PENDIENTE` de diagnóstico.
 | 17 | Averiguar qué reescribió `AppEnvironmentExtra` el 12/09 entre las 23:36 y las 23:57 (§5.6) | Pendiente |
 | 18 | Ejecutar `scripts/verify-dcagent-health.sh` contra el agente tras cada cambio del servicio | Jose |
 | 19 | ~~Incorporar §5.6 al catálogo de fallos silenciosos~~ Incorporado como B39 | Resuelto (2026-09-27) |
-| 20 | Confirmar el atributo de solo lectura del log original en el DC (§5.6, «Conservación de evidencia») | Jose |
+| 20 | ~~Confirmar el atributo de solo lectura del log original en el DC (§5.6, «Conservación de evidencia»)~~ `IsReadOnly` = `True` | Resuelto (2026-09-27) |
 
 > **Actualización (2026-09-27).** Filas 1, 2, 4 y 5 actualizadas y filas
 > 15–19 añadidas tras el hallazgo de §5.6. Después, fila 19 resuelta
 > (caso B39 del catálogo) y fila 20 añadida.
+
+> **Actualización (2026-09-27).** Fila 20 cerrada: el log original
+> `C:\tfm-agent\logs\agent.log` tiene el atributo de solo lectura en el DC
+> (`IsReadOnly` = `True`, `conservacion-log.txt`).
