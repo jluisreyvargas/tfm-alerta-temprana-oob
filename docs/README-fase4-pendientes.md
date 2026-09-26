@@ -173,6 +173,13 @@ Pendientes que quedan de este bloque:
   posible en un DC. Procedería una gMSA con derechos delegados únicamente sobre
   la OU objetivo. Requiere KDS root key y Active Directory real, no disponibles
   en el laboratorio actual.
+
+  > **Actualización (2026-09-26).** El Directorio Activo ya está disponible:
+  > `dc01-tfm` es el controlador de `tfm.local`. Solo falta crear la KDS root
+  > key y la gMSA. Mientras tanto, el agente corre como `LocalSystem` en un
+  > controlador de dominio y actúa en la red con su identidad, lo que da más
+  > peso a esta recomendación. Ver
+  > [`HITO-dominio-tfm-local-2026-09-26.md`](HITO-dominio-tfm-local-2026-09-26.md) §6.
 - **Almacenamiento del token del agente**: `AGENT_TOKEN` reside en el bloque de
   entorno del servicio NSSM (`AppEnvironmentExtra`), legible desde el registro
   de Windows por cualquier proceso con privilegios suficientes para leer la

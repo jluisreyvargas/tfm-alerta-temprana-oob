@@ -8,6 +8,15 @@ aparecen redactados.
 **Fecha de validación:** 27 de agosto de 2026
 **Nodos implicados:** `orchestrator-tfm` (100.64.0.1, Ubuntu Server), `dc01-tfm` (100.64.0.2, Windows Server 2025)
 
+> **Actualización (2026-09-26).** Esta validación se hizo con `dc01-tfm` como
+> servidor independiente, sin Directorio Activo, y con los scripts en
+> simulación. Las salidas `DRY-RUN OK` de este documento corresponden a ese
+> estado. El 2026-09-26, `dc01-tfm` se promovió a controlador de `tfm.local` y
+> `disable_account.ps1` y `enable_account.ps1` pasaron a ejecutar la acción
+> real. La ejecución real, sus evidencias y lo que queda sin acreditar (entre
+> otras cosas, las alertas `100601` en el SIEM) están en
+> [`HITO-dominio-tfm-local-2026-09-26.md`](HITO-dominio-tfm-local-2026-09-26.md).
+
 ---
 
 ## 1. Alcance de la validación
@@ -157,6 +166,12 @@ privilegios pudiera escribir en el directorio de scripts, podría sustituir el
 contenido de cualquier `.ps1` de la allowlist y obtener ejecución arbitraria
 como `SYSTEM` en el DC, invocada por el propio agente y superando todos sus
 controles.
+
+> **Actualización (2026-09-26).** Desde la promoción de `dc01-tfm` a
+> controlador de `tfm.local`, `LocalSystem` actúa en la red con la identidad
+> del propio controlador, y este escenario equivale al control del dominio.
+> La gMSA propuesta en la sección 8 gana peso. Ver
+> [`HITO-dominio-tfm-local-2026-09-26.md`](HITO-dominio-tfm-local-2026-09-26.md) §6.
 
 Configuración aplicada:
 
@@ -441,6 +456,11 @@ de triaje.
 | ~~Fase 4d~~ | ✅ **Resuelto.** Flujo de aprobación de dos personas — ver [`README-fase4d-flujo-aprobacion.md`](README-fase4d-flujo-aprobacion.md) |
 | Cuenta de servicio | `LocalSystem`; procedería una gMSA con derechos delegados sobre la OU objetivo |
 | Verificación de integridad | ~~Firma Authenticode de los scripts previa a su invocación~~ **Corrección (2026-09-24):** evaluado y descartado; lo cubre en parte la ACL de directorios. Ver `README-fase4-pendientes.md` («Firma Authenticode de los scripts de respuesta») y `fase4-breakglass-dc/README.md` (fila «Integridad de scripts (Authenticode)») |
+
+> **Actualización (2026-09-26).** *Cuenta de servicio:* sigue como
+> `LocalSystem` (`dc01.txt` del 2026-09-26), ahora en un controlador de
+> dominio real. Ver la nota de la sección 4 y
+> [`README-fase4-pendientes.md`](README-fase4-pendientes.md).
 
 ---
 

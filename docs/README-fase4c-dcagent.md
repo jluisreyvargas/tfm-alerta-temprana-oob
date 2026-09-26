@@ -308,6 +308,16 @@ Variables de entorno nuevas respecto a la v1.0 (detalle completo en
 
 ## Scripts PowerShell
 
+> **Actualización (2026-09-26).** Los scripts de esta sección y sus salidas
+> `DRY-RUN OK` corresponden a la validación en simulación, con `dc01-tfm` como
+> servidor independiente. Tras su promoción a controlador de `tfm.local`,
+> `disable_account.ps1` y `enable_account.ps1` ejecutan en el DC la orden real.
+> `reset_password.ps1` e `isolate_host.ps1` siguen en simulación. El texto de
+> abajo se conserva tal como se validó. Ver
+> [`HITO-dominio-tfm-local-2026-09-26.md`](HITO-dominio-tfm-local-2026-09-26.md),
+> incluido el hallazgo P1 sobre la publicación en la war room de la contraseña
+> que genera `reset_password.ps1` (§5.5).
+
 ### `C:\tfm-scripts\disable_account.ps1`
 
 ```powershell
@@ -667,6 +677,14 @@ el controlador de dominio, invocada por el propio agente y superando todos sus
 controles de aplicación (allowlist, anclaje de ruta, HMAC). El mismo argumento
 aplica a `C:\tfm-dc-agent`: escribir ahí permite sustituir `agent_dc.py`
 directamente.
+
+> **Actualización (2026-09-26).** Cuando se escribió este apartado, `dc01-tfm`
+> era un servidor independiente. Ahora es el controlador de `tfm.local`, y el
+> servicio sigue como `LocalSystem`: actúa en la red con la identidad del
+> propio controlador. El escenario descrito equivale a obtener el control del
+> dominio. La recomendación de una cuenta de servicio gestionada (gMSA) con
+> derechos delegados sobre la OU objetivo gana peso. Ver
+> [`HITO-dominio-tfm-local-2026-09-26.md`](HITO-dominio-tfm-local-2026-09-26.md) §6.
 
 ```powershell
 icacls C:\tfm-scripts /inheritance:r

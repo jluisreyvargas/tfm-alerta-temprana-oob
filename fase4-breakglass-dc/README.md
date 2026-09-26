@@ -55,6 +55,18 @@ histórico, reemplazados por `README-fase4d-flujo-aprobacion.md`.
 >   D1). Las reglas `tag:kvm` siguen en `headscale/config/acl.hujson:11` y
 >   `:24` sin ningún nodo al que aplicarse.
 
+> **Actualización (2026-09-26).** `dc01-tfm` se ha promovido a controlador del
+> dominio `tfm.local` y `analyst-w11` se ha unido a él. Antes era un servidor
+> independiente. Desde esa fecha, en el DC, `disable_account.ps1` y
+> `enable_account.ps1` ejecutan la orden real (`Disable-ADAccount`,
+> `Enable-ADAccount`), acreditada con las solicitudes `REQ-b2a531dc` y
+> `REQ-cf55f263`. `reset_password.ps1` e `isolate_host.ps1` siguen en
+> simulación. En el repositorio, los scripts se conservan en simulación hasta
+> que se decida qué versión se versiona. La marca de «Auditoría extremo a
+> extremo» corresponde a la validación en simulación: las alertas de la
+> ejecución real no se han localizado en el SIEM. Detalle en
+> [`docs/HITO-dominio-tfm-local-2026-09-26.md`](../docs/HITO-dominio-tfm-local-2026-09-26.md).
+
 ![Fase 4 · Break-Glass sobre Domain Controllers](../images/TFM_Fase4.png)
 
 ## 🏗️ Arquitectura del flujo 4d
@@ -131,6 +143,14 @@ export-peers.sh (cron 30 min)  →  rustdesk/data/db_v2.sqlite3
 | Cuenta de servicio `LocalSystem` en el DC | ⚠️ | Procedería una gMSA con derechos delegados sobre la OU objetivo |
 | Integridad de scripts (Authenticode) | ⚖️ | Evaluado y descartado: cubierto parcialmente por ACL de directorio. Ver justificación en `docs/README-fase4-pendientes.md` |
 
+> **Actualización (2026-09-26).** *Cuenta de servicio `LocalSystem`:* con
+> `dc01-tfm` ya como controlador de `tfm.local`, el servicio `TFM-DC-Agent`
+> (que sigue como `LocalSystem`) actúa en la red con la identidad del propio
+> controlador. Quien obtenga ejecución a través del agente obtiene
+> prácticamente el control del dominio. La gMSA con derechos delegados sobre
+> la OU objetivo gana peso, y ya no la bloquea la falta de Directorio Activo.
+> Ver `docs/HITO-dominio-tfm-local-2026-09-26.md` §6.
+
 ## ✅ Validación
 
 Batería completa con salidas reales y hallazgos en
@@ -138,6 +158,12 @@ Batería completa con salidas reales y hallazgos en
 pruebas del agente, 5/5 de la firma HMAC, 11/11 del flujo de aprobación 4d, y
 verificación por captura de tráfico de que el canal break-glass discurre por
 `tailscale0`.
+
+> **Actualización (2026-09-26).** Esta batería (2026-08-27) se ejecutó sobre
+> `dc01-tfm` como servidor independiente y con los scripts en simulación
+> (`DRY-RUN OK`). La ejecución real posterior a la promoción a `tfm.local` se
+> documenta aparte, con sus pendientes, en
+> [`docs/HITO-dominio-tfm-local-2026-09-26.md`](../docs/HITO-dominio-tfm-local-2026-09-26.md).
 
 ## 🚀 Próximos pasos
 
