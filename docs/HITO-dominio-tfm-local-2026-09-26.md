@@ -490,6 +490,18 @@ Después se reinició el servicio, que quedó en `Running`.
 Control reutilizable: `scripts/verify-dcagent-health.sh` falla si `/health`
 no es JSON o no declara `"hmac_required": true`.
 
+> **Actualización (2026-09-27).** Validación y primera ejecución del control:
+>
+> - **Prueba negativa y positiva.** Las fixtures de `scripts/fixtures/` son
+>   respuestas con la forma del `/health` real de la versión desplegada
+>   (`8b00bdf`) y el valor de `hmac_required` de cada estado. No son capturas
+>   literales. Con la de antes de la corrección (`false`) el script falla con
+>   código 1; con la de después (`true`) pasa con código 0.
+> - **Primera ejecución contra el agente real:** el 2026-09-27 a las
+>   01:10:30 (+02:00). Origen `http://100.64.0.2:8000/health`,
+>   `hmac_required = true`, resultado `RESULTADO: OK`, `codigo=0`. Fuente:
+>   `~/tfm-evidencias/dominio-tfm-local/verify-dcagent-health-agente.txt`.
+
 **Evidencia conservada.** El log `C:\tfm-agent\logs\agent.log` queda en el
 DC. La copia está en
 `~/tfm-evidencias/dominio-tfm-local/agent-log-C-tfm-agent-2026-09-12_2026-09-26.log`,
@@ -569,7 +581,7 @@ la ejecución. `PENDIENTE` de diagnóstico.
 | 15 | Revisar el mensaje publicado en la war room para `reset_password.ps1` del 24/09 (§5.5) | Jose |
 | 16 | Diagnosticar la codificación de la salida de `collect_logs.ps1` (§5.7, P2) | Pendiente |
 | 17 | Averiguar qué reescribió `AppEnvironmentExtra` el 12/09 entre las 23:36 y las 23:57 (§5.6) | Pendiente |
-| 18 | Ejecutar `scripts/verify-dcagent-health.sh` contra el agente tras cada cambio del servicio | Jose |
+| 18 | Ejecutar `scripts/verify-dcagent-health.sh` contra el agente tras cada cambio del servicio | Procedimiento recurrente: primera ejecución el 2026-09-27 a las 01:10:30, `RESULTADO: OK` (§5.6); repetir tras cada cambio del servicio (Jose) |
 | 19 | ~~Incorporar §5.6 al catálogo de fallos silenciosos~~ Incorporado como B39 | Resuelto (2026-09-27) |
 | 20 | ~~Confirmar el atributo de solo lectura del log original en el DC (§5.6, «Conservación de evidencia»)~~ `IsReadOnly` = `True` | Resuelto (2026-09-27) |
 
@@ -580,3 +592,9 @@ la ejecución. `PENDIENTE` de diagnóstico.
 > **Actualización (2026-09-27).** Fila 20 cerrada: el log original
 > `C:\tfm-agent\logs\agent.log` tiene el atributo de solo lectura en el DC
 > (`IsReadOnly` = `True`, `conservacion-log.txt`).
+
+> **Actualización (2026-09-27).** Fila 18 actualizada, no cerrada: la primera
+> ejecución de `scripts/verify-dcagent-health.sh` contra el agente real se hizo
+> el 2026-09-27 a las 01:10:30 (+02:00), con `RESULTADO: OK`
+> (`verify-dcagent-health-agente.txt`). Queda como procedimiento a repetir
+> tras cada cambio del servicio.
