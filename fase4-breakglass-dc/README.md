@@ -67,6 +67,17 @@ histórico, reemplazados por `README-fase4d-flujo-aprobacion.md`.
 > ejecución real no se han localizado en el SIEM. Detalle en
 > [`docs/HITO-dominio-tfm-local-2026-09-26.md`](../docs/HITO-dominio-tfm-local-2026-09-26.md).
 
+> **Actualización (2026-09-27).** Entre el 12/09/2026 a las 23:57 y el
+> 27/09/2026, el entorno del servicio `TFM-DC-Agent` estuvo incompleto
+> (`AppEnvironmentExtra` solo con dos de sus seis variables). En ese periodo,
+> **la firma HMAC del agente no se exigía** (`hmac_required: false`), pese a
+> la marca del Paso 9, y **su auditoría no llegaba a Wazuh**, pese a la marca
+> de auditoría extremo a extremo: escribía en `C:\tfm-agent\logs\agent.log`.
+> Está corregido y verificado por comportamiento el 27/09/2026: `/health` con
+> `hmac_required: true`, una ejecución firmada con código 0 y la alerta
+> `100601` recibida. Detalle en
+> [`docs/HITO-dominio-tfm-local-2026-09-26.md`](../docs/HITO-dominio-tfm-local-2026-09-26.md) §5.6.
+
 ![Fase 4 · Break-Glass sobre Domain Controllers](../images/TFM_Fase4.png)
 
 ## 🏗️ Arquitectura del flujo 4d

@@ -13,6 +13,15 @@ modificación del 2026-09-26. Los cuatro ficheros de salida (`dc01.txt`,
 `desplegado/scripts/`, junto a las copias de los scripts, y no en la raíz de
 la carpeta como indicaba el procedimiento. No afecta a su contenido.
 
+> **Actualización (2026-09-27).** La auditoría en el SIEM de la ejecución real
+> no se acreditó porque el agente escribía su registro en una ruta que Wazuh
+> no lee. Es el hallazgo P1 de §5.6: el entorno del servicio estuvo incompleto
+> del 12/09 al 27/09, y durante ese tiempo la firma HMAC tampoco se exigía.
+> Está corregido y verificado por comportamiento: la alerta `100601` vuelve a
+> llegar. Los `PENDIENTE` de la prueba real (§3.3, §4) se han completado con
+> el log conservado `C:\tfm-agent\logs\agent.log` y con las comprobaciones
+> de Jose del 26 y 27/09.
+
 ## 1. Qué cambió
 
 - **`dc01-tfm` (Windows Server 2025)** pasa de servidor independiente a
@@ -162,6 +171,33 @@ Diferencias con el procedimiento previsto:
 - Las dos aprobaciones cruzan solicitante y aprobador (`ir_lead` → `ir_lead2`
   y `ir_lead2` → `ir_lead`), como exige la regla de dos personas.
 
+> **Actualización (2026-09-27).** Completado con el registro del agente de
+> esa noche, `C:\tfm-agent\logs\agent.log`, líneas 33–40. La copia se
+> conserva en `~/tfm-evidencias/dominio-tfm-local/agent-log-C-tfm-agent-2026-09-12_2026-09-26.log`
+> (ver §5.6):
+>
+> ```text
+> 33  2026-09-26 22:33:38,483 INFO EJECUCION script=disable_account.ps1 target=tfm
+> 34  2026-09-26 22:33:40,757 INFO RESULTADO script=disable_account.ps1 returncode=0
+> 35  2026-09-26 22:40:04,064 INFO EJECUCION script=enable_account.ps1 target=tfm
+> 36  2026-09-26 22:40:05,689 INFO RESULTADO script=enable_account.ps1 returncode=0
+> 37  2026-09-26 22:42:17,802 INFO EJECUCION script=disable_account.ps1 target=tfmuser
+> 38  2026-09-26 22:42:19,472 INFO RESULTADO script=disable_account.ps1 returncode=0
+> 39  2026-09-26 22:43:42,414 INFO EJECUCION script=enable_account.ps1 target=tfmuser
+> 40  2026-09-26 22:43:43,884 INFO RESULTADO script=enable_account.ps1 returncode=0
+> ```
+>
+> - Antes de la prueba con `tfmuser` hubo una primera pareja sobre la cuenta
+>   `tfm` (22:33 y 22:40), con código 0. Jose confirma que la cuenta quedó
+>   habilitada. No consta en `prueba-real.txt` ni hay evidencia de los
+>   privilegios de `tfm`.
+> - Estado final: `(Get-ADUser tfmuser).Enabled` es `True`. `tfmuser` solo
+>   pertenece a «Usuarios del dominio» y «Usuarios»: es una cuenta sin
+>   privilegios.
+> - **El estado intermedio (deshabilitada) no se capturó.** El efecto de
+>   `disable_account.ps1` se acredita por el código 0 del script activado, no
+>   por una consulta al directorio.
+
 ### 3.4 Enclave (A4, `enclave.txt`)
 
 ```text
@@ -186,11 +222,25 @@ primera. Ver §5.3.
 
 | Acción | Solicitud | Solicitante → aprobador | Código de salida | Estado de la cuenta (`Get-ADUser … .Enabled`) | Alerta SIEM `100601` |
 |---|---|---|:-:|:-:|:-:|
-| `disable_account.ps1 tfmuser` | `REQ-b2a531dc` | `ir_lead` → `ir_lead2` | `0` | `PENDIENTE` (esperado `False`) | no encontrada |
-| `enable_account.ps1 tfmuser` | `REQ-cf55f263` | `ir_lead2` → `ir_lead` | `0` | `PENDIENTE` (esperado `True`) | no encontrada |
+| `disable_account.ps1 tfmuser` | `REQ-b2a531dc` | `ir_lead` → `ir_lead2` | `0` | no capturado (esperado `False`) | no generada: log en ruta no monitorizada (§5.6) |
+| `enable_account.ps1 tfmuser` | `REQ-cf55f263` | `ir_lead2` → `ir_lead` | `0` | `True` | no generada: log en ruta no monitorizada (§5.6) |
+
+> **Actualización (2026-09-27).** Tabla completada. La primera versión decía
+> `PENDIENTE` en el estado de la cuenta y «no encontrada» en la alerta. El
+> estado final procede de la consulta de Jose; el intermedio no se capturó.
+> Las alertas no existieron: las líneas 37–40 se escribieron en
+> `C:\tfm-agent\logs\agent.log`, que Wazuh no lee. La cadena
+> agente → Wazuh se verificó después de la corrección con otra ejecución
+> (`REQ-9253813e`, §5.6).
 
 `reset_password.ps1` e `isolate_host.ps1` no se ejecutaron, como estaba
 previsto. Además, en el DC siguen en simulación (§3.1).
+
+> **Actualización (2026-09-27).** No se ejecutaron *en esta prueba*. El log
+> conservado registra una ejecución anterior de `reset_password.ps1` sobre
+> `tfmuser` el 24/09 a las 14:46:44 (líneas 25–26, código 0), y tres de
+> `disable_account.ps1` sobre `tfmuser` el mismo día (líneas 27–32). No hay
+> evidencia de qué versión de los scripts había en el DC el 24/09. Ver §5.5.
 
 ## 5. Hallazgos
 
@@ -252,6 +302,13 @@ Consecuencias:
 **Hallazgo:** lo desplegado en el DC no es lo versionado. El repositorio no
 acredita qué código ejecuta hoy el servicio que actúa sobre el dominio.
 
+> **Actualización (2026-09-27).** La segunda consecuencia se confirmó: el
+> servicio no definía `TFM_LOG_PATH` y el agente escribía en la ruta por
+> defecto de la versión `8b00bdf`. Ver §5.6. La primera sigue abierta. El
+> `/health` posterior a la corrección confirma `"hmac_required":true`, pero no
+> hay evidencia sobre `token_configured`. Tampoco se ha redesplegado
+> `agent_dc.py` de HEAD (pendiente 8).
+
 ### 5.3 La ejecución real no aparece en el SIEM (A4)
 
 La prueba de §4 debió producir al menos dos alertas `100601` («ejecución de
@@ -275,6 +332,11 @@ devolvió nada. Con la evidencia disponible no se puede distinguir entre:
 Mientras no se resuelva, la fila «Auditoría extremo a extremo en el SIEM»
 (`fase4-breakglass-dc/README.md`) vale para la validación en simulación del
 2026-08-27, no para la ejecución real.
+
+> **Actualización (2026-09-27).** Causa determinada: la hipótesis 1. El
+> servicio no tenía `TFM_LOG_PATH`, y el agente escribía en
+> `C:\tfm-agent\logs\agent.log` desde el 12/09. Corregido y verificado con
+> la alerta `100601` de `REQ-9253813e`. Detalle en §5.6.
 
 ### 5.4 `tailscale` no se controla desde la cuenta de dominio en el W11
 
@@ -331,6 +393,139 @@ se materializa en el momento en que se active.
   antes de devolverla y la entregue por un canal aparte.
 - Hasta entonces, no activar `reset_password.ps1` en el DC.
 
+> **Actualización (2026-09-27).** Este camino ya se recorrió una vez. El log
+> conservado registra `reset_password.ps1 target=tfmuser` el 24/09 a las
+> 14:46:44, con código 0 (líneas 25–26). Por el código de `Build Agent Reply`,
+> el bot debió de publicar en la sala la contraseña generada. Si el script del
+> DC era entonces la versión en simulación (lo es el 26/09, §3.1), esa
+> contraseña no se aplicó a la cuenta. No hay evidencia de la versión del
+> 24/09 ni del mensaje publicado. `PENDIENTE`: revisar en la war room el
+> mensaje de esa solicitud y, si la contraseña se hubiera aplicado, tratarla
+> como comprometida.
+
+### 5.6 Hallazgo P1 · Entorno incompleto del servicio del agente (12–27/09)
+
+**Clasificación: fallo silencioso.** Durante unos 14 días, `/health`
+respondió `"status":"ok"`. El agente ejecutó con normalidad, con código 0 y
+el resultado publicado en la war room. Mientras tanto, **la firma HMAC no se
+exigía y ninguna ejecución llegaba al SIEM.** Ningún componente dio una señal
+de error.
+
+> **Actualización (2026-09-27).** Incorporado al catálogo de fallos
+> silenciosos como caso **B39** (familia B, mecanismo M2 «Lo declarado no es
+> lo desplegado», con M5 como asignación discutible):
+> [`CATALOGO-fallos-silenciosos.md`](CATALOGO-fallos-silenciosos.md) §3.
+
+**Síntoma.** La ejecución real de §4 no produjo la alerta `100601` esperada
+(§3.4, §5.3). Al comparar la ruta que monitoriza Wazuh con la ruta en la que
+escribía el agente, y al leer `/health`, apareció el resto.
+
+**Cronología.**
+
+| Momento | Hecho | Fuente |
+|---|---|---|
+| 12/09/2026 23:36:55 | Última escritura en `C:\tfm-dc-agent\logs\agent.log`, la ruta que monitoriza Wazuh (`ossec.conf` del agente Wazuh del DC, línea 40, `<location>`) | Salida de Jose |
+| 12/09/2026 23:57:44 | Primera línea de `C:\tfm-agent\logs\agent.log`: `EJECUCION script=rustdesk_enable.ps1` | Log conservado, línea 1 |
+| 12/09 – 26/09 | 20 ejecuciones registradas solo en la ruta no monitorizada: `rustdesk_enable.ps1` (11), `collect_logs.ps1` (1), `reset_password.ps1` (1), `disable_account.ps1` (5), `enable_account.ps1` (2). Todas con código 0 | Log conservado, líneas 1–40 |
+| 26/09/2026 22:43:43 | Última escritura en `C:\tfm-agent\logs\agent.log` | Log conservado, línea 40 |
+| 27/09/2026 ~00:1x | Corrección del entorno y reinicio del servicio | Salida de Jose |
+| 27/09/2026 00:13:13 | Primera ejecución verificada tras la corrección (`REQ-9253813e`) | `C:\tfm-dc-agent\logs\agent.log`, líneas 117–118 |
+
+**Causa probable.** Se reescribió `AppEnvironmentExtra` con solo dos
+variables. Antes de la corrección, la clave del servicio `TFM-DC-Agent`
+contenía únicamente `AGENT_TOKEN` y `AGENT_HMAC_SECRET`. Faltaban
+`AGENT_REQUIRE_HMAC`, `TFM_SCRIPTS_DIR`, `TFM_LOG_PATH` y `TFM_HEADSCALE_IP`.
+El riesgo estaba documentado: `AppEnvironmentExtra` reemplaza el conjunto
+completo de variables, no lo fusiona (advertencia operativa en
+`docs/README-fase4c-dcagent.md:660-664`). No consta qué operación reescribió
+la clave el 12/09 entre las 23:36 y las 23:57.
+
+**Efecto.**
+
+- **Firma HMAC no exigida.** Sin `AGENT_REQUIRE_HMAC=true`, la versión
+  desplegada (`8b00bdf`) toma `false` por defecto, y `/health` devolvía
+  `"hmac_required": false`. Siguieron activos el token Bearer y la ACL del
+  tailnet, pero no la protección contra replay ni la firma del cuerpo que
+  documenta el Paso 9.
+- **Auditoría fuera del SIEM.** Sin `TFM_LOG_PATH`, el agente usó su ruta por
+  defecto, `C:\tfm-agent\logs\agent.log`. El `localfile` de Wazuh no la lee y
+  la regla `100600` no la cubre. Ninguna de las 20 ejecuciones del periodo
+  generó `100601` ni `100603`, incluidas las once activaciones de acceso
+  remoto con RustDesk.
+- **Duración:** del 12/09 a las 23:57 al 27/09 hacia las 00:1x, unos 14 días.
+- **Consecuencia latente.** `isolate_host.ps1` lee `TFM_HEADSCALE_IP`
+  (`fase4-breakglass-dc/scripts/isolate_host.ps1:5`) para la regla que
+  preserva el control plane del canal OOB. Sin la variable, esa regla habría
+  recibido una dirección vacía; qué habría hecho `New-NetFirewallRule` en ese
+  caso no está comprobado. El script no se ejecutó en el periodo.
+- `TFM_SCRIPTS_DIR` ausente no tuvo efecto: el valor por defecto del agente es
+  el mismo, `C:\tfm-scripts`.
+
+**Corrección (27/09/2026).** Se reescribió `AppEnvironmentExtra` conservando
+`AGENT_TOKEN` y `AGENT_HMAC_SECRET` sin mostrarlos, y se añadió:
+
+```text
+AGENT_REQUIRE_HMAC=true
+TFM_SCRIPTS_DIR=C:\tfm-scripts
+TFM_LOG_PATH=C:\tfm-dc-agent\logs\agent.log
+TFM_HEADSCALE_IP=192.168.127.138
+```
+
+Después se reinició el servicio, que quedó en `Running`.
+
+**Verificación por comportamiento.**
+
+1. `curl -s http://100.64.0.2:8000/health` devuelve `"hmac_required":true`.
+2. `REQ-9253813e` (`!ir run collect_logs.ps1 dc-signed-selftest`, solicitada
+   por `ir_lead` y aprobada por `ir_lead2`) se ejecuta con código 0. Con la
+   firma ya exigida, eso demuestra que n8n firma con el mismo secreto que el
+   agente.
+3. `C:\tfm-dc-agent\logs\agent.log`, líneas 117–118: `EJECUCION` a las
+   00:13:13,985 y `RESULTADO returncode=0` a las 00:13:20,865 del 27/09.
+4. Wazuh: alerta `100601` («TFM Break-glass: ejecucion de script en DC») del
+   agente `002 DC01-TFM`, con `location` `C:\tfm-dc-agent\logs\agent.log`, a
+   las 22:13:13 UTC del 26/09, que son las 00:13:13 locales del 27/09. Es la
+   misma ejecución.
+
+Control reutilizable: `scripts/verify-dcagent-health.sh` falla si `/health`
+no es JSON o no declara `"hmac_required": true`.
+
+**Evidencia conservada.** El log `C:\tfm-agent\logs\agent.log` queda en el
+DC. La copia está en
+`~/tfm-evidencias/dominio-tfm-local/agent-log-C-tfm-agent-2026-09-12_2026-09-26.log`,
+fuera del repositorio.
+
+#### Conservación de evidencia
+
+Por decisión de Jose (27/09/2026), el log se conserva como evidencia y **no se
+versiona**. En el repositorio solo se cita su hash. Fuente:
+`~/tfm-evidencias/dominio-tfm-local/conservacion-log.txt`.
+
+| Elemento | Valor |
+|---|---|
+| Original | `C:\tfm-agent\logs\agent.log` en `dc01-tfm` |
+| Solo lectura en el DC | Se ordenó con `Set-ItemProperty … -Name IsReadOnly -Value $true`. `conservacion-log.txt` no recoge ninguna salida que lo confirme: `PENDIENTE` (`(Get-Item C:\tfm-agent\logs\agent.log).IsReadOnly`) |
+| Copia | `~/tfm-evidencias/dominio-tfm-local/agent-log-C-tfm-agent-2026-09-12_2026-09-26.log` (3.686 bytes, 40 líneas, permisos `0555`) |
+| SHA-256 del original (`Get-FileHash`, DC) | `7917E284C62E84F991DEB4669BEE62B35B7653622AB53A33AF420CB1505F15EC` |
+| SHA-256 de la copia (`sha256sum`, enclave) | `7917e284c62e84f991deb4669bee62b35b7653622ab53a33af420cb1505f15ec` |
+| ¿Coinciden? | **Sí** (la diferencia es solo de mayúsculas). Recalculado el 27/09 con el mismo resultado |
+| Rango temporal | Del 12/09/2026 a las 23:57:44,486 (línea 1) al 26/09/2026 a las 22:43:43,884 (línea 40) |
+
+La copia actual se creó a las 00:33:33 del 27/09 y conserva como fecha de
+modificación la del original (26/09 22:43:43,884). Una copia anterior
+(00:29, 3.646 bytes) tenía 40 bytes menos, uno por línea, lo que apunta a
+finales de línea convertidos. Se sustituyó antes de tomar los hashes, así que
+no afecta a la tabla, pero de ella no se conserva ningún hash.
+
+### 5.7 P2 · Acentos mal codificados en la salida de `collect_logs.ps1`
+
+La salida de `collect_logs.ps1` publicada en la war room para `REQ-9253813e`
+muestra los acentos mal codificados («Informaci¢n»). Por el carácter, parece
+que la consola usa la página de códigos OEM 850 y n8n decodifica en otra. No
+está comprobado. Afecta a la legibilidad y, potencialmente, al hash que
+calcula el propio script si el texto se re-codifica por el camino. No afecta a
+la ejecución. `PENDIENTE` de diagnóstico.
+
 ## 6. Impacto en la validez de lo documentado
 
 - **Todas las validaciones del repositorio son anteriores a la promoción.** La
@@ -357,11 +552,11 @@ se materializa en el momento en que se active.
 
 | # | Pendiente | Quién |
 |---:|---|---|
-| 1 | `(Get-ADUser tfmuser).Enabled` tras cada paso, o repetir la prueba guardando ambas consultas | Jose |
-| 2 | Evidencia de que `tfmuser` es una cuenta sin privilegios (`Get-ADUser tfmuser -Properties MemberOf`) | Jose |
+| 1 | ~~`(Get-ADUser tfmuser).Enabled` tras cada paso~~ Estado final `True` acreditado; el intermedio no se capturó (§3.3) | Resuelto en parte (2026-09-27) |
+| 2 | ~~Evidencia de que `tfmuser` es una cuenta sin privilegios~~ Solo «Usuarios del dominio» y «Usuarios» (§3.3) | Resuelto (2026-09-27) |
 | 3 | Copia de `agent_dc.py` desplegado en `desplegado/agent_dc.py` | Jose |
-| 4 | `curl -s http://100.64.0.2:8000/health` para confirmar la versión del agente en ejecución (§5.2) | Jose |
-| 5 | Localizar las alertas `100601` de la prueba o la causa de su ausencia (§5.3) | Jose |
+| 4 | `curl -s http://100.64.0.2:8000/health`: `hmac_required:true` confirmado (§5.6); falta constancia de si emite `token_configured` (§5.2) | Resuelto en parte (2026-09-27) |
+| 5 | ~~Localizar las alertas `100601` de la prueba o la causa de su ausencia~~ Causa: `TFM_LOG_PATH` ausente; corregido y verificado (§5.6) | Resuelto (2026-09-27) |
 | 6 | Decidir la versión de `disable_account.ps1` y `enable_account.ps1` que se versiona (§5.1) | Decisión de Jose |
 | 7 | Alinear `rustdesk_enable.ps1` entre DC y repositorio (§5.1) | Decisión de Jose |
 | 8 | Redesplegar `agent_dc.py` de HEAD en el DC, o documentar por qué corre `8b00bdf` (§5.2) | Decisión de Jose |
@@ -371,3 +566,13 @@ se materializa en el momento en que se active.
 | 12 | Medir las alertas propias del Directorio Activo (ampliación de M-24) | Pendiente |
 | 13 | Migrar `TFM-DC-Agent` a una gMSA | Pendiente |
 | 14 | `isolate_host.ps1` en real: requiere una ventana planificada | Pendiente |
+| 15 | Revisar el mensaje publicado en la war room para `reset_password.ps1` del 24/09 (§5.5) | Jose |
+| 16 | Diagnosticar la codificación de la salida de `collect_logs.ps1` (§5.7, P2) | Pendiente |
+| 17 | Averiguar qué reescribió `AppEnvironmentExtra` el 12/09 entre las 23:36 y las 23:57 (§5.6) | Pendiente |
+| 18 | Ejecutar `scripts/verify-dcagent-health.sh` contra el agente tras cada cambio del servicio | Jose |
+| 19 | ~~Incorporar §5.6 al catálogo de fallos silenciosos~~ Incorporado como B39 | Resuelto (2026-09-27) |
+| 20 | Confirmar el atributo de solo lectura del log original en el DC (§5.6, «Conservación de evidencia») | Jose |
+
+> **Actualización (2026-09-27).** Filas 1, 2, 4 y 5 actualizadas y filas
+> 15–19 añadidas tras el hallazgo de §5.6. Después, fila 19 resuelta
+> (caso B39 del catálogo) y fila 20 añadida.

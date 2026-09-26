@@ -662,6 +662,17 @@ Tres decisiones de esta configuración y su motivo:
   reescribir todas las líneas, o las que se omitan desaparecen (un
   `AGENT_TOKEN` que se pierde así produce un `500 AGENT_TOKEN not set`, no un
   fallo evidente al arrancar).
+
+  > **Actualización (2026-09-27).** Este riesgo se materializó el 12/09/2026.
+  > `AppEnvironmentExtra` quedó con solo `AGENT_TOKEN` y `AGENT_HMAC_SECRET`,
+  > y durante unos 14 días el agente no exigió la firma HMAC
+  > (`hmac_required: false`) y escribió su auditoría en
+  > `C:\tfm-agent\logs\agent.log`, que Wazuh no lee. No produjo ningún error:
+  > `/health` seguía en `ok` y los scripts devolvían código 0. Se corrigió y
+  > verificó el 27/09/2026. Ver
+  > [`HITO-dominio-tfm-local-2026-09-26.md`](HITO-dominio-tfm-local-2026-09-26.md) §5.6,
+  > y `scripts/verify-dcagent-health.sh` para comprobarlo tras cada
+  > modificación.
 - **`DependOnService Tailscale`.** El binding a `100.64.0.2` falla si el
   servicio arranca antes de que la interfaz de la tailnet exista todavía; la
   dependencia de servicio asegura el orden de arranque.

@@ -224,13 +224,18 @@ defecto, que el consumidor lee como aprobación. El control falla cerrado ante
 caída del servicio y **abierto** ante error propio, que es el caso más probable.
 → [`docs/cierre-mejora1-hook.md`](./docs/cierre-mejora1-hook.md) §3
 
-**El fallo silencioso es el modo de fallo dominante.** 69 ocurrencias documentadas
+**El fallo silencioso es el modo de fallo dominante.** 70 ocurrencias documentadas
 en el proyecto, agrupadas en seis mecanismos: algo informa de éxito o de
 normalidad —o no informa de nada— mientras la función no se cumple. Afecta tanto
 a los instrumentos con los que se mide (34 ocurrencias) como al propio sistema
-(35). Para los primeros, la defensa es contrastar con un segundo instrumento que
+(36). Para los primeros, la defensa es contrastar con un segundo instrumento que
 mida lo mismo por otra vía; para el segundo, medir desde el consumidor.
 → [`docs/CATALOGO-fallos-silenciosos.md`](./docs/CATALOGO-fallos-silenciosos.md)
+
+> **Actualización (2026-09-27).** Cifras actualizadas de 69 a 70 ocurrencias y
+> de 35 a 36 en el sistema observado, por la incorporación del caso B39 al
+> catálogo: el entorno incompleto del servicio del agente del DC, del 12/09 al
+> 27/09 ([`docs/HITO-dominio-tfm-local-2026-09-26.md`](./docs/HITO-dominio-tfm-local-2026-09-26.md) §5.6).
 
 ---
 
@@ -273,3 +278,9 @@ mida lo mismo por otra vía; para el segundo, medir desde el consumidor.
   queda acreditada por comportamiento para `web` (batería D-1); se corrige que
   la consola no es `/cmd/` sino `/connect/`, fuera de la ventana; y se declara
   que la ventana limita el inicio de la sesión, no su duración.
+
+- **2026-09-27.** El catálogo de fallos silenciosos pasa de 69 a 70
+  ocurrencias con el caso B39: entorno incompleto del servicio `TFM-DC-Agent`
+  del 12/09 al 27/09, con la firma HMAC sin exigir y la auditoría fuera del
+  SIEM. La entrada del 2026-09-24 conserva la cifra de su fecha. Detalle en
+  [`docs/HITO-dominio-tfm-local-2026-09-26.md`](./docs/HITO-dominio-tfm-local-2026-09-26.md) §5.6.

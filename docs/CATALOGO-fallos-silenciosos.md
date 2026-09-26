@@ -12,6 +12,11 @@ sustituye esa cifra por una lista trazable caso a caso.
 > documentos desplazan números de línea; para ver cada cita tal como se
 > comprobó: `git show 3f26c07:<fichero>`. La fila B1 se actualizó después para
 > citar M-46 (`77e4d1c`).
+>
+> **Actualización (2026-09-27).** La fila B39 no está anclada a `3f26c07`: sus
+> números de línea corresponden a `docs/HITO-dominio-tfm-local-2026-09-26.md` y
+> `docs/README-fase4c-dcagent.md` en el estado en que se incorporó el caso, el
+> 2026-09-27.
 
 ---
 
@@ -130,6 +135,7 @@ colisiones conocidas (`P1-6`, `P0-4`, entre otras): ver
 | B35 | URL de `Verificar Evidencia` en modo *fixed* (M-37) | `200` con una lista de evidencias vacía | n8n envió la plantilla literal e IRIS devolvió otro caso | `object_last_update` con la fecha de instalación | REGISTRO-MEDICIONES `:1203-1219` | corregido (`:1240`) | |
 | B36 | Cabecera HSTS del nginx de IRIS (M-9) | Cabecera presente | `max-age=31536000: includeSubDomains`: se descarta `includeSubDomains` | Lectura de la respuesta | REGISTRO-MEDICIONES `:253-260`; `fase6-iris/docker/nginx/nginx.conf:110`, `:140` | abierto | |
 | B38 | Rechazo de firma HMAC en el Workflow 1 (M-21) | Nada: sin ejecución visible, sin mensaje, sin log | Con una alerta real, la alerta se habría perdido | Prueba con firma inválida | REGISTRO-MEDICIONES `:656-673` | no consta | |
+| B39 | Entorno del servicio `TFM-DC-Agent` (NSSM `AppEnvironmentExtra`) | `/health` con `"status":"ok"`; ejecuciones con código 0 y resultado publicado en la war room | Del 12/09 a las 23:57 al 27/09, el entorno solo tenía 2 de sus 6 variables. La firma HMAC no se exigía (`hmac_required:false`), y el registro de auditoría se escribía en `C:\tfm-agent\logs\agent.log`, que Wazuh no lee: ninguna ejecución llegó al SIEM | Al verificar la ejecución real tras la promoción del dominio: la alerta 100601 esperada no apareció; se comparó la ruta monitorizada con la ruta escrita y se leyó `/health` | `docs/HITO-dominio-tfm-local-2026-09-26.md:406-518` (síntoma `:419-421`, cronología `:423-432`, verificación `:476-488`); `docs/README-fase4c-dcagent.md:660-664` | corregido y verificado (27/09/2026) | |
 
 ---
 
@@ -142,12 +148,15 @@ principal. La asignación es una clasificación del autor, no de las fuentes.
 | Mecanismo | Qué ocurre | Ocurrencias | n |
 |---|---|---|---|
 | **M1 · El acuse no es el efecto** | Un código de salida, un `200`, un «Started» o un «success» confirma la recepción o la sintaxis, no el resultado | A1, A2, A3, A5, A27, A28, A29, A34, A38, B1, B8, B21, B28 | 13 |
-| **M2 · Lo declarado no es lo desplegado** | La configuración escrita no es la que corre, o no surte efecto | A18, B2, B9, B13, B14, B15, B16, B19, B26, B27, B33 | 11 |
+| **M2 · Lo declarado no es lo desplegado** | La configuración escrita no es la que corre, o no surte efecto | A18, B2, B9, B13, B14, B15, B16, B19, B26, B27, B33, B39 | 12 |
 | **M3 · La ausencia disfrazada de valor** | Un vacío, un cero o un valor por defecto plausible ocupa el lugar de un error | A8, A36, A37, A40, B4, B5, B6, B18, B25, B29, B31, B32 | 12 |
 | **M4 · La comprobación no discrimina** | Se mide algo contiguo a lo que importa: correlacionado, pero distinto | A9, A15, A16, A17, A19, A20, A23, A26, A30, A33, A39, B11, B12, B22, B23, B24, B36 | 17 |
 | **M5 · La señal no llega a nadie** | El fallo se produce, a veces incluso se registra, pero ningún consumidor lo recibe | B3, B7, B17, B30, B34, B38 | 6 |
 | **M6 · La lectura parcial tomada por total** | Salida truncada, filtrada, de otro momento o de otro objeto | A4, A6, A7, A14, A21, A24, A25, A32, A35, B35 | 10 |
-| | | **Total** | **69** |
+| | | **Total** | **70** |
+
+> **Actualización (2026-09-27).** Recuentos actualizados por la incorporación
+> de B39 a M2: M2 pasa de 11 a 12 y el total, de 69 a 70.
 
 **Observaciones.** M4 es el mecanismo más frecuente: se comprueba lo que es fácil
 de medir en lugar de lo que importa. M5 solo aparece en la familia B: es el único
@@ -155,7 +164,9 @@ mecanismo que no depende del observador, sino de que el sistema no tenga a nadie
 escuchando, y es el argumento directo para la prueba periódica de las
 capacidades que no se usan a diario (B9).
 
-**Asignaciones discutibles:** B2 (M2 o M4), B8 (M1 o M3), A33 (M4 o M6).
+**Asignaciones discutibles:** B2 (M2 o M4), B8 (M1 o M3), A33 (M4 o M6), B39 (M2 o
+M5): la auditoría que no llega a Wazuh también encaja en «la señal no llega a
+nadie».
 
 ---
 
@@ -164,8 +175,13 @@ capacidades que no se usan a diario (B9).
 | Familia | Casos |
 |---|---|
 | A · El observador | 34 |
-| B · El sistema observado | 35 |
-| **Total** | **69** |
+| B · El sistema observado | 36 |
+| **Total** | **70** |
+
+> **Actualización (2026-09-27).** Se incorpora B39, el entorno incompleto del
+> servicio `TFM-DC-Agent` entre el 12/09 y el 27/09
+> (`docs/HITO-dominio-tfm-local-2026-09-26.md` §5.6). La familia B pasa de 35 a
+> 36 y el total, de 69 a 70.
 
 Este total sustituye al «ocho» del `README.md` raíz. La versión inicial de este
 catálogo contaba 72; el 2026-09-24 se trasladaron A22, A31 y B37 a
