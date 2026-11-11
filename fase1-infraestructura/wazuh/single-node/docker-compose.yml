@@ -1,7 +1,7 @@
 # Wazuh App Copyright (C) 2017, Wazuh Inc. (License GPLv2)
 services:
   wazuh.manager:
-    image: wazuh/wazuh-manager:4.14.0
+    image: wazuh/wazuh-manager:4.14.0@sha256:d2387a8304391600154c7b8604b390c8b798ec1403b5f1f707703bafdb230f84
     hostname: wazuh.manager
     restart: always
     ulimits:
@@ -47,7 +47,7 @@ services:
       - "n8n.oob.local:host-gateway"
 
   wazuh.indexer:
-    image: wazuh/wazuh-indexer:4.14.0
+    image: wazuh/wazuh-indexer:4.14.0@sha256:0f1eb6c22912ca7948679cc3eca05346464678a42cab5cf5b1e17b99659e3582
     hostname: wazuh.indexer
     restart: always
     ports:
@@ -72,7 +72,7 @@ services:
       - ./config/wazuh_indexer/internal_users.yml:/usr/share/wazuh-indexer/config/opensearch-security/internal_users.yml
 
   wazuh.dashboard:
-    image: wazuh/wazuh-dashboard:4.14.0
+    image: wazuh/wazuh-dashboard:4.14.0@sha256:ee2bad5f799e29a2a1ba218a634749a3bcd823e6f1aa09482b5d81bdba886b6c
     hostname: wazuh.dashboard
     restart: always
     # Sin 'ports': el 4443 se retiro en el P1-1a Fase C. El dashboard se sirve

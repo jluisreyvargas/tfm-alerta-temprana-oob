@@ -121,3 +121,9 @@ __pycache__/
 
 # Notas de trabajo para la presentación: fuera del repositorio (auditoría de cierre 2026-09-23)
 docs/tfm/insumos-presentacion.md
+
+# Despliegue desde cero (deploy/deploy.sh). Estado local del instalador:
+# parametros, almacen de secretos, marcas de etapa y log; y el paquete de
+# salida para DC01, W11 y el GL-RM1. Ambos contienen secretos.
+deploy/.state/
+deploy/out/

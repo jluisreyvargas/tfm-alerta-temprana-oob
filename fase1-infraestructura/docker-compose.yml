@@ -6,7 +6,7 @@ networks:
 
 services:
   traefik:
-    image: traefik:v3.3
+    image: traefik:v3.3@sha256:2cd5cc75530c8d07ae0587c743d23eb30cae2436d07017a5ff78498b1a43d09f
     container_name: traefik
     restart: unless-stopped
     security_opt:
@@ -28,7 +28,7 @@ services:
       - oob-network
 
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce:latest@sha256:8d2f5c9fbc5b8490fb3a12efadbad74978e22991911e1db611d8a45871775112
     container_name: portainer
     restart: unless-stopped
     security_opt:
@@ -52,7 +52,7 @@ services:
       - "traefik.http.services.portainer.loadbalancer.server.scheme=https"
 
   authelia:
-    image: authelia/authelia:latest
+    image: authelia/authelia:latest@sha256:0c824dcab1ae97c56bf673c5e77fe8cc6bcd400564555140cc8002a12c6b6463
     container_name: authelia
     restart: unless-stopped
     volumes:
@@ -73,7 +73,7 @@ services:
       - "traefik.http.services.authelia.loadbalancer.server.port=9091"
 
   mongodb:
-    image: mongo:8.0
+    image: mongo:8.0@sha256:44aa79ae28ff80b56fe58681b66cda9336706df408a5175a6c04988aa54610d3
     container_name: mongodb
     restart: unless-stopped
     user: root

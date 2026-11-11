@@ -1,0 +1,24 @@
+# Copiar a users_database.yml en este mismo directorio. El fichero real esta
+# excluido por fase1-infraestructura/.gitignore y NUNCA se versiona.
+#
+# Lo lee Authelia como backend de usuarios (configuration.yml:13-15).
+# Formato tomado de docs/README-fase1b-authelia.md, seccion
+# "authelia/users_database.yml".
+#
+# El campo password es un hash argon2id, no la contrasena. Generarlo con:
+#   authelia crypto hash generate argon2
+# (docs/README-fase1b-authelia.md:222-223). El valor de abajo es un marcador:
+# con el Authelia no puede autenticar a nadie.
+#
+# El grupo ir_lead es el que conceden las reglas de access_control
+# (configuration.yml:20-50). Sin el, el usuario se autentica y no entra en
+# ningun servicio.
+
+users:
+  NOMBRE_DE_USUARIO:
+    displayname: "Nombre visible"
+    password: "REEMPLAZAR_POR_HASH_ARGON2ID"
+    email: usuario@oob.local
+    groups:
+      - ir_lead
+      - ir_team
