@@ -21,6 +21,17 @@
 #   positivos en assets vendorizados (JS minificado, yarn.lock, .db del
 #   datastore). Las reglas ancladas cubren el material real de Velociraptor.
 #
+#   Esta regla —y SOLO esta— descuenta los digest de imagen de contenedor: la
+#   cadena literal "@sha256:" seguida de EXACTAMENTE 64 hexadecimales en
+#   minúscula (image: nombre:etiqueta@sha256:…). Un digest es un identificador
+#   público del registro, no un secreto, y al fijar minio/minio por digest en
+#   fase5-velociraptor/docker-compose.yml la regla daba un falso positivo.
+#   El descuento es por cadena, no por fichero ni por línea: se retira el
+#   digest y la línea se vuelve a evaluar, de modo que cualquier otra cadena
+#   larga en la misma línea sigue contando. No se descuentan: 64 hexadecimales
+#   sin el prefijo, "sha256:" sin la arroba, ni un prefijo seguido de 65 o más
+#   caracteres.
+#
 # Regla de credenciales conocidas (P0-3) — se aplica a TODO el árbol trackeado,
 #   binarios incluidos (git grep -a):
 #   - minioadmin, minioadmin123, SecretPassword, changeme, change_me,
@@ -274,11 +285,16 @@ _line_content() {   # $1 = ruta   $2 = numero de linea
   fi
 }
 
+# Digest de imagen de contenedor: "@sha256:" + exactamente 64 hexadecimales.
+# "Exactamente" se impone exigiendo después un carácter que no pueda prolongar
+# la cadena (ni base64 ni '=') o el fin de línea; ese carácter se conserva.
+IMAGE_DIGEST_SED='s#@sha256:[0-9a-f]{64}([^A-Za-z0-9+/=]|$)#\1#g'
+
 # Asume que las rutas trackeadas no contienen ':' (cierto en este repo).
 # git grep -I salta binarios; -n da número de línea; el contenido de la
 # línea se descarta con cut para no exponer nunca el valor.
-scan() {   # $1 = etiqueta   $2 = ERE   $3 = (opcional) filtro de ruta ERE   $4 = 1: aplicar la exclusión de vendorizados P1-4
-  local label="$1" ere="$2" path_filter="${3:-}" vendor_skip="${4:-0}" hit path line
+scan() {   # $1 = etiqueta   $2 = ERE   $3 = (opcional) filtro de ruta ERE   $4 = 1: aplicar la exclusión de vendorizados P1-4   $5 = 1: descontar digest de imagen
+  local label="$1" ere="$2" path_filter="${3:-}" vendor_skip="${4:-0}" strip_digest="${5:-0}" hit path line
   while IFS= read -r hit; do
     [ -n "$hit" ] || continue
     path=${hit%%:*}
@@ -298,6 +314,15 @@ scan() {   # $1 = etiqueta   $2 = ERE   $3 = (opcional) filtro de ruta ERE   $4 
     # Plantillas: se admite únicamente el marcador en esa línea.
     if [ "${path#"$TEMPLATE_DIR"}" != "$path" ]; then
       if _line_content "$path" "$line" | grep -qF "$MARKER"; then
+        continue
+      fi
+    fi
+
+    # Digest de imagen: se retira de la línea y se reevalúa lo que queda. Si
+    # sin el digest la línea ya no casa, el único motivo del hallazgo era el
+    # digest. El contenido de la línea no se imprime en ningún caso.
+    if [ "$strip_digest" = "1" ]; then
+      if ! _line_content "$path" "$line" | sed -E "$IMAGE_DIGEST_SED" | grep -qE "$ere"; then
         continue
       fi
     fi
@@ -342,7 +367,7 @@ scan "password_hash"     '(^|[^A-Za-z_])password_hash:[[:space:]]*[^[:space:]#]'
 scan "password_salt"     '(^|[^A-Za-z_])password_salt:[[:space:]]*[^[:space:]#]'
 scan "obfuscation_nonce" '(^|[^A-Za-z_])obfuscation_nonce:[[:space:]]*[^[:space:]#]'
 scan "nonce"             "(^|[^A-Za-z_])nonce:[[:space:]]*[\"']?[A-Za-z0-9+/=_-]{16,}"
-scan "base64>60"         '[A-Za-z0-9+/]{60,}={0,2}'   "$B64_PATH_RE"
+scan "base64>60"         '[A-Za-z0-9+/]{60,}={0,2}'   "$B64_PATH_RE" 0 1
 # Anclada por límites no alfabéticos: evita el falso positivo de "changeme"
 # como subcadena de "changement" (prosa francesa en fase8-kvm) sin excluir
 # ficheros. Un dígito o signo tras la credencial (minioadmin123) sí cuenta.
